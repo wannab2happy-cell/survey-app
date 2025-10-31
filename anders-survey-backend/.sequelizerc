@@ -1,0 +1,11 @@
+// .sequelizerc 
+const path = require('path');
+
+// Sequelize CLI에게 설정, 모델, 마이그레이션 파일의 위치를 알려줍니다.
+module.exports = {
+  // ✅ CLI가 config 파일 경로를 'src/config/config.json'으로 찾도록 명시
+  'config': path.resolve(__dirname, 'src', 'config', 'config.json'), 
+  'models-path': path.resolve(__dirname, 'src', 'models'),
+  'migrations-path': path.resolve(__dirname, 'migrations'),
+  'seeders-path': path.resolve(__dirname, 'seeders')
+};

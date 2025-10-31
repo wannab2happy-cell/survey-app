@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "root", 
+    "password": "s@@5413375",
+    "database": "anders_survey_dev",
+    "host": "127.0.0.1", 
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "root",
+    "password": "s@@5413375",
+    "database": "anders_survey_test",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "PRODUCTION_DB_USERNAME",
+    "password": "PRODUCTION_DB_PASSWORD",
+    "database": "anders_survey_production",
+    "host": "YOUR_PRODUCTION_HOST",
+    "dialect": "mysql"
+  }
+}

@@ -1,0 +1,102 @@
+/* client/src/SurveyTaker.css */
+
+.survey-taker-container {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: var(--card-bg-color);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.survey-header-info {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 3px solid var(--dynamic-primary-color);
+}
+
+.survey-title {
+    font-size: 2.5em;
+    color: var(--text-color);
+    margin-bottom: 10px;
+}
+
+.survey-description {
+    font-size: 1.1em;
+    color: #666;
+}
+
+/* Question Display Card */
+.question-display-card {
+    background-color: var(--neutral-bg-color);
+    padding: 25px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+}
+
+.question-text {
+    font-size: 1.3em;
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+/* Answer Options */
+.option-label {
+    display: block;
+    padding: 10px;
+    margin-bottom: 8px;
+    background-color: var(--card-bg-color);
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.option-label:hover {
+    border-color: var(--dynamic-primary-color);
+    box-shadow: 0 0 5px rgba(0, 122, 255, 0.2);
+}
+
+.option-label input[type="radio"],
+.option-label input[type="checkbox"] {
+    margin-right: 10px;
+    accent-color: var(--dynamic-primary-color);
+    transform: scale(1.2); /* 인풋 크기 키우기 */
+}
+
+/* Text Answer Input */
+.text-answer-input {
+    width: 100%;
+    min-height: 100px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    resize: vertical;
+    font-size: 1em;
+    outline-color: var(--dynamic-primary-color);
+}
+
+/* Submit Button */
+.submit-button {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.2em;
+    border: none;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+/* Status and Error Messages */
+.loading-message, .error-message {
+    text-align: center;
+    padding: 20px;
+    font-weight: bold;
+}
+
+.survey-taker-error {
+    background-color: #ffeaea;
+    color: #cc0000;
+    border: 1px solid #ffcccc;
+    border-radius: 8px;
+}

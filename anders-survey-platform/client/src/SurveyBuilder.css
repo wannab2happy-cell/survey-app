@@ -1,0 +1,242 @@
+/* client/src/SurveyBuilder.css (QuestionCard 스타일까지 포함된 최종 코드) */
+
+/* 1. 메인 레이아웃 및 중앙 정렬 */
+.survey-builder-container {
+    padding: 20px;
+    max-width: 1200px; /* 전체 최대 폭 제한 */
+    margin: 0 auto;    /* 중앙 정렬 */
+}
+
+/* 2. 상단 헤더 및 저장 버튼 */
+.builder-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    margin-bottom: 20px;
+}
+
+/* 3. 질문 영역과 설정 영역 분할 (70% / 30%) */
+.builder-content {
+    display: flex;
+    gap: 30px; 
+}
+
+.questions-area {
+    flex: 3; /* 70% 비율 */
+}
+
+.settings-panel {
+    flex: 1; /* 30% 비율 */
+    background-color: var(--card-bg-color);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* 깔끔한 그림자 */
+    height: fit-content; /* 내용물 높이만큼만 차지 */
+    position: sticky; 
+    top: 20px;
+}
+
+/* 4. 설문 기본 정보 카드 스타일 */
+.survey-info-card {
+    background-color: var(--card-bg-color);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* 강조된 그림자 */
+    margin-bottom: 20px;
+}
+
+.survey-title-input {
+    width: 100%;
+    font-size: 32px; /* 제목 강조 */
+    font-weight: bold;
+    border: none;
+    padding: 5px 0;
+    margin-bottom: 10px;
+    border-bottom: 2px solid var(--neutral-bg-color); /* 얇은 구분선 */
+    outline: none;
+}
+
+.survey-description-input {
+    width: 100%;
+    font-size: 16px;
+    color: #666;
+    border: none;
+    padding: 5px 0;
+    resize: vertical;
+    min-height: 50px;
+    outline: none;
+}
+
+/* 5. 질문 카드 플레이스홀더 (QuestionCard 컴포넌트 사용으로 대체됨) */
+/* 이 부분은 이제 사용되지 않지만 혹시 모를 충돌 방지를 위해 남겨둡니다. */
+.question-card-placeholder { 
+    display: none; 
+}
+
+/* 6. 플로팅 '질문 추가' 버튼 */
+.floating-add-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    border-radius: 50px; /* 원형 모양 */
+    padding: 15px 25px;
+    font-size: 18px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+/* 7. 일반 입력 필드 (Settings Panel 내) */
+.settings-panel select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+
+/* ========================================================= */
+/* 8. Question Card 스타일 (핵심 기능) */
+/* ========================================================= */
+
+.question-card {
+    background-color: var(--card-bg-color);
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border-left: 5px solid var(--dynamic-primary-color); /* 왼쪽 메인 컬러 바 */
+    transition: box-shadow 0.2s;
+}
+
+.question-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 호버 시 약간 강조 */
+}
+
+/* 9. Card Header */
+.card-header {
+    display: flex;
+    justify-content: flex-end; 
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--neutral-bg-color);
+    padding-bottom: 10px;
+}
+
+.question-index {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-right: auto; /* 왼쪽 끝으로 밀어냄 */
+    color: var(--dynamic-primary-color);
+}
+
+.question-type-select, .delete-question-button {
+    padding: 8px 12px;
+    margin-left: 10px;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.delete-question-button {
+    background-color: transparent;
+    color: #FF453A; /* 경고색 */
+    border: 1px solid #FF453A;
+    transition: background-color 0.2s;
+}
+
+.delete-question-button:hover {
+    background-color: #FF453A;
+    color: white;
+}
+
+/* 10. Card Body */
+.question-text-input {
+    width: 100%;
+    font-size: 20px;
+    font-weight: 500;
+    border: none;
+    padding: 10px 0;
+    margin-bottom: 20px;
+    outline: none;
+    border-bottom: 1px solid #ddd;
+}
+
+/* 11. Options List */
+.options-list {
+    padding-left: 10px;
+}
+
+.option-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.option-item input[type="radio"],
+.option-item input[type="checkbox"] {
+    margin-right: 10px;
+    accent-color: var(--dynamic-primary-color); /* 라디오/체크박스 색상 변경 */
+}
+
+.option-input {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid var(--neutral-bg-color);
+    border-radius: 4px;
+    margin-right: 10px;
+}
+
+.delete-option-button {
+    background: none;
+    color: #999;
+    font-size: 1.2em;
+    padding: 5px;
+    transition: color 0.2s;
+}
+
+.delete-option-button:hover {
+    color: #FF453A;
+}
+
+.add-option-button {
+    background-color: transparent;
+    color: var(--dynamic-primary-color);
+    border: 1px dashed var(--dynamic-primary-color);
+    padding: 8px 15px;
+    margin-top: 5px;
+    border-radius: 6px;
+}
+
+/* 주관식 미리보기 */
+.text-answer-preview {
+    padding: 15px;
+    background-color: var(--neutral-bg-color);
+    border-radius: 6px;
+    color: #666;
+    font-style: italic;
+}
+
+/* client/src/SurveyBuilder.css (파일 하단에 추가) */
+
+/* 12. 상태 메시지 스타일 */
+.status-message {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    text-align: center;
+    border: 1px solid transparent;
+}
+
+.status-message.error {
+    background-color: #ffeaea;
+    color: #cc0000;
+    border-color: #ffcccc;
+}
+
+.status-message.success {
+    background-color: #eaf8e7;
+    color: #008000;
+    border-color: #ccffcc;
+}

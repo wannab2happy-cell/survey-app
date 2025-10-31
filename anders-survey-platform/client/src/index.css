@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 전역 폰트 및 색상 기본화 */
+:root {
+  --color-primary: #0099ff;
+  --color-secondary: #f8fafc;
+  --font-sans: 'Inter', 'Pretendard', 'Noto Sans KR', sans-serif;
+}
+
+html, body {
+  font-family: var(--font-sans);
+  background-color: var(--color-secondary);
+  color: #111827;
+  margin: 0;
+  padding: 0;
+}
+
+/* 버튼, 카드 등 공통 유틸 클래스 */
+@layer utilities {
+  .btn-primary {
+    @apply text-white font-semibold px-5 py-2 rounded-lg shadow transition;
+    background-color: var(--color-primary);
+  }
+
+  .btn-primary:hover {
+    background-color: #0077cc; /* hover 색상 */
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow p-6;
+  }
+}
