@@ -1,4 +1,10 @@
-export default function DataExport() {
+// client/src/pages/Admin/DataExport.jsx 파일 전체 코드 (수정됨)
+import React from 'react'; // 🔴 핵심 수정: React 임포트 추가
+
+// surveyList 배열을 props로 받습니다.
+export default function DataExport({ surveyList = [] }) {
+  // 🔴 핵심 수정: surveyList가 없을 경우를 대비해 기본값 빈 배열 설정
+
   return (
     <div className="space-y-8">
       <h2 className="text-2xl font-bold text-gray-800">📊 응답 데이터 추출 및 관리</h2>
@@ -8,8 +14,16 @@ export default function DataExport() {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">설문 선택</label>
             <select className="w-full p-2 border border-gray-300 rounded-lg">
-              <option>2025년 신제품 만족도 조사</option>
-              <option>BTL 현장 피드백</option>
+              {/* 🔴 핵심 수정 1: surveyList를 옵션으로 매핑 */}
+              {surveyList.length > 0 ? (
+                surveyList.map((survey) => (
+                  <option key={survey.id} value={survey.id}>
+                    {survey.title} (생성일: {survey.created})
+                  </option>
+                ))
+              ) : (
+                <option>생성된 설문이 없습니다.</option>
+              )}
             </select>
           </div>
 
@@ -30,9 +44,12 @@ export default function DataExport() {
 
         <div className="flex justify-between items-center border-t pt-4">
           <p className="text-gray-700 font-medium">
-            필터링된 결과: <span className="text-blue-600 font-semibold">128건</span>
+            총 설문 수: <span className="text-primary font-semibold">{surveyList.length}개</span>
           </p>
-          <button className="btn-primary">💾 CSV로 다운로드</button>
+          {/* 브랜딩 컬러 적용을 위해 Tailwind primary 클래스 사용 */}
+          <button className="bg-primary hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-150">
+             💾 CSV로 다운로드
+          </button>
         </div>
       </div>
     </div>

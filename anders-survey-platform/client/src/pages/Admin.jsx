@@ -1,66 +1,64 @@
-import { useState } from "react";
-import DataExport from "./Admin/DataExport";
-import SurveyBuilder from "./Admin/SurveyBuilder";
-import Customization from "./Admin/Customization";
+// src/pages/Admin.jsx (최종 코드)
 
-export default function Admin() {
-  const [tab, setTab] = useState("export");
+import React from 'react';
+import { Routes, Route, Link, Navigate } from 'react-router-dom';
+import SurveyBuilder from "../components/SurveyBuilder.jsx"; 
+import SurveyList from "./SurveyList.jsx"; 
+import SurveyResults from "./SurveyResults.jsx"; 
+// BrandingPage import 제거됨
 
-  const renderTab = () => {
-    if (tab === "export") return <DataExport />;
-    if (tab === "builder") return <SurveyBuilder />;
-    if (tab === "custom") return <Customization />;
-  };
+export default function Admin({ onLogout }) {
+    return (
+        <div className="flex h-screen bg-gray-100">
+            {/* 1. 좌측 메뉴 (Navigation) */}
+            <nav className="w-64 bg-white shadow-xl p-4 space-y-2 flex flex-col">
+                <div className="text-xl font-bold text-indigo-600 mb-6">Survey Admin</div>
+                
+                <Link 
+                    to="/admin" 
+                    className="block p-3 rounded-lg text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition"
+                >
+                    📋 설문 목록 (대시보드)
+                </Link>
+                <Link 
+                    to="/admin/builder" 
+                    className="block p-3 rounded-lg text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition"
+                >
+                    📝 설문 생성 (Builder)
+                </Link>
+                
+                {/* 브랜딩 Link 제거됨 */}
+                
+                <button 
+                    onClick={onLogout} 
+                    className="mt-auto p-3 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition"
+                >
+                    로그아웃
+                </button>
+            </nav>
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* 상단 헤더 */}
-      <header className="bg-white shadow-md sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold" style={{ color: "var(--color-primary)" }}>
-            Anders Admin
-          </h1>
-          <button
-            onClick={() => alert('로그아웃 기능 추가 예정')}
-            className="text-gray-600 hover:text-gray-800 text-sm"
-          >
-            로그아웃
-          </button>
+            {/* 2. 우측 콘텐츠 영역 */}
+            <main className="flex-1 overflow-y-auto">
+                <Routes>
+                    
+                    {/* 1순위: 수정 모드 */}
+                    <Route path="builder/:id" element={<SurveyBuilder />} /> 
+                    
+                    {/* 2순위: 결과 분석 모드 */}
+                    <Route path="results/:id" element={<SurveyResults />} /> 
+                    
+                    {/* 브랜딩 Route 제거됨 */}
+                    
+                    {/* 3순위: 생성 모드 */}
+                    <Route path="builder" element={<SurveyBuilder />} /> 
+                    
+                    {/* 4순위: Admin 루트 경로 (목록) */}
+                    <Route index element={<SurveyList />} /> 
+                    
+                    {/* 5순위: 정의되지 않은 Admin 내부 경로는 목록으로 리디렉션 */}
+                    <Route path="*" element={<Navigate to="/admin" replace />} />
+                </Routes>
+            </main>
         </div>
-      </header>
-
-      {/* 탭 메뉴 */}
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto flex justify-start px-6">
-          {[
-            { id: "export", label: "📊 응답 데이터 추출" },
-            { id: "builder", label: "✍️ 설문 생성 및 관리" },
-            { id: "custom", label: "🎨 브랜드 커스터마이징" },
-          ].map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setTab(item.id)}
-              className={`px-6 py-3 font-medium border-b-2 transition ${
-                tab === item.id
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-600 hover:text-blue-600"
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      </nav>
-
-      {/* 메인 콘텐츠 */}
-      <main className="flex-grow max-w-7xl mx-auto w-full p-6">
-        <div className="bg-white rounded-xl shadow-card p-8">{renderTab()}</div>
-      </main>
-
-      {/* 하단 */}
-      <footer className="bg-gray-100 text-center text-sm text-gray-500 py-4 border-t">
-        © 2025 Anders Inc. All rights reserved.
-      </footer>
-    </div>
-  );
+    );
 }

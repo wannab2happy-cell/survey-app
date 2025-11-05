@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+// client/src/pages/Admin/Customization.jsx 파일 전체 코드
+import React, { useEffect, useMemo, useState } from "react"; 
 
 /** Anders Survey Platform — Customization v4
  * - 컬러: primary + sub1~3
@@ -21,7 +22,6 @@ const DEFAULT_THEME = {
     sub3: "#F59E0B",
   },
   font: { kr: "Noto Sans KR", en: "Inter" },
-
   // 1) 버튼 스타일
   buttonStyle: {
     colorMode: "primary", // 'primary' | 'custom'
@@ -31,7 +31,6 @@ const DEFAULT_THEME = {
     textColor: "#FFFFFF",
     fontWeight: "600", // '400' | '500' | '600' | '700'
   },
-
   // 2) 본문 페이지 레이아웃
   layout: {
     head: {
@@ -43,7 +42,6 @@ const DEFAULT_THEME = {
     footer: { imageUrl: "", logoUrl: "" },
     bodyBg: "#FFFFFF",
   },
-
   // 3) 완료 페이지
   completePage: {
     thankTitle: "참여해주셔서 감사합니다!",
@@ -53,7 +51,22 @@ const DEFAULT_THEME = {
   },
 };
 
-/* ---------- 공통 유틸 ---------- */
+/* ---------- 전역 스타일 관리 유틸리티 ---------- */
+const refreshGlobalTheme = (theme) => {
+  const root = document.documentElement.style;
+  const primary = theme.colorSet.primary;
+  
+  // Primary 색상 업데이트
+  root.setProperty('--color-primary', primary);
+  
+  // Customization에서 설정하는 다른 서브 색상도 업데이트
+  root.setProperty('--color-sub1', theme.colorSet.sub1);
+  root.setProperty('--color-sub2', theme.colorSet.sub2);
+  root.setProperty('--color-sub3', theme.colorSet.sub3);
+};
+/* ---------------------------------------------------- */
+
+// ImageUpload 컴포넌트
 const ImageUpload = ({ label, path, value, width, height, guide, onUpload, onClear }) => (
   <div>
     <label className="text-sm font-semibold text-gray-700">{label}</label>
@@ -95,17 +108,23 @@ const ImageUpload = ({ label, path, value, width, height, guide, onUpload, onCle
 
 export default function Customization() {
   const [theme, setTheme] = useState(DEFAULT_THEME);
-  const [tab, setTab] = useState("brand"); // brand | colors | page | complete | button
+  const [tab, setTab] = useState("brand"); 
   const [saving, setSaving] = useState(false);
 
   /* 로드 */
   useEffect(() => {
     const raw = localStorage.getItem(LS_KEY);
+    let loadedTheme = DEFAULT_THEME;
     if (raw) {
       try {
-        setTheme({ ...DEFAULT_THEME, ...JSON.parse(raw) });
-      } catch {}
+        loadedTheme = { ...DEFAULT_THEME, ...JSON.parse(raw) };
+        setTheme(loadedTheme);
+      } catch (e) {
+         console.error("테마 로딩 오류:", e);
+      }
     }
+    // 로드 직후 전역 CSS 변수를 설정하여 Admin 페이지 헤더/탭 색상을 즉시 업데이트합니다.
+    refreshGlobalTheme(loadedTheme); 
   }, []);
 
   /* 갱신 */
@@ -116,6 +135,12 @@ export default function Customization() {
       let cur = next;
       for (let i = 0; i < ks.length - 1; i++) cur = cur[ks[i]];
       cur[ks.at(-1)] = value;
+      
+      // Primary 색상이 변경될 때마다 미리보기뿐만 아니라 전역 스타일을 즉시 업데이트 (Live Preview)
+      if (path.startsWith('colorSet.primary')) {
+          refreshGlobalTheme(next);
+      }
+      
       return next;
     });
   };
@@ -137,8 +162,13 @@ export default function Customization() {
   const save = () => {
     setSaving(true);
     try {
+      // 1. localStorage 저장
       localStorage.setItem(LS_KEY, JSON.stringify(theme));
-      alert("저장 완료");
+      
+      // 2. 저장 후 최종적으로 전역 스타일 업데이트
+      refreshGlobalTheme(theme); 
+      
+      alert("✅ 저장 완료: 브랜드 설정이 적용되었습니다.");
     } finally {
       setSaving(false);
     }
@@ -225,18 +255,13 @@ export default function Customization() {
         <div className="flex gap-2">
           <button
             className="px-4 py-2 border rounded-lg"
-            onClick={() => setTheme(DEFAULT_THEME)}
+            onClick={() => { setTheme(DEFAULT_THEME); refreshGlobalTheme(DEFAULT_THEME); }} 
           >
             기본값
           </button>
           <button
             className="px-5 py-2 text-white rounded-lg font-semibold"
-            style={{
-              backgroundColor:
-                theme.buttonStyle.colorMode === "custom"
-                  ? theme.buttonStyle.customColor
-                  : theme.colorSet.primary,
-            }}
+            style={{ backgroundColor: previewBtnStyle.color }}
             onClick={save}
             disabled={saving}
           >
@@ -259,8 +284,9 @@ export default function Customization() {
               key={t.id}
               onClick={() => setTab(t.id)}
               className={`px-4 py-3 text-sm font-medium ${
-                tab === t.id ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"
+                tab === t.id ? "border-b-2" : "text-gray-600"
               }`}
+              style={tab === t.id ? { borderColor: previewBtnStyle.color, color: previewBtnStyle.color } : {}}
             >
               {t.label}
             </button>
@@ -270,6 +296,7 @@ export default function Customization() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
           {/* 좌측 폼 */}
           <div className="lg:col-span-2 space-y-6">
+            
             {/* 1) 브랜드 정보 */}
             {tab === "brand" && (
               <section className="border rounded-xl p-5 bg-white space-y-4">
@@ -352,7 +379,6 @@ export default function Customization() {
             {tab === "button" && (
               <section className="border rounded-xl p-5 bg-white space-y-5">
                 <h3 className="font-semibold text-lg mb-3">버튼 스타일</h3>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className="text-sm font-semibold text-gray-700">색상 소스</label>
@@ -377,7 +403,6 @@ export default function Customization() {
                       </label>
                     </div>
                   </div>
-
                   <div>
                     <label className="text-sm font-semibold text-gray-700">텍스트 색상</label>
                     <input
@@ -387,7 +412,6 @@ export default function Customization() {
                       onChange={(e) => setByPath("buttonStyle.textColor", e.target.value)}
                     />
                   </div>
-
                   {theme.buttonStyle.colorMode === "custom" && (
                     <div>
                       <label className="text-sm font-semibold text-gray-700">버튼 배경색</label>
@@ -399,7 +423,6 @@ export default function Customization() {
                       />
                     </div>
                   )}
-
                   <div>
                     <label className="text-sm font-semibold text-gray-700">모양</label>
                     <div className="mt-2 flex gap-3 text-sm">
@@ -420,7 +443,6 @@ export default function Customization() {
                       ))}
                     </div>
                   </div>
-
                   <div>
                     <label className="text-sm font-semibold text-gray-700">굵기</label>
                     <select
@@ -435,7 +457,6 @@ export default function Customization() {
                       ))}
                     </select>
                   </div>
-
                   <div className="flex items-center gap-2">
                     <input
                       id="btnShadow"
@@ -448,7 +469,6 @@ export default function Customization() {
                     </label>
                   </div>
                 </div>
-
                 <div className="mt-4">
                   <div className="text-xs text-gray-500 mb-2">미리보기</div>
                   <button
@@ -469,7 +489,6 @@ export default function Customization() {
             {tab === "page" && (
               <section className="border rounded-xl p-5 bg-white space-y-5">
                 <h3 className="font-semibold text-lg mb-3">페이지 스타일(본문)</h3>
-
                 <ImageUpload
                   label="Head 이미지"
                   path="layout.head.imageUrl"
@@ -479,7 +498,6 @@ export default function Customization() {
                   onUpload={onUpload}
                   onClear={onClear}
                 />
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className="text-sm font-semibold text-gray-700">Head 배경색</label>
@@ -500,7 +518,6 @@ export default function Customization() {
                     />
                   </div>
                 </div>
-
                 <ImageUpload
                   label="Footer 배경 이미지"
                   path="layout.footer.imageUrl"
@@ -526,7 +543,6 @@ export default function Customization() {
             {tab === "complete" && (
               <section className="border rounded-xl p-5 bg-white space-y-5">
                 <h3 className="font-semibold text-lg mb-3">완료 화면</h3>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className="text-sm font-semibold text-gray-700">감사 타이틀</label>
@@ -547,7 +563,6 @@ export default function Customization() {
                     onClear={onClear}
                   />
                 </div>
-
                 <label className="text-sm font-semibold text-gray-700">안내 문구</label>
                 <textarea
                   rows={3}

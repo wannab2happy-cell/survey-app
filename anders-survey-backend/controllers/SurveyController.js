@@ -1,114 +1,107 @@
-import db from '../db/index.js';
+// controllers/surveyController.js
+import Survey from "../models/Survey.js";
+import Response from "../models/Response.js";
 
-const { Survey, Question, Response, Answer } = db;
+// ============================================================
+// 1️⃣ 설문 생성 (POST /api/surveys)
+// ============================================================
+export async function createSurvey(req, res) {
+  try {
+    const { title, description, questions } = req.body;
 
-// 설문 목록 조회
-export const getSurveyList = async (req, res) => {
-    try {
-        const surveys = await Survey.findAll({ attributes: ['id', 'title'] });
-        return res.status(200).json(surveys);
-    } catch (error) {
-        console.error("설문 목록 조회 중 오류 발생:", error);
-        return res.status(500).json({ message: "서버 오류 발생", error: error.message });
+    // 필수 값 확인
+    if (!title || !questions || questions.length === 0) {
+      return res.status(400).json({ message: "제목과 문항은 필수 항목입니다." });
     }
-};
 
-// 설문 상세 정보 (질문 포함) 조회
-export const getSurveyDetails = async (req, res) => {
-    try {
-        const { surveyId } = req.params;
+    // 새 설문 저장
+    const newSurvey = new Survey({
+      title,
+      description,
+      questions,
+    });
 
-        const survey = await Survey.findByPk(surveyId, {
-            include: [
-                {
-                    model: Question,
-                    attributes: ['id', 'text', 'type', 'options'],
-                    as: 'Questions'
-                }
-            ],
-            attributes: ['id', 'title', 'description']
-        });
+    const savedSurvey = await newSurvey.save();
+    res.status(201).json(savedSurvey);
+  } catch (error) {
+    console.error("❌ 설문 생성 오류:", error);
+    res.status(500).json({ message: "서버 오류로 설문을 생성할 수 없습니다." });
+  }
+}
 
-        if (!survey) {
-            return res.status(404).json({ message: "설문을 찾을 수 없습니다." });
-        }
+// ============================================================
+// 2️⃣ 설문 목록 조회 (GET /api/surveys)
+// ============================================================
+export async function getSurveyList(req, res) {
+  try {
+    const surveys = await Survey.find({}, "title description createdAt");
+    res.status(200).json(surveys);
+  } catch (error) {
+    console.error("❌ 설문 목록 조회 오류:", error);
+    res.status(500).json({ message: "서버 오류 발생", error: error.message });
+  }
+}
 
-        return res.status(200).json(survey);
-    } catch (error) {
-        console.error("설문 상세 정보 조회 중 오류 발생:", error);
-        return res.status(500).json({ message: "서버 오류 발생", error: error.message });
+// ============================================================
+// 3️⃣ 설문 상세 조회 (GET /api/surveys/:surveyId)
+// ============================================================
+export async function getSurveyDetails(req, res) {
+  try {
+    const { surveyId } = req.params;
+    const survey = await Survey.findById(surveyId);
+    if (!survey) {
+      return res.status(404).json({ message: "설문을 찾을 수 없습니다." });
     }
-};
+    res.status(200).json(survey);
+  } catch (error) {
+    console.error("❌ 설문 상세 조회 오류:", error);
+    res.status(500).json({ message: "서버 오류 발생", error: error.message });
+  }
+}
 
-// 설문 응답 제출
-export const submitSurveyResponse = async (req, res) => {
-    const { userId, answers } = req.body;
+// ============================================================
+// 4️⃣ 설문 응답 제출 (POST /api/surveys/:surveyId/response)
+// ============================================================
+export async function submitSurveyResponse(req, res) {
+  try {
+    const { answers } = req.body;
     const { surveyId } = req.params;
 
-    if (!userId || !answers || answers.length === 0) {
-        return res.status(400).json({ message: "사용자 ID와 답변이 필요합니다." });
+    if (!answers || answers.length === 0) {
+      return res.status(400).json({ message: "답변 내용이 필요합니다." });
     }
 
-    try {
-        const response = await Response.create({
-            surveyId: surveyId,
-            userId: userId
-        });
+    const newResponse = new Response({ surveyId, answers });
+    await newResponse.save();
 
-        const answerRecords = answers.map(answer => ({
-            responseId: response.id,
-            questionId: answer.questionId,
-            content: JSON.stringify(answer.content)
-        }));
+    res.status(201).json({
+      message: "응답이 성공적으로 저장되었습니다.",
+      responseId: newResponse._id,
+    });
+  } catch (error) {
+    console.error("❌ 설문 응답 저장 오류:", error);
+    res.status(500).json({ message: "서버 오류 발생", error: error.message });
+  }
+}
 
-        await Answer.bulkCreate(answerRecords);
+// ============================================================
+// 5️⃣ 설문 결과 조회 (GET /api/surveys/:surveyId/results)
+// ============================================================
+export async function getSurveyResults(req, res) {
+  try {
+    const { surveyId } = req.params;
+    const responses = await Response.find({ surveyId });
 
-        return res.status(201).json({
-            message: "응답이 성공적으로 제출되었습니다.",
-            responseId: response.id
-        });
-    } catch (error) {
-        console.error("설문 응답 제출 중 오류 발생:", error);
-        return res.status(500).json({ message: "서버 오류 발생", error: error.message });
-    }
-};
-
-// 설문 결과 조회 (관리자 대시보드용)
-export const getSurveyResults = async (req, res) => {
-    try {
-        const totalResponses = await Response.count();
-
-        const surveyCounts = await Response.findAll({
-            attributes: [
-                'surveyId',
-                [db.sequelize.fn('COUNT', db.sequelize.col('id')), 'responseCount']
-            ],
-            group: ['surveyId'],
-            order: [[db.sequelize.col('responseCount'), 'DESC']],
-            limit: 5,
-            include: [{ model: Survey, attributes: ['title'] }]
-        });
-
-        const recentResponses = await Response.findAll({
-            limit: 5,
-            order: [['createdAt', 'DESC']],
-            include: [{ model: Survey, attributes: ['title'] }]
-        });
-
-        return res.status(200).json({
-            totalResponses,
-            surveyCounts: surveyCounts.map(item => ({
-                surveyTitle: item.Survey.title,
-                responseCount: item.get('responseCount')
-            })),
-            recentResponses: recentResponses.map(item => ({
-                id: item.id,
-                surveyTitle: item.Survey.title,
-                submittedAt: item.createdAt
-            }))
-        });
-    } catch (error) {
-        console.error("설문 결과 조회 중 오류 발생:", error);
-        return res.status(500).json({ message: "서버 오류 발생", error: error.message });
-    }
-};
+    res.status(200).json({
+      totalResponses: responses.length,
+      results: responses.map((r) => ({
+        id: r._id,
+        answers: r.answers,
+        submittedAt: r.submittedAt,
+      })),
+    });
+  } catch (error) {
+    console.error("❌ 설문 결과 조회 오류:", error);
+    res.status(500).json({ message: "서버 오류 발생", error: error.message });
+  }
+}

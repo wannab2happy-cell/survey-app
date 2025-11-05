@@ -1,44 +1,69 @@
-import { useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-
-// 페이지 import
+import React, { useState } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+} from "react-router-dom";
 import Login from "./pages/Login";
-import Admin from "./pages/Admin";
-import SurveyPage from "./pages/SurveyPage"; // ✅ 새로 추가
+import SurveyList from "./pages/SurveyList";
+import SurveyBuilder from "./pages/SurveyBuilder";
 
-/**
- * Anders Survey Platform App.jsx (라우팅 통합 버전)
- * - 로그인 → 관리자(Admin)
- * - /survey 경로 → 참여자용 설문 페이지
- */
+// ✅ 보호 라우트
+const AdminRoute = ({ isAuthenticated, children }) => {
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return children;
+};
 
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+// ✅ 로그아웃 포함 메인 App
+function AppContent() {
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    !!localStorage.getItem("token")
+  );
 
-  const handleLoginSuccess = () => {
-    setIsLoggedIn(true);
+  const handleLogin = (token) => {
+    localStorage.setItem("token", token);
+    setIsAuthenticated(true);
+    navigate("/admin/list", { replace: true });
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsAuthenticated(false);
+    navigate("/login", { replace: true }); // ✅ 즉시 로그인 화면으로 이동
   };
 
   return (
-    <Router>
+    <div className="min-h-screen bg-gray-100">
       <Routes>
-        {/* 참여자 설문 페이지 (로그인 없이 접근 가능) */}
-        <Route path="/survey" element={<SurveyPage />} />
-
-        {/* 기본 루트: 로그인 또는 관리자 페이지 */}
+        <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route
-          path="/"
+          path="/admin/*"
           element={
-            isLoggedIn ? (
-              <Admin />
-            ) : (
-              <Login onLoginSuccess={handleLoginSuccess} />
-            )
+            <AdminRoute isAuthenticated={isAuthenticated}>
+              <Routes>
+                <Route
+                  path="list"
+                  element={<SurveyList onLogout={handleLogout} />}
+                />
+                <Route path="builder/:id" element={<SurveyBuilder />} />
+                <Route path="/" element={<Navigate to="list" replace />} />
+              </Routes>
+            </AdminRoute>
           }
         />
+        <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
-    </Router>
+    </div>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
+  );
+}

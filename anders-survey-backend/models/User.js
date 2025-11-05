@@ -1,33 +1,11 @@
-// src/models/User.js
+// models/User.js
+import mongoose from 'mongoose';
 
-import { DataTypes } from 'sequelize'; // DataTypes import 추가
+const UserSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  email: { type: String },
+  role: { type: String, default: 'admin' },
+});
 
-export default (sequelize) => {
-    const User = sequelize.define('User', {
-        username: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            unique: true,
-        },
-        email: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            unique: true,
-            validate: {
-                isEmail: true,
-            },
-        },
-        password: {
-            type: DataTypes.STRING,
-            allowNull: false,
-        },
-        role: { // 예: 'admin', 'user'
-            type: DataTypes.STRING,
-            defaultValue: 'user',
-        }
-    }, {
-        // 기타 모델 옵션
-    });
-
-    return User;
-};
+export default mongoose.model('User', UserSchema);
