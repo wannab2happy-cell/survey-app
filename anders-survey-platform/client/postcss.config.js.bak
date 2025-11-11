@@ -1,0 +1,7 @@
+// Tailwind CSS는 Vite 플러그인(@tailwindcss/vite)으로 처리됩니다
+// PostCSS 설정은 autoprefixer만 필요합니다
+export default {
+  plugins: {
+    autoprefixer: {},
+  },
+};

@@ -1,5 +1,14 @@
-import { Survey, Question, Option } from '../models/index.js';
-import { Op } from 'sequelize';
+// controllers/SettingController.js
+// ⚠️ 참고: 이 파일은 현재 사용되지 않습니다.
+// SurveyController.js가 MongoDB를 사용하여 설문 생성을 처리하고 있습니다.
+// 이 파일은 Sequelize를 사용하므로 anders-survey-backend와 호환되지 않습니다.
+// 
+// 이 파일의 모든 함수는 주석 처리되었습니다.
+// 만약 필요하다면 SurveyController.js를 참고하세요.
+
+/*
+// import { Survey, Question, Option } from '../models/index.js';
+// import { Op } from 'sequelize';
 
 // Survey 생성 (user_id not null 오류 해결)
 export const createSurvey = async (req, res) => {
@@ -77,3 +86,4 @@ export const getSurveyById = async (req, res) => {
 export const getSurveyResults = async (req, res) => {
     return res.status(501).json({ message: '설문 결과 조회 기능이 아직 구현되지 않았습니다.' });
 };
+*/

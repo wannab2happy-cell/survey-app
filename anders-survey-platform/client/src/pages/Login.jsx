@@ -1,34 +1,30 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axiosInstance from "../api/axiosInstance";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../api/axiosInstance';
 
 export default function Login({ onLogin }) {
-  const [id, setId] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [id, setId] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     try {
-      const res = await axiosInstance.post("/login", {
+      const res = await axiosInstance.post('/login', {
         username: id,
         password,
       });
 
       const token = res.data.token;
-      localStorage.setItem("token", token);
+      localStorage.setItem('token', token);
 
-      // ✅ App.jsx 의 상태 변경과 리다이렉트를 하나의 동작으로 통일
-      if (onLogin) {
-        onLogin(token); // App.jsx 에서 token 기반 setState + navigate 처리
-      } else {
-        navigate("/admin/list", { replace: true });
-      }
+      // ✅ 로그인 성공 후 관리자 페이지로 이동
+      navigate('/admin', { replace: true });
     } catch (err) {
-      setError("아이디 또는 비밀번호가 잘못되었습니다.");
+      setError('아이디 또는 비밀번호가 잘못되었습니다.');
     }
   };
 
@@ -46,22 +42,26 @@ export default function Login({ onLogin }) {
               placeholder="관리자 ID"
               value={id}
               onChange={(e) => setId(e.target.value)}
-              className="w-full border px-3 py-2 rounded-t-md focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full border border-border px-3 py-2 rounded-t-md focus:ring-2 focus:ring-primary focus:border-primary transition-all"
             />
             <input
               type="password"
               placeholder="비밀번호"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border px-3 py-2 rounded-b-md focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full border border-border px-3 py-2 rounded-b-md focus:ring-2 focus:ring-primary focus:border-primary transition-all"
             />
           </div>
 
-          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+          {error && <p className="text-error text-sm mt-2">{error}</p>}
 
           <button
             type="submit"
-            className="w-full py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+            className="w-full py-2 px-4 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors font-medium"
+            style={{
+              backgroundColor: 'var(--primary, #26C6DA)',
+              color: '#FFFFFF'
+            }}
           >
             로그인
           </button>

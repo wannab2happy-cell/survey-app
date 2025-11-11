@@ -1,7 +1,6 @@
-// src/controllers/brandingController.js (ESM)
+// controllers/brandingController.js (Mongoose 버전)
 
-import db from '../models/index.js'; // DB 모델 가져오기
-const { BrandingSetting } = db;
+import BrandingSetting from '../models/brandingSetting.js';
 
 /**
  * 💡 [PUT /api/admin/branding] 관리자가 브랜딩 설정을 저장/업데이트
@@ -15,13 +14,12 @@ export const updateBrandingSetting = async (req, res) => {
 
         const { primaryColor, keyVisualUrl, headerImageUrl, footerText } = req.body;
 
-        // BrandingSetting 테이블은 설정이 하나만 존재해야 합니다. (WHERE id = 1)
-        let setting = await BrandingSetting.findByPk(1);
+        // BrandingSetting은 단일 문서만 유지합니다.
+        let setting = await BrandingSetting.findOne();
 
         if (!setting) {
             // 설정이 없으면 새로 생성
             setting = await BrandingSetting.create({
-                id: 1, // id를 1로 고정
                 primaryColor, 
                 keyVisualUrl, 
                 headerImageUrl, 
@@ -29,12 +27,11 @@ export const updateBrandingSetting = async (req, res) => {
             });
         } else {
             // 설정이 있으면 업데이트
-            setting = await setting.update({
-                primaryColor,
-                keyVisualUrl,
-                headerImageUrl,
-                footerText
-            });
+            setting.primaryColor = primaryColor;
+            setting.keyVisualUrl = keyVisualUrl;
+            setting.headerImageUrl = headerImageUrl;
+            setting.footerText = footerText;
+            await setting.save();
         }
 
         return res.status(200).json({
@@ -55,11 +52,8 @@ export const updateBrandingSetting = async (req, res) => {
  */
 export const getBrandingSetting = async (req, res) => {
     try {
-        // ID 1번 설정을 조회
-        const setting = await BrandingSetting.findByPk(1, {
-            // 응답자에게는 불필요한 DB 필드 제외
-            attributes: ['primaryColor', 'keyVisualUrl', 'headerImageUrl', 'footerText']
-        });
+        // 단일 설정 문서 조회
+        const setting = await BrandingSetting.findOne();
 
         // 설정이 없으면 기본값으로 응답
         if (!setting) {
@@ -76,7 +70,12 @@ export const getBrandingSetting = async (req, res) => {
 
         return res.status(200).json({
             status: 'success',
-            data: setting
+            data: {
+                primaryColor: setting.primaryColor,
+                keyVisualUrl: setting.keyVisualUrl,
+                headerImageUrl: setting.headerImageUrl,
+                footerText: setting.footerText
+            }
         });
     } catch (error) {
         console.error("브랜딩 설정 조회 오류:", error);

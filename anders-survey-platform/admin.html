@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anders Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* -------------------------------------- */
+        /* 1. 커스터마이징 변수 설정 */
+        /* -------------------------------------- */
+        :root {
+            --primary-color: #0099ff; /* 관리자 시스템 주 색상 */
+            --secondary-color: #f7f7f7; /* 배경색 */
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* 2. 관리자 레이아웃 스타일 */
+        .admin-content-area {
+            min-height: calc(100vh - 64px); /* 헤더 높이만큼 제외 */
+            background-color: var(--secondary-color);
+        }
+        /* 현재 활성화된 탭 스타일 */
+        .admin-nav-item.active {
+            border-bottom: 3px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+        /* 질문 빌더 스타일 */
+        .question-block.selected {
+            border: 2px solid var(--primary-color);
+            background-color: #e0f2ff; /* blue-50 */
+        }
+        /* 인증되지 않았을 때 본문 숨기기 */
+        body.no-auth .admin-nav-item { display: none !important; }
+    </style>
+</head>
+<body class="bg-white">
+
+    <header class="bg-white shadow-md sticky top-0 z-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-gray-800" style="color: var(--primary-color);">Anders Admin</span>
+                </div>
+                <nav id="admin-nav" class="flex space-x-6 h-full" style="display: none;">
+                    <a href="#" onclick="renderAdminView('export')" class="admin-nav-item flex items-center px-1 pt-1 text-sm font-medium text-gray-500 active">
+                        응답 데이터 추출 (DB)
+                    </a>
+                    <a href="#" onclick="renderAdminView('builder')" class="admin-nav-item flex items-center px-1 pt-1 text-sm font-medium text-gray-500">
+                        설문 생성 및 관리
+                    </a>
+                    <a href="#" onclick="renderAdminView('custom')" class="admin-nav-item flex items-center px-1 pt-1 text-sm font-medium text-gray-500">
+                        🎨 브랜드/커스터마이징
+                    </a>
+                </nav>
+                <div class="flex items-center">
+                    <button id="logout-button" onclick="handleAdminLogout()" class="text-gray-600 hover:text-gray-800 text-sm" style="display: none;">로그아웃</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="admin-content-area max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-8 h-40 bg-gray-200 rounded-xl shadow-lg flex items-center justify-center text-gray-600 font-semibold text-xl">
+             [Admin Main Key Visual Image Area]
+        </div>
+        <div id="admin-content-container">
+            <div class="text-center py-10 text-gray-500">인증 상태를 확인 중입니다...</div>
+        </div>
+    </main>
+
+    <script>
+        const adminContentContainer = document.getElementById('admin-content-container');
+        const adminNav = document.getElementById('admin-nav');
+        const logoutButton = document.getElementById('logout-button');
+        
+        // 인증 관련 상수
+        const API_LOGIN_URL = 'http://localhost:3000/api/users/login'; // 고객의 기존 API 엔드포인트
+        const ADMIN_TOKEN_KEY = 'adminToken'; 
+
+        // 상태 관리
+        let currentAdminView = 'export';
+        let selectedQuestionElement = null;
+
+        // ===============================================
+        // A. 인증 및 로그인 관련 함수
+        // ===============================================
+
+        /**
+         * 1. 관리자 로그인 처리
+         */
+        async function handleAdminLogin(username, password) {
+            try {
+                const response = await fetch(API_LOGIN_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.token) {
+                    // 1. 토큰 저장 (실제로는 백엔드에서 'role: ADMIN'을 확인해야 함)
+                    localStorage.setItem(ADMIN_TOKEN_KEY, data.token);
+                    
+                    // 2. 페이지 리로드하여 인증 성공 뷰 렌더링
+                    window.location.reload(); 
+                    return { success: true };
+                } else {
+                    return { success: false, message: data.message || "로그인 정보가 올바르지 않거나 권한이 없습니다." };
+                }
+            } catch (error) {
+                console.error("Login API Error:", error);
+                return { success: false, message: "서버 연결에 실패했습니다. (API 확인 필요)" };
+            }
+        }
+
+        /**
+         * 2. 관리자 로그아웃 처리
+         */
+        function handleAdminLogout() {
+            if (confirm("정말로 로그아웃 하시겠습니까?")) {
+                localStorage.removeItem(ADMIN_TOKEN_KEY);
+                // 로그아웃 후 로그인 뷰 렌더링
+                window.location.reload();
+            }
+        }
+
+        /**
+         * 3. 로그인 뷰 렌더링
+         */
+        function renderLoginView() {
+            adminContentContainer.innerHTML = `
+                <div class="flex items-center justify-center min-h-[70vh]">
+                    <div class="bg-white p-10 rounded-xl shadow-2xl w-full max-w-sm">
+                        <h2 class="text-3xl font-bold text-gray-800 text-center mb-6">🔑 관리자 로그인</h2>
+                        <div id="login-error-message" class="text-red-600 text-sm mb-4 hidden"></div>
+                        <form id="admin-login-form" class="space-y-4">
+                            <div>
+                                <label class="block text-gray-700 font-medium mb-1">아이디</label>
+                                <input type="text" id="login-username" value="admin" class="w-full p-3 border rounded-lg focus:ring-blue-500" required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-medium mb-1">비밀번호</label>
+                                <input type="password" id="login-password" value="1234" class="w-full p-3 border rounded-lg focus:ring-blue-500" required>
+                            </div>
+                            <button type="submit" 
+                                    class="w-full py-3 text-white font-bold rounded-lg transition duration-150"
+                                    style="background-color: var(--primary-color);">
+                                로그인
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            `;
+
+            // 이벤트 리스너 부착
+            document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('login-username').value;
+                const password = document.getElementById('login-password').value;
+                const errorDiv = document.getElementById('login-error-message');
+                
+                const result = await handleAdminLogin(username, password);
+                
+                if (!result.success) {
+                    errorDiv.textContent = result.message;
+                    errorDiv.classList.remove('hidden');
+                }
+            });
+        }
+
+        /**
+         * 4. Admin 페이지 초기 진입 시 인증 상태 확인 및 뷰 분기
+         */
+        function checkAdminAuth() {
+            const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+            
+            if (token) {
+                // 토큰이 있을 경우, 관리자 뷰 로드 (실제로는 여기서 토큰 유효성 검증 API 호출 필요)
+                document.body.classList.remove('no-auth');
+                adminNav.style.display = 'flex';
+                logoutButton.style.display = 'block';
+                renderAdminView('export');
+            } else {
+                // 토큰이 없으면 로그인 뷰 렌더링
+                document.body.classList.add('no-auth');
+                renderLoginView();
+            }
+        }
+
+
+        // ===============================================
+        // B. 관리자 뷰 렌더링 및 기능 함수 (기존 로직 유지)
+        // ===============================================
+
+        function renderAdminView(view) {
+            currentAdminView = view;
+            
+            // 네비게이션 하이라이트 업데이트
+            document.querySelectorAll('.admin-nav-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelector(`[onclick="renderAdminView('${view}')"]`).classList.add('active');
+
+            if (view === 'export') {
+                renderDataExportView();
+            } else if (view === 'builder') {
+                renderSurveyBuilderView();
+            } else if (view === 'custom') {
+                renderCustomizationView();
+            }
+        }
+        
+        // 페이지 로드 시 인증 확인 함수 호출
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAdminAuth();
+        });
+        
+        // --- 2. 응답 데이터 추출 (DB 확보) 뷰 ---
+        function renderDataExportView() {
+            // ... (이전의 renderDataExportView HTML 내용 그대로 삽입)
+            adminContentContainer.innerHTML = `
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">📊 응답 데이터 추출 및 관리</h1>
+                
+                <div class="bg-white p-6 shadow-xl rounded-xl space-y-6">
+                    
+                    <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 border-b pb-4">
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">설문 선택</label>
+                            <select class="w-full p-2 border border-gray-300 rounded-lg">
+                                <option>설문 ID 1: 2024년 신제품 이벤트 (452 응답)</option>
+                                <option>설문 ID 2: 만족도 조사 (120 응답)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">날짜 범위</label>
+                            <div class="flex space-x-2">
+                                <input type="date" value="2025-01-01" class="p-2 border border-gray-300 rounded-lg w-full">
+                                <span class="flex items-center text-gray-500">~</span>
+                                <input type="date" value="2025-10-30" class="p-2 border border-gray-300 rounded-lg w-full">
+                            </div>
+                        </div>
+
+                        <div class="flex-grow">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">이름/ID 검색</label>
+                            <input type="text" placeholder="특정 참여자 검색" class="w-full p-2 border border-gray-300 rounded-lg">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-4">
+                        <p class="text-lg font-semibold text-gray-800">
+                            필터링된 결과: <span class="text-blue-600">421건</span>
+                        </p>
+                        <button onclick="alert('필터링된 421건의 데이터가 CSV 파일로 다운로드됩니다.')" 
+                            class="px-6 py-3 text-white font-bold rounded-lg transition duration-150"
+                            style="background-color: var(--primary-color);">
+                            💾 필터링된 데이터 엑셀 다운로드 (CSV)
+                        </button>
+                    </div>
+
+                </div>
+
+                <div class="mt-8 bg-white p-6 shadow-xl rounded-xl overflow-x-auto">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">응답 목록 (최근순)</h2>
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No.</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">이름</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">연락처</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">응답 시각</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">핵심 답변 (Q1)</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">액션</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">1</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">김앤더스</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">010-1234-5678</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025-10-30 16:30</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-medium">매우 만족</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium"><a href="#" class="text-blue-600 hover:text-blue-900" onclick="alert('응답 ID 1의 상세 정보를 모달로 표시')">상세 보기</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // --- 3. 설문 생성 및 관리 뷰 (QR, 일정관리 포함) ---
+        function renderSurveyBuilderView() {
+            // ... (이전의 renderSurveyBuilderView HTML 내용 그대로 삽입)
+            adminContentContainer.innerHTML = `
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">✍️ 설문 생성 및 문항 관리</h1>
+                
+                <div class="flex space-x-6">
+                    
+                    <div class="w-1/4 sticky top-20 h-full bg-white p-4 shadow-xl rounded-xl">
+                        <h2 class="text-xl font-bold mb-4 border-b pb-2">문항 팔레트</h2>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-gray-50 rounded-lg border cursor-grab hover:bg-gray-100">📻 단일 선택 (Radio)</div>
+                            <div class="p-3 bg-gray-50 rounded-lg border cursor-grab hover:bg-gray-100">☑️ 복수 선택 (Checkbox)</div>
+                            <div class="p-3 bg-gray-50 rounded-lg border cursor-grab hover:bg-gray-100">✏️ 주관식 (Text)</div>
+                            <div class="p-3 bg-gray-50 rounded-lg border cursor-grab hover:bg-gray-100">⭐️ 별점 평가 (Rating)</div>
+                        </div>
+                    </div>
+
+                    <div class="w-1/2 space-y-4">
+                        
+                        <div class="bg-white p-6 shadow-xl rounded-xl border-t-8" style="border-color: var(--primary-color);">
+                            <input type="text" value="[설문 제목] BTL 현장 만족도 조사" class="text-3xl font-bold w-full border-b pb-2 mb-2 focus:outline-none">
+                            <textarea class="w-full text-gray-600 resize-none focus:outline-none" rows="2">설문 참여자에게 보이는 설명입니다.</textarea>
+                            
+                            <div class="flex items-center justify-between mt-4 pt-3 border-t">
+                                <span class="text-sm font-semibold text-gray-700 mr-2">설문 실행 상태:</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="deploy-toggle" value="" class="sr-only peer" checked onchange="updateStatusLabel(this.checked)">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    <span id="status-label" class="ml-3 text-sm font-medium text-green-600">실행 중 (Active)</span>
+                                </label>
+                            </div>
+                            
+                            <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">실행 일정 관리 (자동 배포/종료)</label>
+                                <div class="flex space-x-4 text-sm">
+                                    <div class="w-1/2">
+                                        <label class="block text-gray-500">시작 일시:</label>
+                                        <input type="datetime-local" value="2025-11-01T00:00" class="w-full p-2 border rounded-lg">
+                                    </div>
+                                    <div class="w-1/2">
+                                        <label class="block text-gray-500">종료 일시:</label>
+                                        <input type="datetime-local" value="2025-11-03T23:59" class="w-full p-2 border rounded-lg">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="survey-canvas" class="bg-white p-4 shadow-xl rounded-xl space-y-3 min-h-[300px] border border-dashed border-gray-300">
+                            <div class="question-block p-4 border rounded-lg shadow-sm hover:shadow-md cursor-pointer" onclick="selectQuestion(this)">
+                                <span class="font-semibold text-gray-800">Q1. 개인정보 수집 동의 (기본 포함)</span>
+                            </div>
+                            <div class="question-block p-4 border rounded-lg shadow-sm hover:shadow-md cursor-pointer" onclick="selectQuestion(this)">
+                                <span class="font-semibold text-gray-800">Q2. 현장 부스 방문 경험은 어떠셨나요? (단일 선택)</span>
+                                <div class="text-right text-xs text-blue-600">필수 응답 | [삭제]</div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-4 pt-4">
+                            <button class="px-6 py-3 bg-gray-300 text-gray-700 font-bold rounded-lg">임시 저장</button>
+                            <button onclick="handleDeploySurvey()"
+                                class="px-6 py-3 text-white font-bold rounded-lg" style="background-color: var(--primary-color);">
+                                ✅ 설문 저장 및 배포
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="question-settings" class="w-1/4 sticky top-20 h-full bg-white p-4 shadow-xl rounded-xl border border-gray-100">
+                        <h2 class="text-xl font-bold mb-4 text-gray-600">👈 문항을 선택해주세요</h2>
+                    </div>
+
+                </div>
+            `;
+        }
+
+        /**
+         * 설문 실행 상태 레이블 업데이트 함수 (토글 시)
+         */
+        function updateStatusLabel(isChecked) {
+            const label = document.getElementById('status-label');
+            if (label) {
+                if (isChecked) {
+                    label.textContent = '실행 중 (Active)';
+                    label.classList.remove('text-red-600');
+                    label.classList.add('text-green-600');
+                } else {
+                    label.textContent = '비활성화 (Inactive)';
+                    label.classList.remove('text-green-600');
+                    label.classList.add('text-red-600');
+                }
+            }
+        }
+
+        /**
+         * 문항 선택 시 스타일 적용 및 설정 패널 업데이트 (데모)
+         */
+        function selectQuestion(element) {
+            if (selectedQuestionElement) {
+                selectedQuestionElement.classList.remove('selected');
+            }
+            element.classList.add('selected');
+            selectedQuestionElement = element;
+
+            document.getElementById('question-settings').innerHTML = `
+                <h2 class="text-xl font-bold mb-4 border-b pb-2">문항 설정</h2>
+                <div class="space-y-3">
+                    <label class="block">질문 내용: <textarea class="w-full border p-2 rounded" rows="3">${element.querySelector('span').textContent}</textarea></label>
+                    <label class="block">
+                        필수 응답: <input type="checkbox" ${element.textContent.includes('필수') ? 'checked' : ''} class="form-checkbox text-blue-600">
+                    </label>
+                    <button class="w-full py-2 bg-red-600 text-white rounded mt-4">문항 삭제</button>
+                </div>
+            `;
+        }
+
+        /**
+         * 설문 배포 처리 및 QR 코드 생성/표시 핸들러
+         */
+        function handleDeploySurvey() {
+            const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+            if (!token) {
+                alert("인증 정보가 만료되었습니다. 다시 로그인해주세요.");
+                handleAdminLogout();
+                return;
+            }
+            // 이 곳에서 서버로 토큰과 함께 설문 저장 API 호출 로직이 필요함.
+            // ... (API 호출 및 토큰 전송 로직 추가)
+
+            const surveyId = 12345;
+            const surveyUrl = `https://your.domain.com/survey.html?id=${surveyId}`;
+            const qrCodeImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(surveyUrl)}`;
+            const isRunning = document.getElementById('deploy-toggle').checked;
+            
+            // 배포 결과 모달 표시 (데모)
+            const modalHtml = `
+                <div class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex justify-center items-center p-4" id="deploy-modal">
+                    <div class="bg-white rounded-xl shadow-2xl p-8 max-w-lg w-full text-center">
+                        <h2 class="text-3xl font-bold mb-4 ${isRunning ? 'text-green-600' : 'text-orange-600'}">
+                            ${isRunning ? '🎉 설문 배포 완료!' : '🕒 설문 비활성화됨'}
+                        </h2>
+                        <p class="text-gray-700 mb-6">설문이 저장되었으며, 아래 QR 코드를 통해 ${isRunning ? '즉시 참여 가능합니다.' : '현재는 접근이 제한됩니다.'}</p>
+                        
+                        <img src="${qrCodeImageUrl}" alt="설문 QR 코드" class="mx-auto my-6 border-4 border-gray-100 rounded-lg">
+                        
+                        <div class="mb-6">
+                            <p class="text-sm font-semibold text-gray-600 mb-2">설문 고유 URL:</p>
+                            <div class="flex border rounded-lg overflow-hidden">
+                                <input id="survey-url-input" type="text" value="${surveyUrl}" readonly class="flex-grow p-3 text-sm bg-gray-50">
+                                <button onclick="navigator.clipboard.writeText(document.getElementById('survey-url-input').value); alert('URL이 복사되었습니다!');" 
+                                        class="bg-blue-600 text-white px-4 hover:bg-blue-700 transition" style="background-color: var(--primary-color);">복사</button>
+                            </div>
+                        </div>
+
+                        <p class="text-sm ${isRunning ? 'text-blue-600' : 'text-orange-600'} font-semibold mb-6">
+                            ${isRunning ? '현재 실행 중입니다.' : '현재 비활성화 상태입니다.'} (일정에 따라 자동 변경됩니다.)
+                        </p>
+
+                        <button onclick="document.getElementById('deploy-modal').remove()" 
+                                class="px-8 py-3 bg-gray-800 text-white font-bold rounded-lg hover:bg-gray-700 transition">닫기</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        // --- 4. 브랜드/커스터마이징 관리 뷰 ---
+        function renderCustomizationView() {
+            // ... (이전의 renderCustomizationView HTML 내용 그대로 삽입)
+            adminContentContainer.innerHTML = `
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">🎨 브랜드 및 설문 요소 커스터마이징</h1>
+                
+                <div class="bg-white p-8 shadow-xl rounded-xl space-y-8">
+                    
+                    <div class="border-b pb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">관리자 페이지 브랜딩</h2>
+                        <p class="text-sm text-gray-500 mb-4">관리자 페이지 상단에 노출되는 로고 및 메인 키 비주얼을 설정합니다.</p>
+                        <div class="flex space-x-6">
+                            <div class="w-1/2">
+                                <label class="block text-sm font-medium text-gray-700">관리자 로고 (Header Logo)</label>
+                                <input type="text" value="https://placehold.co/100x30/0099ff/FFFFFF/text=Anders+Logo" placeholder="로고 이미지 URL" class="mt-1 block w-full p-2 border rounded-lg">
+                            </div>
+                            <div class="w-1/2">
+                                <label class="block text-sm font-medium text-gray-700">메인 키 비주얼 (Admin Main KV)</label>
+                                <input type="text" value="https://placehold.co/600x150/0099ff/FFFFFF/text=Main+Key+Visual+Image" placeholder="키 비주얼 이미지 URL" class="mt-1 block w-full p-2 border rounded-lg">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-b pb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">설문 페이지 (survey.html) 고정 요소</h2>
+                        <p class="text-sm text-gray-500 mb-4">참여자가 모든 설문 단계에서 보게 될 상하단 이미지 및 브랜드 색상을 설정합니다.</p>
+                        <div class="flex space-x-6">
+                            <div class="w-1/2">
+                                <label class="block text-sm font-medium text-gray-700">설문 Head 이미지 (상단)</label>
+                                <input type="text" value="https://placehold.co/600x60/B0BEC5/FFFFFF/text=Header+Image" placeholder="설문 Head 이미지 URL (var(--survey-head-image))" class="mt-1 block w-full p-2 border rounded-lg">
+                            </div>
+                            <div class="w-1/2">
+                                <label class="block text-sm font-medium text-gray-700">설문 Foot 이미지 (하단)</label>
+                                <input type="text" value="https://placehold.co/600x40/B0BEC5/FFFFFF/text=Footer+Image" placeholder="설문 Foot 이미지 URL (var(--survey-foot-image))" class="mt-1 block w-full p-2 border rounded-lg">
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-700">브랜드 주 색상 (Primary Color)</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="color" value="#0099ff" class="w-10 h-10 border rounded-lg">
+                                <input type="text" value="#0099ff" class="w-1/2 p-2 border rounded-lg">
+                                <p class="text-xs text-gray-500">설문 진행 바, 버튼 색상 등에 사용됩니다. (--primary-color)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">설문 완료 페이지 문구</h2>
+                        <p class="text-sm text-gray-500 mb-4">설문 완료 후 참여자에게 노출되는 최종 안내 메시지입니다.</p>
+                        
+                        <label class="block text-sm font-medium text-gray-700">감사 타이틀</label>
+                        <input type="text" value="참여해주셔서 감사합니다!" class="mt-1 block w-full p-2 border rounded-lg mb-4">
+
+                        <label class="block text-sm font-medium text-gray-700">주요 안내 메시지</label>
+                        <textarea id="thankyou-message" rows="4" class="mt-1 block w-full p-2 border rounded-lg">귀하의 소중한 의견이 이벤트 운영 및 제품 개발에 큰 도움이 됩니다. 참여해주신 분들께는 추첨을 통해 소정의 경품이 제공될 예정이며, 당첨자는 개별 연락드릴 예정입니다.</textarea>
+                    </div>
+
+                    <div class="flex justify-end pt-4">
+                        <button onclick="alert('브랜드 커스터마이징 설정이 성공적으로 저장되어 모든 설문에 반영되었습니다.')" 
+                            class="px-6 py-3 text-white font-bold rounded-lg transition duration-150"
+                            style="background-color: var(--primary-color);">
+                            💾 변경 사항 저장
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+    </script>
+</body>
+</html>

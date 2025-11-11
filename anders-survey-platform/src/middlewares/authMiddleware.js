@@ -1,7 +1,10 @@
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 
-// UserController.js에서 사용된 키와 동일해야 합니다!
-const JWT_SECRET = 'your_super_secret_key'; 
+dotenv.config();
+
+// 환경 변수에서 JWT_SECRET을 가져오고, 없으면 기본값 사용 (개발 환경용)
+const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_key'; 
 
 export const authMiddleware = (req, res, next) => {
     // 1. Authorization 헤더 (Bearer)에서 토큰 추출 시도

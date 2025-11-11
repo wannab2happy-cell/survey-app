@@ -1,0 +1,4 @@
+{
+  "_comment": "이 파일은 더 이상 사용되지 않습니다. MongoDB를 사용하므로 MONGO_URI 환경 변수를 사용하세요.",
+  "deprecated": true
+}

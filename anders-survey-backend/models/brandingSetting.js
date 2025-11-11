@@ -1,43 +1,34 @@
-// src/models/brandingSetting.js (ESM)
+// models/brandingSetting.js (Mongoose 버전)
+import mongoose from 'mongoose';
 
-import { DataTypes } from 'sequelize';
+const BrandingSettingSchema = new mongoose.Schema({
+  primaryColor: {
+    type: String,
+    default: '#007bff', // 기본값 설정
+  },
+  keyVisualUrl: {
+    type: String,
+    default: null,
+  },
+  headerImageUrl: {
+    type: String,
+    default: null,
+  },
+  footerText: {
+    type: String,
+    default: null,
+  },
+}, {
+  timestamps: true, // createdAt, updatedAt 자동 생성
+});
 
-export default (sequelize) => {
-  const BrandingSetting = sequelize.define('BrandingSetting', {
-    id: {
-      allowNull: false,
-      autoIncrement: true,
-      primaryKey: true,
-      type: DataTypes.INTEGER,
-    },
-    primaryColor: {
-      type: DataTypes.STRING,
-      allowNull: true, // 설정 안 할 경우 기본값 사용
-      defaultValue: '#007bff', // 기본값 설정
-    },
-    keyVisualUrl: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    headerImageUrl: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    footerText: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE,
-    },
-    updatedAt: {
-      allowNull: false,
-      type: DataTypes.DATE,
-    },
-  }, {
-    tableName: 'BrandingSettings',
-  });
-
-  return BrandingSetting;
+// 단일 문서만 유지하기 위한 설정 (id를 항상 1로 고정)
+BrandingSettingSchema.statics.getSettings = async function() {
+  let settings = await this.findOne();
+  if (!settings) {
+    settings = await this.create({});
+  }
+  return settings;
 };
+
+export default mongoose.model('BrandingSetting', BrandingSettingSchema);

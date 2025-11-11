@@ -1,0 +1,111 @@
+/* -------------------------------------- */
+/* 1. 커스터마이징 변수 설정 (Rule #5) */
+/* -------------------------------------- */
+:root {
+    /* 핵심 브랜드 컬러 */
+    --brand-primary-color: #007bff; /* CTA 버튼, 강조색 */
+    --brand-secondary-color: #f8f9fa; /* 배경색 등 */
+    --text-color: #333;
+    --background-image-url: url('./assets/default_keyvisual.jpg'); /* 키 비주얼 기본 이미지 */
+}
+
+/* -------------------------------------- */
+/* 2. 모바일 최적화 및 기본 스타일 (Rule #2) */
+/* -------------------------------------- */
+body {
+    font-family: 'Noto Sans KR', sans-serif; /* 가독성 높은 폰트 */
+    margin: 0;
+    background-color: var(--brand-secondary-color);
+    color: var(--text-color);
+}
+
+.container {
+    max-width: 600px; /* 모바일/태블릿 최적화 */
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
+    min-height: 100vh; /* 모바일 전체 화면 사용 */
+    display: flex;
+    flex-direction: column;
+}
+
+/* -------------------------------------- */
+/* 3. 요소별 스타일 */
+/* -------------------------------------- */
+.key-visual-area {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.logo {
+    max-width: 150px;
+    height: auto;
+    margin-bottom: 20px;
+}
+
+.visual-placeholder {
+    width: 100%;
+    height: 200px; /* 키 비주얼 높이 */
+    background-image: var(--background-image-url);
+    background-size: cover;
+    background-position: center;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.content-area {
+    flex-grow: 1; /* 남은 공간 차지 */
+    padding: 30px 0;
+    text-align: center;
+}
+
+h1 {
+    font-size: 1.8em;
+    color: var(--brand-primary-color);
+    margin-bottom: 15px;
+}
+
+.description {
+    font-size: 1em;
+    line-height: 1.5;
+    margin-bottom: 25px;
+}
+
+.info-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 30px;
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+/* -------------------------------------- */
+/* 4. CTA 버튼 스타일 */
+/* -------------------------------------- */
+.cta-area {
+    padding: 20px 0;
+    text-align: center;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.1em;
+    font-weight: bold;
+    color: white;
+    background-color: var(--brand-primary-color);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.privacy-note {
+    margin-top: 15px;
+    font-size: 0.8em;
+    color: #adb5bd;
+}

@@ -75,16 +75,20 @@ export const getLiveSurveyData = async (req, res) => {
 
     // 최종 응답 반환
     return res.status(200).json({
-      surveyTitle: survey.title,
-      totalResponses,
-      lastResponseAt,
-      liveData,
+      success: true,
+      data: {
+        surveyTitle: survey.title,
+        totalResponses,
+        lastResponseAt,
+        liveData,
+      },
     });
   } catch (error) {
     console.error('라이브 설문 데이터 조회 중 오류 발생:', error);
     return res.status(500).json({
-      message: '서버 오류 발생',
-      error: error.message || '알 수 없는 오류',
+      success: false,
+      message: '서버 오류가 발생했습니다.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -97,15 +101,20 @@ export const getDashboardSummary = async (req, res) => {
   try {
     const surveyCount = await Survey.countDocuments();
     const responseCount = await Response.countDocuments();
+    
     res.status(200).json({
-      surveyCount,
-      responseCount,
-      message: '요약 데이터 반환 성공',
+      success: true,
+      data: {
+        surveyCount,
+        responseCount,
+      },
     });
   } catch (error) {
+    console.error('대시보드 요약 데이터 조회 오류:', error);
     res.status(500).json({
-      message: '요약 데이터 조회 오류',
-      error: error.message,
+      success: false,
+      message: '서버 오류가 발생했습니다.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };

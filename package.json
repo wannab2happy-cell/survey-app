@@ -1,0 +1,31 @@
+{
+  "name": "survey-app-root",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "설문조사 애플리케이션 프로젝트",
+  "scripts": {
+    "dev": "cd anders-survey-platform/client && npm run dev",
+    "dev:platform": "cd anders-survey-platform && node src/app.js",
+    "dev:backend": "cd anders-survey-backend && npm start",
+    "dev:all": "concurrently \"npm run dev:platform\" \"npm run dev:backend\" \"npm run dev\"",
+    "build": "cd anders-survey-platform/client && npm run build",
+    "preview": "cd anders-survey-platform/client && npm run preview",
+    "start-backend": "cd anders-survey-backend && npm start",
+    "start-platform": "cd anders-survey-platform && node src/app.js",
+    "install:all": "npm install && cd anders-survey-platform && npm install && cd client && npm install && cd ../../anders-survey-backend && npm install",
+    "lint": "cd anders-survey-platform && npm run lint 2>/dev/null || echo 'No lint script' && cd ../anders-survey-backend && npm run lint 2>/dev/null || echo 'No lint script'",
+    "clean": "rm -rf node_modules && rm -rf anders-survey-platform/node_modules && rm -rf anders-survey-platform/client/node_modules && rm -rf anders-survey-backend/node_modules"
+  },
+  "keywords": [
+    "survey",
+    "questionnaire",
+    "react",
+    "express",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

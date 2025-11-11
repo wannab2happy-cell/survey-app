@@ -1,0 +1,126 @@
+/* Design Tokens - Theme System v2 */
+/* 이 파일은 모든 디자인 토큰을 CSS 변수로 정의합니다. */
+
+:root {
+  /* ===== 색상 (Colors) ===== */
+  --primary: #26C6DA;
+  --primary-hover: #00ACC1;
+  --secondary: #F59E0B;
+  --success: #10B981;
+  --error: #EF4444;
+  --text-main: #111827;
+  --text-sub: #6B7280;
+  --border: #E5E7EB;
+  --bg: #F9FAFB;
+  --white: #FFFFFF;
+  
+  /* 호환성을 위한 기존 변수 이름 매핑 */
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-surface: var(--white);
+  --color-on-surface: var(--text-main);
+  --color-accent: var(--primary);
+  --color-error: var(--error);
+  --color-success: var(--success);
+  --color-warning: var(--secondary);
+  
+  /* 배경 색상 */
+  --color-bg-primary: var(--white);
+  --color-bg-secondary: var(--bg);
+  --color-bg-tertiary: #F3F4F6;
+  
+  /* 텍스트 색상 */
+  --color-text-primary: var(--text-main);
+  --color-text-secondary: var(--text-sub);
+  --color-text-tertiary: #9CA3AF;
+  
+  /* ===== 간격 (Spacing) ===== */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  
+  /* ===== 둥근 모서리 (Border Radius) ===== */
+  --radius-sm: 4px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+  
+  /* ===== 폰트 (Typography) ===== */
+  --font-display: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, 'Roboto', 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+  --font-body: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, 'Roboto', 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Monaco', 'Consolas', monospace;
+  
+  /* 폰트 크기 */
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.5rem;    /* 24px */
+  --font-size-3xl: 1.875rem;  /* 30px */
+  --font-size-4xl: 2.25rem;   /* 36px */
+  
+  /* 폰트 두께 */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* ===== 그림자 (Shadows) ===== */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  
+  /* ===== 전환 효과 (Transitions) ===== */
+  --transition-fast: 150ms ease-in-out;
+  --transition-base: 200ms ease-in-out;
+  --transition-slow: 300ms ease-in-out;
+  
+  /* ===== 터치 타깃 (Touch Targets) ===== */
+  --touch-target-min: 44px;  /* 최소 터치 타깃 크기 (접근성) */
+  
+  /* ===== Z-Index 레이어 ===== */
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+}
+
+/* 다크 모드 지원 (향후 확장용) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* 다크 모드 토큰은 향후 추가 */
+  }
+}
+
+/* 테마 동적 적용을 위한 유틸리티 클래스 */
+.theme-primary {
+  color: var(--color-primary);
+}
+
+.theme-surface {
+  background-color: var(--color-surface);
+}
+
+.theme-on-surface {
+  color: var(--color-on-surface);
+}
+
+.theme-accent {
+  color: var(--color-accent);
+}
+
+
+

@@ -1,69 +1,62 @@
-import React, { useState } from "react";
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-  useNavigate,
-} from "react-router-dom";
-import Login from "./pages/Login";
-import SurveyList from "./pages/SurveyList";
-import SurveyBuilder from "./pages/SurveyBuilder";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import SurveyBuilder from './components/SurveyBuilder';
+import SurveyPage from './pages/SurveyPage';
+import SurveyPageV2 from './pages/SurveyPageV2';
+import Login from './pages/Login';
+import Admin from './pages/Admin';
+import AdminV2 from './pages/AdminV2';
+import NotFound from './pages/NotFound';
+import { isThemeV2Enabled } from './utils/featureToggle';
+import './App.css';
 
-// ✅ 보호 라우트
-const AdminRoute = ({ isAuthenticated, children }) => {
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  return children;
-};
+const isAuthenticated = () => !!localStorage.getItem('token');
 
-// ✅ 로그아웃 포함 메인 App
-function AppContent() {
-  const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    !!localStorage.getItem("token")
-  );
+const PrivateRoute = ({ element: Element }) =>
+  isAuthenticated() ? Element : <Navigate to="/login" />;
 
-  const handleLogin = (token) => {
-    localStorage.setItem("token", token);
-    setIsAuthenticated(true);
-    navigate("/admin/list", { replace: true });
-  };
-
+function App() {
+  // Feature Toggle: Theme V2 활성화 여부 확인
+  const themeV2Enabled = isThemeV2Enabled();
+  
+  // 로그아웃 핸들러
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    setIsAuthenticated(false);
-    navigate("/login", { replace: true }); // ✅ 즉시 로그인 화면으로 이동
+    localStorage.removeItem('token');
+    window.location.href = '/login';
   };
-
-  return (
-    <div className="min-h-screen bg-gray-100">
-      <Routes>
-        <Route path="/login" element={<Login onLogin={handleLogin} />} />
-        <Route
-          path="/admin/*"
-          element={
-            <AdminRoute isAuthenticated={isAuthenticated}>
-              <Routes>
-                <Route
-                  path="list"
-                  element={<SurveyList onLogout={handleLogout} />}
-                />
-                <Route path="builder/:id" element={<SurveyBuilder />} />
-                <Route path="/" element={<Navigate to="list" replace />} />
-              </Routes>
-            </AdminRoute>
-          }
-        />
-        <Route path="/" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </div>
-  );
-}
-
-export default function App() {
+  
   return (
     <BrowserRouter>
-      <AppContent />
+      <div className={themeV2Enabled ? 'theme-v2' : 'theme-legacy'}>
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<Login />} />
+          {/* 레거시 라우트 (기존 호환성 유지) */}
+          <Route path="/surveys" element={<SurveyPage />} />
+          <Route path="/surveys/:surveyId" element={<SurveyPage />} />
+          {/* 새로운 라우트 (Theme V2) */}
+          {themeV2Enabled ? (
+            <>
+              <Route path="/s/:slug" element={<SurveyPageV2 />} />
+              <Route path="/s/:slug/start" element={<SurveyPageV2 />} />
+              <Route path="/s/:slug/q/:step" element={<SurveyPageV2 />} />
+              <Route path="/s/:slug/review" element={<SurveyPageV2 />} />
+              <Route path="/s/:slug/done" element={<SurveyPageV2 />} />
+            </>
+          ) : null}
+          <Route path="/builder" element={<PrivateRoute element={<SurveyBuilder />} />} />
+          <Route 
+            path="/admin/*" 
+            element={
+              <PrivateRoute 
+                element={themeV2Enabled ? <AdminV2 onLogout={handleLogout} /> : <Admin onLogout={handleLogout} />} 
+              />
+            } 
+          />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
     </BrowserRouter>
   );
 }
+
+export default App;

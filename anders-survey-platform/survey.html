@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anders Survey Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* -------------------------------------- */
+        /* 1. 커스터마이징 변수 설정 (Rule #5) */
+        /* -------------------------------------- */
+        :root {
+            --primary-color: #0099ff; /* 브랜드 색상 */
+            --survey-head-image: url('https://placehold.co/600x60/B0BEC5/FFFFFF/text=Header+Image'); /* 설문 상단 이미지 경로 (데모 이미지) */
+            --survey-foot-image: url('https://placehold.co/600x40/B0BEC5/FFFFFF/text=Footer+Image'); /* 설문 하단 이미지 경로 (데모 이미지) */
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* -------------------------------------- */
+        /* 2. 전역 스타일 및 애니메이션 */
+        /* -------------------------------------- */
+        body {
+            font-family: var(--font-family);
+            background-color: #f7f7f7;
+        }
+
+        /* 로딩 스피너 스타일 */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top: 4px solid #0099ff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 막대 그래프 스타일 */
+        .bar-chart-bar {
+            background-color: var(--primary-color);
+            height: 20px;
+            border-radius: 4px;
+            transition: width 0.5s ease-out;
+        }
+        
+        /* 대시보드 색상 테마 */
+        .dashboard-metric {
+            border-left: 4px solid var(--primary-color);
+        }
+
+        /* -------------------------------------- */
+        /* 3. 설문 뷰 고정 영역 및 스크롤 영역 설정 (Rule #2 M-First) */
+        /* -------------------------------------- */
+        .fixed-header, .fixed-footer {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 40rem; /* max-w-4xl과 일치 */
+            z-index: 10;
+        }
+
+        .fixed-header {
+            top: 0;
+            height: 60px; 
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-bar-container {
+            padding: 10px 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .fixed-footer {
+            bottom: 0;
+            padding: 10px 20px;
+            background-color: white; 
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer-image-placeholder {
+            height: 40px; 
+            margin-bottom: 5px;
+        }
+
+        .question-scroll-area {
+            /* 헤더(60px) + 푸터(120px) 공간 확보 */
+            padding-top: 80px; 
+            padding-bottom: 120px; 
+            width: 100%;
+            max-width: 40rem;
+            box-sizing: border-box;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center">
+
+    <div id="status-message" class="hidden fixed top-0 left-0 w-full p-3 text-center text-white z-50 transition-opacity duration-300"></div>
+    
+    <div id="content-container" class="w-full max-w-4xl flex-grow flex flex-col items-center justify-start p-4 sm:p-8">
+        <div id="initial-loading" class="flex justify-center items-center h-40">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <div class="fixed top-2 right-2 flex space-x-2 z-50">
+        <button onclick="navigate('survey')" class="px-3 py-1 text-sm bg-gray-200 text-gray-800 rounded-lg">Survey</button>
+        <button onclick="navigate('dashboard')" class="px-3 py-1 text-sm bg-blue-500 text-white rounded-lg">Dashboard</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

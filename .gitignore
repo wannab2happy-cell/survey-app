@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# Build outputs
+dist/
+build/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+*.sqbpro
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Package manager
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ESLint cache
+.eslintcache
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Test
+*.test.js.snap
+

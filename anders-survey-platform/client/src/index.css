@@ -1,34 +1,88 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* client/src/index.css (최종 수정 - 동적 변수 사용) */
 
-/* 전역 폰트 및 색상 기본화 */
+/* Tailwind CSS v4 - Vite 플러그인 사용 */
+@import "tailwindcss";
+
+/* Design Tokens - Theme System v2 */
+@import "./styles/theme.css";
+
+/* 1. 동적 CSS 변수 정의 (기본값 설정) */
 :root {
-  --color-primary: #0099ff;
-  --color-secondary: #f8fafc;
-  --font-sans: 'Inter', 'Pretendard', 'Noto Sans KR', sans-serif;
+  /* useDesignSettings.js가 DB에서 불러와 덮어쓸 변수들. 
+     DB 로드 실패 시 이 기본값이 적용됩니다. */
+  --dynamic-primary-color: var(--primary, #26C6DA);
+  --dynamic-secondary-color: var(--secondary, #F59E0B);
+  --dynamic-font-family: var(--font-body, 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif);
+  
+  --neutral-bg-color: var(--bg, #F9FAFB);
+  --card-bg-color: var(--white, #FFFFFF);
+  --text-color: var(--text-main, #111827);
+  
+  /* Admin 버튼 색상 (요구사항) */
+  --admin-btn-bg: var(--primary, #26C6DA);
+  --admin-btn-text: var(--white, #ffffff);
+  --admin-btn-hover: var(--primary-hover, #00ACC1);
 }
 
-html, body {
-  font-family: var(--font-sans);
-  background-color: var(--color-secondary);
-  color: #111827;
+/* 2. 전역 폰트 및 기본 스타일 설정 */
+* {
+  /* ⭐ Pretendard 폰트를 사용합니다. */
+  font-family: var(--font-body, 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif);
+  box-sizing: border-box;
+}
+
+body {
   margin: 0;
   padding: 0;
+  background-color: var(--bg, #F9FAFB);
+  color: var(--text-main, #111827);
+  min-height: 100vh;
+  font-family: var(--font-body, 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif);
 }
 
-/* 버튼, 카드 등 공통 유틸 클래스 */
-@layer utilities {
-  .btn-primary {
-    @apply text-white font-semibold px-5 py-2 rounded-lg shadow transition;
-    background-color: var(--color-primary);
-  }
+/* 3. 기본 링크 및 버튼 스타일 */
+a {
+  color: var(--dynamic-primary-color);
+  text-decoration: none;
+}
 
-  .btn-primary:hover {
-    background-color: #0077cc; /* hover 색상 */
-  }
+/* 4. 주요 버튼 스타일 (예시) */
+.primary-button {
+    background-color: var(--dynamic-primary-color);
+    color: var(--card-bg-color);
+    padding: 10px 20px;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
 
-  .card {
-    @apply bg-white rounded-xl shadow p-6;
-  }
+.primary-button:hover {
+    filter: brightness(0.9); /* 마우스 오버 시 색상 어둡게 처리 */
+}
+
+/* 5. Admin 버튼 통일 스타일 (요구사항) */
+.admin-btn {
+    background-color: var(--admin-btn-bg);
+    color: var(--admin-btn-text);
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.admin-btn:hover {
+    background-color: var(--admin-btn-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.admin-btn:active {
+    transform: translateY(0);
+}
+
+.admin-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
 }

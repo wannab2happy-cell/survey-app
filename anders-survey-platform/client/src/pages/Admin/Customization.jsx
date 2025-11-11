@@ -1,5 +1,5 @@
 // client/src/pages/Admin/Customization.jsx 파일 전체 코드
-import React, { useEffect, useMemo, useState } from "react"; 
+import { useEffect, useMemo, useState } from 'react'; 
 
 /** Anders Survey Platform — Customization v4
  * - 컬러: primary + sub1~3
@@ -8,46 +8,46 @@ import React, { useEffect, useMemo, useState } from "react";
  * - 페이지 그룹: 브랜드 정보(시작), 페이지 스타일(본문), 완료 화면
  * - 저장소: localStorage BRANDS_THEME_V4
  */
-const LS_KEY = "BRAND_THEME_V4";
+const LS_KEY = 'BRAND_THEME_V4';
 
 const DEFAULT_THEME = {
   // 0) 브랜드 기본
-  logoUrl: "",
-  keyVisualUrl: "",
-  title: "행사 참여 설문",
+  logoUrl: '',
+  keyVisualUrl: '',
+  title: '행사 참여 설문',
   colorSet: {
-    primary: "#4F46E5", // Indigo-600
-    sub1: "#00A3FF",
-    sub2: "#22C55E",
-    sub3: "#F59E0B",
+    primary: '#4F46E5', // Indigo-600
+    sub1: '#00A3FF',
+    sub2: '#22C55E',
+    sub3: '#F59E0B',
   },
-  font: { kr: "Noto Sans KR", en: "Inter" },
+  font: { kr: 'Noto Sans KR', en: 'Inter' },
   // 1) 버튼 스타일
   buttonStyle: {
-    colorMode: "primary", // 'primary' | 'custom'
-    customColor: "#4F46E5",
-    radius: "rounded", // 'square' | 'rounded' | 'pill'
+    colorMode: 'primary', // 'primary' | 'custom'
+    customColor: '#4F46E5',
+    radius: 'rounded', // 'square' | 'rounded' | 'pill'
     shadow: true,
-    textColor: "#FFFFFF",
-    fontWeight: "600", // '400' | '500' | '600' | '700'
+    textColor: '#FFFFFF',
+    fontWeight: '600', // '400' | '500' | '600' | '700'
   },
   // 2) 본문 페이지 레이아웃
   layout: {
     head: {
-      backgroundType: "image", // 'image' | 'color'
-      imageUrl: "",
-      color: "#EEF6FF",
-      text: "당신의 피드백이 더 나은 경험을 만듭니다.",
+      backgroundType: 'image', // 'image' | 'color'
+      imageUrl: '',
+      color: '#EEF6FF',
+      text: '당신의 피드백이 더 나은 경험을 만듭니다.',
     },
-    footer: { imageUrl: "", logoUrl: "" },
-    bodyBg: "#FFFFFF",
+    footer: { imageUrl: '', logoUrl: '' },
+    bodyBg: '#FFFFFF',
   },
   // 3) 완료 페이지
   completePage: {
-    thankTitle: "참여해주셔서 감사합니다!",
+    thankTitle: '참여해주셔서 감사합니다!',
     thankMessage:
-      "여러분의 의견은 다음 행사에 소중히 반영됩니다.\n좋은 하루 되세요.",
-    keyVisualUrl: "",
+      '여러분의 의견은 다음 행사에 소중히 반영됩니다.\n좋은 하루 되세요.',
+    keyVisualUrl: '',
   },
 };
 
@@ -84,9 +84,9 @@ const ImageUpload = ({ label, path, value, width, height, guide, onUpload, onCle
             src={value}
             alt="preview"
             style={{
-              maxWidth: width || "100%",
-              maxHeight: height || "110px",
-              objectFit: "contain",
+              maxWidth: width || '100%',
+              maxHeight: height || '110px',
+              objectFit: 'contain',
             }}
             className="rounded-lg mb-2"
           />
@@ -108,7 +108,7 @@ const ImageUpload = ({ label, path, value, width, height, guide, onUpload, onCle
 
 export default function Customization() {
   const [theme, setTheme] = useState(DEFAULT_THEME);
-  const [tab, setTab] = useState("brand"); 
+  const [tab, setTab] = useState('brand'); 
   const [saving, setSaving] = useState(false);
 
   /* 로드 */
@@ -120,7 +120,7 @@ export default function Customization() {
         loadedTheme = { ...DEFAULT_THEME, ...JSON.parse(raw) };
         setTheme(loadedTheme);
       } catch (e) {
-         console.error("테마 로딩 오류:", e);
+         console.error('테마 로딩 오류:', e);
       }
     }
     // 로드 직후 전역 CSS 변수를 설정하여 Admin 페이지 헤더/탭 색상을 즉시 업데이트합니다.
@@ -131,7 +131,7 @@ export default function Customization() {
   const setByPath = (path, value) => {
     setTheme((prev) => {
       const next = structuredClone(prev);
-      const ks = path.split(".");
+      const ks = path.split('.');
       let cur = next;
       for (let i = 0; i < ks.length - 1; i++) cur = cur[ks[i]];
       cur[ks.at(-1)] = value;
@@ -149,14 +149,14 @@ export default function Customization() {
   const onUpload = (e, path) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    const allow = ["image/jpeg", "image/png", "image/webp"];
-    if (!allow.includes(f.type)) return alert("JPG, PNG, WEBP만 허용됩니다.");
-    if (f.size > 2 * 1024 * 1024) return alert("2MB 이하만 업로드 가능합니다.");
+    const allow = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allow.includes(f.type)) return alert('JPG, PNG, WEBP만 허용됩니다.');
+    if (f.size > 2 * 1024 * 1024) return alert('2MB 이하만 업로드 가능합니다.');
     const reader = new FileReader();
     reader.onload = () => setByPath(path, reader.result);
     reader.readAsDataURL(f);
   };
-  const onClear = (path) => setByPath(path, "");
+  const onClear = (path) => setByPath(path, '');
 
   /* 저장 */
   const save = () => {
@@ -168,7 +168,7 @@ export default function Customization() {
       // 2. 저장 후 최종적으로 전역 스타일 업데이트
       refreshGlobalTheme(theme); 
       
-      alert("✅ 저장 완료: 브랜드 설정이 적용되었습니다.");
+      alert('✅ 저장 완료: 브랜드 설정이 적용되었습니다.');
     } finally {
       setSaving(false);
     }
@@ -177,16 +177,16 @@ export default function Customization() {
   /* 미리보기 버튼 스타일 계산 */
   const previewBtnStyle = useMemo(() => {
     const color =
-      theme.buttonStyle.colorMode === "custom"
+      theme.buttonStyle.colorMode === 'custom'
         ? theme.buttonStyle.customColor
         : theme.colorSet.primary;
     const radiusCls =
-      theme.buttonStyle.radius === "square"
-        ? "rounded-none"
-        : theme.buttonStyle.radius === "pill"
-        ? "rounded-full"
-        : "rounded-lg";
-    const shadowCls = theme.buttonStyle.shadow ? "shadow" : "";
+      theme.buttonStyle.radius === 'square'
+        ? 'rounded-none'
+        : theme.buttonStyle.radius === 'pill'
+        ? 'rounded-full'
+        : 'rounded-lg';
+    const shadowCls = theme.buttonStyle.shadow ? 'shadow' : '';
     const weight = theme.buttonStyle.fontWeight;
     return { color, radiusCls, shadowCls, weight };
   }, [theme]);
@@ -194,7 +194,7 @@ export default function Customization() {
   /* 우측 미리보기 */
   const Preview = useMemo(() => {
     const headBg =
-      theme.layout.head.backgroundType === "image" && theme.layout.head.imageUrl
+      theme.layout.head.backgroundType === 'image' && theme.layout.head.imageUrl
         ? { background: `url(${theme.layout.head.imageUrl}) center/cover no-repeat` }
         : { background: theme.layout.head.color };
     return (
@@ -265,7 +265,7 @@ export default function Customization() {
             onClick={save}
             disabled={saving}
           >
-            {saving ? "저장 중…" : "저장"}
+            {saving ? '저장 중…' : '저장'}
           </button>
         </div>
       </div>
@@ -274,17 +274,17 @@ export default function Customization() {
       <div className="bg-white border rounded-xl shadow">
         <div className="flex border-b overflow-x-auto">
           {[
-            { id: "brand", label: "브랜드 정보(시작)" },
-            { id: "colors", label: "컬러 시스템" },
-            { id: "button", label: "버튼 스타일" },
-            { id: "page", label: "페이지 스타일(본문)" },
-            { id: "complete", label: "완료 화면" },
+            { id: 'brand', label: '브랜드 정보(시작)' },
+            { id: 'colors', label: '컬러 시스템' },
+            { id: 'button', label: '버튼 스타일' },
+            { id: 'page', label: '페이지 스타일(본문)' },
+            { id: 'complete', label: '완료 화면' },
           ].map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
               className={`px-4 py-3 text-sm font-medium ${
-                tab === t.id ? "border-b-2" : "text-gray-600"
+                tab === t.id ? 'border-b-2' : 'text-gray-600'
               }`}
               style={tab === t.id ? { borderColor: previewBtnStyle.color, color: previewBtnStyle.color } : {}}
             >
@@ -298,7 +298,7 @@ export default function Customization() {
           <div className="lg:col-span-2 space-y-6">
             
             {/* 1) 브랜드 정보 */}
-            {tab === "brand" && (
+            {tab === 'brand' && (
               <section className="border rounded-xl p-5 bg-white space-y-4">
                 <h3 className="font-semibold text-lg mb-3">브랜드 정보(시작 안내)</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -328,7 +328,7 @@ export default function Customization() {
                       type="text"
                       className="w-full border rounded p-2 mt-1"
                       value={theme.title}
-                      onChange={(e) => setByPath("title", e.target.value)}
+                      onChange={(e) => setByPath('title', e.target.value)}
                       placeholder="예) 2025 행사 만족도 조사"
                     />
                   </div>
@@ -338,7 +338,7 @@ export default function Customization() {
                       type="color"
                       className="w-28 h-10 border rounded mt-1"
                       value={theme.layout.bodyBg}
-                      onChange={(e) => setByPath("layout.bodyBg", e.target.value)}
+                      onChange={(e) => setByPath('layout.bodyBg', e.target.value)}
                     />
                   </div>
                 </div>
@@ -346,7 +346,7 @@ export default function Customization() {
             )}
 
             {/* 2) 컬러 시스템 */}
-            {tab === "colors" && (
+            {tab === 'colors' && (
               <section className="border rounded-xl p-5 bg-white space-y-4">
                 <h3 className="font-semibold text-lg mb-3">컬러 시스템</h3>
                 <p className="text-xs text-gray-500 mb-2">
@@ -376,7 +376,7 @@ export default function Customization() {
             )}
 
             {/* 3) 버튼 스타일 */}
-            {tab === "button" && (
+            {tab === 'button' && (
               <section className="border rounded-xl p-5 bg-white space-y-5">
                 <h3 className="font-semibold text-lg mb-3">버튼 스타일</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -386,8 +386,8 @@ export default function Customization() {
                       <label>
                         <input
                           type="radio"
-                          checked={theme.buttonStyle.colorMode === "primary"}
-                          onChange={() => setByPath("buttonStyle.colorMode", "primary")}
+                          checked={theme.buttonStyle.colorMode === 'primary'}
+                          onChange={() => setByPath('buttonStyle.colorMode', 'primary')}
                           className="mr-1"
                         />
                         Primary 컬러 사용
@@ -395,8 +395,8 @@ export default function Customization() {
                       <label>
                         <input
                           type="radio"
-                          checked={theme.buttonStyle.colorMode === "custom"}
-                          onChange={() => setByPath("buttonStyle.colorMode", "custom")}
+                          checked={theme.buttonStyle.colorMode === 'custom'}
+                          onChange={() => setByPath('buttonStyle.colorMode', 'custom')}
                           className="mr-1"
                         />
                         직접 지정
@@ -409,17 +409,17 @@ export default function Customization() {
                       type="color"
                       className="w-28 h-10 border rounded mt-1"
                       value={theme.buttonStyle.textColor}
-                      onChange={(e) => setByPath("buttonStyle.textColor", e.target.value)}
+                      onChange={(e) => setByPath('buttonStyle.textColor', e.target.value)}
                     />
                   </div>
-                  {theme.buttonStyle.colorMode === "custom" && (
+                  {theme.buttonStyle.colorMode === 'custom' && (
                     <div>
                       <label className="text-sm font-semibold text-gray-700">버튼 배경색</label>
                       <input
                         type="color"
                         className="w-28 h-10 border rounded mt-1"
                         value={theme.buttonStyle.customColor}
-                        onChange={(e) => setByPath("buttonStyle.customColor", e.target.value)}
+                        onChange={(e) => setByPath('buttonStyle.customColor', e.target.value)}
                       />
                     </div>
                   )}
@@ -427,16 +427,16 @@ export default function Customization() {
                     <label className="text-sm font-semibold text-gray-700">모양</label>
                     <div className="mt-2 flex gap-3 text-sm">
                       {[
-                        { id: "square", name: "사각" },
-                        { id: "rounded", name: "라운드" },
-                        { id: "pill", name: "완전 라운드" },
+                        { id: 'square', name: '사각' },
+                        { id: 'rounded', name: '라운드' },
+                        { id: 'pill', name: '완전 라운드' },
                       ].map((r) => (
                         <label key={r.id}>
                           <input
                             type="radio"
                             className="mr-1"
                             checked={theme.buttonStyle.radius === r.id}
-                            onChange={() => setByPath("buttonStyle.radius", r.id)}
+                            onChange={() => setByPath('buttonStyle.radius', r.id)}
                           />
                           {r.name}
                         </label>
@@ -448,9 +448,9 @@ export default function Customization() {
                     <select
                       className="w-full border rounded p-2 mt-1"
                       value={theme.buttonStyle.fontWeight}
-                      onChange={(e) => setByPath("buttonStyle.fontWeight", e.target.value)}
+                      onChange={(e) => setByPath('buttonStyle.fontWeight', e.target.value)}
                     >
-                      {["400", "500", "600", "700"].map((w) => (
+                      {['400', '500', '600', '700'].map((w) => (
                         <option key={w} value={w}>
                           {w}
                         </option>
@@ -462,7 +462,7 @@ export default function Customization() {
                       id="btnShadow"
                       type="checkbox"
                       checked={theme.buttonStyle.shadow}
-                      onChange={(e) => setByPath("buttonStyle.shadow", e.target.checked)}
+                      onChange={(e) => setByPath('buttonStyle.shadow', e.target.checked)}
                     />
                     <label htmlFor="btnShadow" className="text-sm font-semibold text-gray-700">
                       그림자 사용
@@ -486,7 +486,7 @@ export default function Customization() {
             )}
 
             {/* 4) 페이지 스타일(본문) */}
-            {tab === "page" && (
+            {tab === 'page' && (
               <section className="border rounded-xl p-5 bg-white space-y-5">
                 <h3 className="font-semibold text-lg mb-3">페이지 스타일(본문)</h3>
                 <ImageUpload
@@ -505,7 +505,7 @@ export default function Customization() {
                       type="color"
                       className="w-28 h-10 border rounded mt-1"
                       value={theme.layout.head.color}
-                      onChange={(e) => setByPath("layout.head.color", e.target.value)}
+                      onChange={(e) => setByPath('layout.head.color', e.target.value)}
                     />
                   </div>
                   <div>
@@ -514,7 +514,7 @@ export default function Customization() {
                       type="text"
                       className="w-full border rounded p-2 mt-1"
                       value={theme.layout.head.text}
-                      onChange={(e) => setByPath("layout.head.text", e.target.value)}
+                      onChange={(e) => setByPath('layout.head.text', e.target.value)}
                     />
                   </div>
                 </div>
@@ -540,7 +540,7 @@ export default function Customization() {
             )}
 
             {/* 5) 완료 화면 */}
-            {tab === "complete" && (
+            {tab === 'complete' && (
               <section className="border rounded-xl p-5 bg-white space-y-5">
                 <h3 className="font-semibold text-lg mb-3">완료 화면</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -550,7 +550,7 @@ export default function Customization() {
                       type="text"
                       className="w-full border rounded p-2 mt-1"
                       value={theme.completePage.thankTitle}
-                      onChange={(e) => setByPath("completePage.thankTitle", e.target.value)}
+                      onChange={(e) => setByPath('completePage.thankTitle', e.target.value)}
                     />
                   </div>
                   <ImageUpload
@@ -568,7 +568,7 @@ export default function Customization() {
                   rows={3}
                   className="w-full border rounded p-2"
                   value={theme.completePage.thankMessage}
-                  onChange={(e) => setByPath("completePage.thankMessage", e.target.value)}
+                  onChange={(e) => setByPath('completePage.thankMessage', e.target.value)}
                 />
               </section>
             )}

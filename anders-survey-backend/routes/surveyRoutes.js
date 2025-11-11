@@ -1,11 +1,13 @@
 import express from "express";
 import {
-  createSurvey,           // ✅ 추가
+  createSurvey,
   getSurveyList,
   getSurveyDetails,
+  updateSurvey,
+  deleteSurvey,
   submitSurveyResponse,
   getSurveyResults,
-} from "../controllers/surveyController.js";
+} from "../controllers/SurveyController.js";
 
 const router = express.Router();
 
@@ -17,6 +19,12 @@ router.get("/", getSurveyList);
 
 // 설문 상세 조회
 router.get("/:surveyId", getSurveyDetails);
+
+// ✅ 설문 수정 (PUT /api/surveys/:surveyId)
+router.put("/:surveyId", updateSurvey);
+
+// ✅ 설문 삭제 (DELETE /api/surveys/:surveyId)
+router.delete("/:surveyId", deleteSurvey);
 
 // 설문 응답 제출
 router.post("/:surveyId/response", submitSurveyResponse);

@@ -1,5 +1,4 @@
 // client/src/pages/Admin/DataExport.jsx 파일 전체 코드 (수정됨)
-import React from 'react'; // 🔴 핵심 수정: React 임포트 추가
 
 // surveyList 배열을 props로 받습니다.
 export default function DataExport({ surveyList = [] }) {
