@@ -19,9 +19,12 @@ export default function QuestionPage({
   onNext,
   onPrevious,
   showPrevious = true,
-  color = 'var(--primary)',
+  color = 'var(--primary)', // Primary 색상 (강조 색상)
+  secondaryColor = null, // Secondary 색상 (보조 색상)
+  backgroundColor = null, // Tertiary 색상 (배경 색상)
   buttonShape = 'rounded-lg',
-  koreanSpacingWrap = false
+  koreanSpacingWrap = false,
+  bgImageBase64 = ''
 }) {
   const [localAnswer, setLocalAnswer] = useState(answer || '');
   const [error, setError] = useState(null);
@@ -36,6 +39,47 @@ export default function QuestionPage({
   const normalizedOptions = (question.options || []).map(opt =>
     typeof opt === 'string' ? opt : (opt.text || opt.label || opt.content || String(opt))
   );
+
+  // 색상 처리
+  const actualColor = typeof color === 'string' && color.startsWith('#') 
+    ? color 
+    : (typeof color === 'string' && color.includes('var') 
+        ? '#7C3AED'
+        : (color || '#7C3AED'));
+
+  const actualSecondaryColor = secondaryColor && typeof secondaryColor === 'string' && secondaryColor.startsWith('#')
+    ? secondaryColor
+    : (secondaryColor && typeof secondaryColor === 'string' && secondaryColor.includes('var')
+        ? '#A78BFA'
+        : (secondaryColor || '#A78BFA'));
+
+  const actualBackgroundColor = backgroundColor && typeof backgroundColor === 'string' && backgroundColor.startsWith('#')
+    ? backgroundColor
+    : (backgroundColor && typeof backgroundColor === 'string' && backgroundColor.includes('var')
+        ? '#F3F4F6'
+        : (backgroundColor || '#F3F4F6'));
+
+  // 배경 스타일 결정
+  const getBackgroundStyle = () => {
+    const isValidImage = bgImageBase64 && 
+      bgImageBase64.trim() !== '' && 
+      (bgImageBase64.startsWith('data:image/') || bgImageBase64.startsWith('http://') || bgImageBase64.startsWith('https://'));
+    
+    if (isValidImage) {
+      return {
+        backgroundImage: `url(${bgImageBase64})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundColor: actualBackgroundColor
+      };
+    }
+    // 배경 이미지가 없으면 그라데이션 배경 사용
+    return {
+      background: `linear-gradient(135deg, ${actualBackgroundColor} 0%, ${actualSecondaryColor}08 50%, ${actualBackgroundColor} 100%)`,
+      backgroundColor: actualBackgroundColor // 명시적으로 배경색 설정
+    };
+  };
 
   const handleAnswerChange = (value) => {
     setLocalAnswer(value);
@@ -71,7 +115,8 @@ export default function QuestionPage({
                 selected={localAnswer === option}
                 onSelect={handleAnswerChange}
                 type="radio"
-                color={color}
+                color={actualColor}
+                secondaryColor={actualSecondaryColor}
               />
             ))}
           </div>
@@ -94,7 +139,8 @@ export default function QuestionPage({
                   handleAnswerChange(newArray);
                 }}
                 type="checkbox"
-                color={color}
+                color={actualColor}
+                secondaryColor={actualSecondaryColor}
               />
             ))}
           </div>
@@ -214,7 +260,7 @@ export default function QuestionPage({
               onChange={(e) => handleAnswerChange(e.target.value)}
               className="w-full h-3 rounded-lg appearance-none cursor-pointer"
               style={{
-                background: `linear-gradient(to right, ${color} 0%, ${color} ${((scaleValue - min) / (max - min)) * 100}%, #E5E7EB ${((scaleValue - min) / (max - min)) * 100}%, #E5E7EB 100%)`,
+                background: `linear-gradient(to right, ${actualColor} 0%, ${actualSecondaryColor} ${((scaleValue - min) / (max - min)) * 100}%, #E5E7EB ${((scaleValue - min) / (max - min)) * 100}%, #E5E7EB 100%)`,
                 outline: 'none'
               }}
             />
@@ -249,7 +295,7 @@ export default function QuestionPage({
                     relative rounded-xl overflow-hidden border-2 transition-all
                     ${isSelected ? 'border-purple-500 shadow-lg' : 'border-gray-200'}
                   `}
-                  style={isSelected ? { borderColor: color } : {}}
+                  style={isSelected ? { borderColor: actualColor } : {}}
                 >
                   {imageUrl && (
                     <img
@@ -262,7 +308,7 @@ export default function QuestionPage({
                     />
                   )}
                   {isSelected && (
-                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: color }}>
+                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: actualColor }}>
                       <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
@@ -283,7 +329,7 @@ export default function QuestionPage({
             rows={5}
             className="w-full px-5 py-3.5 rounded-xl border-2 border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 resize-none bg-white transition-all"
             style={{ 
-              '--tw-ring-color': `${color}40`,
+              '--tw-ring-color': `${actualColor}40`,
               fontSize: '15px',
               fontWeight: 400,
               letterSpacing: '-0.01em',
@@ -294,7 +340,7 @@ export default function QuestionPage({
               } : {})
             }}
             onFocus={(e) => {
-              e.target.style.borderColor = color;
+              e.target.style.borderColor = actualColor;
             }}
             onBlur={(e) => {
               e.target.style.borderColor = '#e5e7eb';
@@ -312,16 +358,25 @@ export default function QuestionPage({
             onChange={handleAnswerChange}
             error={error}
             required={question.required}
-            color={color}
+            color={actualColor}
             koreanSpacingWrap={koreanSpacingWrap}
           />
         );
     }
   };
 
+  const bgStyle = getBackgroundStyle();
+
   return (
     <motion.div 
-      className="h-screen bg-bg flex flex-col items-center justify-center overflow-hidden"
+      className="h-screen flex flex-col items-center justify-center overflow-hidden"
+      style={{
+        ...bgStyle,
+        width: '100%',
+        maxWidth: '100vw',
+        minHeight: '100vh',
+        position: 'relative' // 배경이 확실히 보이도록
+      }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
@@ -331,7 +386,8 @@ export default function QuestionPage({
         <ProgressBar 
           current={questionNumber} 
           total={totalQuestions} 
-          color={color} 
+          color={actualColor}
+          secondaryColor={actualSecondaryColor} 
         />
       </div>
 
@@ -344,7 +400,8 @@ export default function QuestionPage({
             title={question.title || question.text || question.content || '질문'}
             required={question.required}
             error={error}
-            color={color}
+            color={actualColor}
+            secondaryColor={actualSecondaryColor}
           >
             {renderQuestionContent()}
           </QuestionCard>
@@ -360,7 +417,8 @@ export default function QuestionPage({
           nextLabel={questionNumber === totalQuestions ? '검토하기' : '다음'}
           previousLabel="이전"
           disabled={false}
-          color={color}
+          color={actualColor}
+          secondaryColor={actualSecondaryColor}
           buttonShape={buttonShape}
         />
       </div>

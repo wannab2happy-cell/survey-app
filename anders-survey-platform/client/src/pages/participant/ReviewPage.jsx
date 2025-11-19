@@ -11,9 +11,10 @@ export default function ReviewPage({
   onEdit,
   onSubmit,
   onSubmitLoading = false,
-  color = 'var(--primary)',
+  color = 'var(--primary)', // Primary 색상 (강조 색상)
+  secondaryColor = null, // Secondary 색상 (보조 색상)
+  backgroundColor = '#F3F4F6', // Tertiary 색상 (배경 색상)
   buttonShape = 'rounded-lg',
-  backgroundColor = '#1a1f2e',
   bgImageBase64 = ''
 }) {
   const [expandedQuestion, setExpandedQuestion] = useState(null);
@@ -36,9 +37,27 @@ export default function ReviewPage({
     return String(answer);
   };
 
-  // 배경 스타일 결정 (이미지가 있으면 이미지 사용, 없으면 색상 사용)
+  // 색상 처리
+  const actualColor = typeof color === 'string' && color.startsWith('#') 
+    ? color 
+    : (typeof color === 'string' && color.includes('var') 
+        ? '#7C3AED'
+        : (color || '#7C3AED'));
+
+  const actualSecondaryColor = secondaryColor && typeof secondaryColor === 'string' && secondaryColor.startsWith('#')
+    ? secondaryColor
+    : (secondaryColor && typeof secondaryColor === 'string' && secondaryColor.includes('var')
+        ? '#A78BFA'
+        : (secondaryColor || '#A78BFA'));
+
+  const actualBackgroundColor = typeof backgroundColor === 'string' && backgroundColor.startsWith('#')
+    ? backgroundColor
+    : (typeof backgroundColor === 'string' && backgroundColor.includes('var')
+        ? '#F3F4F6'
+        : (backgroundColor || '#F3F4F6'));
+
+  // 배경 스타일 결정 (그라데이션 + 배경 이미지)
   const getBackgroundStyle = () => {
-    // bgImageBase64가 유효한지 확인 (빈 문자열이 아니고, data:image/로 시작하거나 http로 시작하는지)
     const isValidImage = bgImageBase64 && 
       bgImageBase64.trim() !== '' && 
       (bgImageBase64.startsWith('data:image/') || bgImageBase64.startsWith('http://') || bgImageBase64.startsWith('https://'));
@@ -49,11 +68,12 @@ export default function ReviewPage({
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        backgroundColor: backgroundColor // 이미지 로딩 전 배경색
+        backgroundColor: actualBackgroundColor
       };
     }
+    // 배경 이미지가 없으면 그라데이션 배경 사용
     return {
-      backgroundColor: backgroundColor
+      background: `linear-gradient(135deg, ${actualBackgroundColor} 0%, ${actualSecondaryColor}08 50%, ${actualBackgroundColor} 100%)`
     };
   };
 
@@ -148,10 +168,11 @@ export default function ReviewPage({
             onNext={onSubmit}
             onPrevious={() => onEdit(questions.length - 1)}
             showPrevious={true}
-            nextLabel={onSubmitLoading ? '제출 중...' : '제출 완료'}
-            previousLabel="이전"
+            nextLabel={onSubmitLoading ? '제출 중...' : '제출하기'}
+            previousLabel="수정하기"
             disabled={onSubmitLoading || missingQuestions.length > 0}
-            color={color}
+            color={actualColor}
+            secondaryColor={actualSecondaryColor}
             buttonShape={buttonShape}
           />
         </div>

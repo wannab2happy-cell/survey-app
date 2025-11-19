@@ -1,7 +1,7 @@
 // QuestionCard.jsx - Theme V2 스타일로 완전히 재작성
 // 모든 질문 타입 지원 및 디자인 통일
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import ImageUpload from '../ImageUpload';
 
@@ -124,46 +124,71 @@ const QuestionCard = (props) => {
   // 옵션별 로컬 입력 상태 관리
   const [localOptionValues, setLocalOptionValues] = useState({});
   
-  // 질문 데이터가 변경되면 (탭 전환 등) 로컬 상태 동기화
-  useEffect(() => {
-    // 질문 텍스트 재계산 (text, title, content 순서로 확인)
-    let normalizedQuestionText = '';
-    if (question.text !== undefined && question.text !== null) {
-      normalizedQuestionText = question.text === '새 질문' ? '' : question.text;
-    } else if (question.title !== undefined && question.title !== null) {
-      normalizedQuestionText = question.title === '새 질문' ? '' : question.title;
-    } else if (question.content !== undefined && question.content !== null) {
-      normalizedQuestionText = question.content === '새 질문' ? '' : question.content;
-    }
-    
-    // 한글 조합 중이 아니고, 조합 완료 직후가 아니면 동기화
-    if (!isComposing && !justComposed) {
-      // 입력 필드가 포커스되어 있지 않으면 무조건 동기화
-      if (!isInputFocused) {
-        if (localInputValue !== normalizedQuestionText) {
-          setLocalInputValue(normalizedQuestionText);
-        }
-      } else {
-        // 포커스되어 있어도 질문 ID가 변경되었거나, 로컬 값이 비어있고 외부 값이 있으면 동기화
-        if (localInputValue === '' && normalizedQuestionText !== '') {
-          setLocalInputValue(normalizedQuestionText);
-        }
-      }
-    }
-    
-    // 질문 ID가 변경되면 포커스 상태와 조합 상태 리셋
-    // (질문 ID가 변경되면 이 useEffect가 실행되므로 항상 리셋)
-    setIsInputFocused(false);
-    setIsComposing(false);
-    setJustComposed(false);
-  }, [question.id, question.text, question.title, question.content]); // 질문 데이터를 직접 의존성으로 사용
+  // 질문 ID 추적 (질문이 변경되었는지 확인)
+  const prevQuestionIdRef = useRef(null);
+  const isUpdatingFromParentRef = useRef(false); // 부모로부터 업데이트 중인지 추적
   
-  // 컴포넌트 언마운트 시 현재 입력값 저장 (탭 전환 시 데이터 손실 방지)
+  // 초기값 계산
+  const getInitialText = () => {
+    if (question?.text !== undefined && question?.text !== null) {
+      return question.text === '새 질문' ? '' : String(question.text);
+    } else if (question?.title !== undefined && question?.title !== null) {
+      return question.title === '새 질문' ? '' : String(question.title);
+    } else if (question?.content !== undefined && question?.content !== null) {
+      return question.content === '새 질문' ? '' : String(question.content);
+    }
+    return '';
+  };
+  
+  const savedValueRef = useRef(getInitialText());
+  
+  // 질문 텍스트를 문자열로 추출
+  const getQuestionTextValue = () => {
+    if (question?.text !== undefined && question?.text !== null && question.text !== '새 질문') {
+      return String(question.text);
+    } else if (question?.title !== undefined && question?.title !== null && question.title !== '새 질문') {
+      return String(question.title);
+    } else if (question?.content !== undefined && question?.content !== null && question.content !== '새 질문') {
+      return String(question.content);
+    }
+    return '';
+  };
+  
+  // localInputValue가 변경될 때마다 ref 업데이트 (별도 useEffect로 분리하여 무한 루프 방지)
+  useEffect(() => {
+    savedValueRef.current = localInputValue;
+  }, [localInputValue]);
+  
+  // 질문 ID를 문자열로 변환하여 안전하게 비교 (메모이제이션으로 무한 루프 방지)
+  const currentQuestionIdStr = useMemo(() => {
+    return String(question?.id || question?._id || '');
+  }, [question?.id, question?._id]);
+  
+  // 질문 ID 추적 (질문이 변경되었는지 확인)
+  useEffect(() => {
+    const prevQuestionId = String(prevQuestionIdRef.current || '');
+    
+    // 질문 ID가 실제로 변경되었는지 확인
+    if (currentQuestionIdStr !== prevQuestionId && currentQuestionIdStr !== '') {
+      prevQuestionIdRef.current = currentQuestionIdStr;
+      const questionTextValue = getQuestionTextValue();
+      
+      // 질문이 변경되었으면 포커스 상태와 조합 상태 리셋
+      setIsInputFocused(false);
+      setIsComposing(false);
+      setJustComposed(false);
+      // 새 질문의 텍스트로 동기화
+      setLocalInputValue(questionTextValue);
+      savedValueRef.current = questionTextValue;
+    }
+  }, [currentQuestionIdStr]); // 문자열 ID만 의존성으로 사용
+  
+  // 컴포넌트 언마운트 시 현재 입력값 저장 (한 번만 등록)
   useEffect(() => {
     return () => {
       // 컴포넌트가 언마운트되기 전에 현재 입력값 저장
-      const currentValue = localInputValue || '';
-      if (onQuestionChange && typeof onQuestionChange === 'function') {
+      const currentValue = savedValueRef.current || '';
+      if (onQuestionChange && typeof onQuestionChange === 'function' && currentValue !== '') {
         try {
           onQuestionChange(index, 'text', currentValue);
           onQuestionChange(index, 'title', currentValue);
@@ -173,7 +198,8 @@ const QuestionCard = (props) => {
         }
       }
     };
-  }, [localInputValue, index, onQuestionChange]); // localInputValue가 변경될 때마다 cleanup 함수 업데이트
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 빈 의존성 배열로 한 번만 등록 (무한 루프 방지)
   
   // 옵션이 외부에서 변경되면 로컬 상태도 동기화
   useEffect(() => {
@@ -255,6 +281,9 @@ const QuestionCard = (props) => {
     setLocalInputValue(value);
     setJustComposed(true); // 조합 완료 플래그 설정
     
+    // 부모 업데이트 플래그 설정 (무한 루프 방지)
+    isUpdatingFromParentRef.current = true;
+    
     // 조합 완료 후 부모 상태 업데이트
     if (onQuestionChange && typeof onQuestionChange === 'function') {
       try {
@@ -266,8 +295,9 @@ const QuestionCard = (props) => {
       }
     }
     
-    // 조합 완료 직후 발생하는 onChange 이벤트를 무시하기 위해 짧은 딜레이 후 플래그 해제
+    // 다음 렌더링 사이클에서 플래그 해제
     setTimeout(() => {
+      isUpdatingFromParentRef.current = false;
       setJustComposed(false);
     }, 0);
   };
@@ -282,6 +312,9 @@ const QuestionCard = (props) => {
     
     // 한글 조합 중이 아니면 즉시 부모 상태 업데이트 (탭 전환 시 데이터 손실 방지)
     if (!isComposing) {
+      // 부모 업데이트 플래그 설정 (무한 루프 방지)
+      isUpdatingFromParentRef.current = true;
+      
       // 즉시 부모 상태에 저장 (탭 전환 시에도 데이터 유지)
       if (onQuestionChange && typeof onQuestionChange === 'function') {
         try {
@@ -292,6 +325,11 @@ const QuestionCard = (props) => {
           console.error('[QuestionCard] onQuestionChange 오류:', error);
         }
       }
+      
+      // 다음 렌더링 사이클에서 플래그 해제
+      setTimeout(() => {
+        isUpdatingFromParentRef.current = false;
+      }, 0);
     }
     
     // 한글 조합 중이면 여기서 종료 (조합 완료 후 handleCompositionEnd에서 저장)
@@ -679,20 +717,24 @@ const QuestionCard = (props) => {
               // 포커스를 잃을 때 최종 값을 부모에 동기화
               const finalValue = e.target.value || '';
               
-              // 빈 값이 아닐 때만 업데이트 (질문 제목이 사라지는 것 방지)
-              if (finalValue.trim() !== '' || localInputValue.trim() !== '') {
-                if (onQuestionChange && typeof onQuestionChange === 'function') {
-                  try {
-                    // 최종 값이 있으면 그 값을 사용, 없으면 로컬 값을 유지
-                    const valueToSave = finalValue.trim() !== '' ? finalValue : localInputValue;
-                    onQuestionChange(index, 'text', valueToSave);
-                    onQuestionChange(index, 'title', valueToSave);
-                    onQuestionChange(index, 'content', valueToSave);
-                  } catch (error) {
-                    console.error('[QuestionCard] onQuestionChange 오류:', error);
-                  }
+              // 부모 업데이트 플래그 설정 (무한 루프 방지)
+              isUpdatingFromParentRef.current = true;
+              
+              // 항상 최종 값을 저장 (빈 값도 포함하여 사용자가 의도적으로 지운 경우 반영)
+              if (onQuestionChange && typeof onQuestionChange === 'function') {
+                try {
+                  onQuestionChange(index, 'text', finalValue);
+                  onQuestionChange(index, 'title', finalValue);
+                  onQuestionChange(index, 'content', finalValue);
+                } catch (error) {
+                  console.error('[QuestionCard] onQuestionChange 오류:', error);
                 }
               }
+              
+              // 다음 렌더링 사이클에서 플래그 해제
+              setTimeout(() => {
+                isUpdatingFromParentRef.current = false;
+              }, 0);
             }}
             placeholder="새 질문"
             className={`w-full text-lg font-medium border border-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white ${

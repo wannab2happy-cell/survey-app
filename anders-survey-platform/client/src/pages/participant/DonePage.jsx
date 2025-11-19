@@ -6,9 +6,10 @@ import { sanitizeHTML } from '../../utils/htmlSanitizer';
 
 export default function DonePage({ 
   survey,
-  color = 'var(--primary)',
+  color = 'var(--primary)', // Primary 색상 (강조 색상)
+  secondaryColor = null, // Secondary 색상 (보조 색상)
+  backgroundColor = '#F3F4F6', // Tertiary 색상 (배경 색상)
   buttonShape = 'rounded-lg',
-  backgroundColor = '#1a1f2e',
   bgImageBase64 = '',
   buttonOpacity = 0.9
 }) {
@@ -17,9 +18,27 @@ export default function DonePage({
   const linkUrl = survey?.ending?.linkUrl || '';
   const linkText = survey?.ending?.linkText || '더 알아보기';
 
-  // 배경 스타일 결정 (이미지가 있으면 이미지 사용, 없으면 색상 사용)
+  // 색상 처리 (먼저 처리)
+  const actualColor = typeof color === 'string' && color.startsWith('#') 
+    ? color 
+    : (typeof color === 'string' && color.includes('var') 
+        ? '#7C3AED'
+        : (color || '#7C3AED'));
+
+  const actualSecondaryColor = secondaryColor && typeof secondaryColor === 'string' && secondaryColor.startsWith('#')
+    ? secondaryColor
+    : (secondaryColor && typeof secondaryColor === 'string' && secondaryColor.includes('var')
+        ? '#A78BFA'
+        : (secondaryColor || '#A78BFA'));
+
+  const actualBackgroundColor = typeof backgroundColor === 'string' && backgroundColor.startsWith('#')
+    ? backgroundColor
+    : (typeof backgroundColor === 'string' && backgroundColor.includes('var')
+        ? '#F3F4F6'
+        : (backgroundColor || '#F3F4F6'));
+
+  // 배경 스타일 결정 (그라데이션 + 배경 이미지)
   const getBackgroundStyle = () => {
-    // bgImageBase64가 유효한지 확인 (빈 문자열이 아니고, data:image/로 시작하거나 http로 시작하는지)
     const isValidImage = bgImageBase64 && 
       bgImageBase64.trim() !== '' && 
       (bgImageBase64.startsWith('data:image/') || bgImageBase64.startsWith('http://') || bgImageBase64.startsWith('https://'));
@@ -30,29 +49,16 @@ export default function DonePage({
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        backgroundColor: backgroundColor // 이미지 로딩 전 배경색
+        backgroundColor: actualBackgroundColor
       };
     }
+    // 배경 이미지가 없으면 그라데이션 배경 사용 (배경색 + 보조색 활용)
     return {
-      backgroundColor: backgroundColor
+      background: `linear-gradient(135deg, ${actualBackgroundColor} 0%, ${actualSecondaryColor}15 50%, ${actualBackgroundColor} 100%)`
     };
   };
 
   const bgStyle = getBackgroundStyle();
-  // 브랜딩 색상 처리
-  const actualColor = typeof color === 'string' && color.startsWith('#') 
-    ? color 
-    : (typeof color === 'string' && color.includes('var') 
-        ? '#7C3AED'
-        : (color || '#7C3AED'));
-
-  // 보조 색상 처리
-  const secondaryColor = survey?.branding?.secondaryColor;
-  const actualSecondaryColor = secondaryColor && typeof secondaryColor === 'string' && secondaryColor.startsWith('#')
-    ? secondaryColor
-    : (secondaryColor && typeof secondaryColor === 'string' && secondaryColor.includes('var')
-        ? '#F59E0B'
-        : (secondaryColor || '#6B7280')); // 기본값: 회색
 
   // buttonShape에 따른 클래스 매핑
   const getShapeClass = () => {
@@ -71,28 +77,6 @@ export default function DonePage({
   };
 
   const shapeClass = getShapeClass();
-
-  // 배경 밝기에 따라 텍스트 색상 결정
-  const getTextColor = () => {
-    // bgImageBase64가 유효한지 확인
-    const isValidImage = bgImageBase64 && 
-      bgImageBase64.trim() !== '' && 
-      (bgImageBase64.startsWith('data:image/') || bgImageBase64.startsWith('http://') || bgImageBase64.startsWith('https://'));
-    
-    if (isValidImage) {
-      return '#ffffff';
-    }
-    const hex = backgroundColor.replace('#', '');
-    if (hex.length !== 6) return '#ffffff';
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    return brightness > 128 ? '#000000' : '#ffffff';
-  };
-
-  const textColor = getTextColor();
-  const isDarkBg = textColor === '#ffffff';
 
   return (
     <div className="h-screen w-full max-w-full flex items-center justify-center px-4 sm:px-6 safe-area-bottom" style={{ ...bgStyle, width: '100%', maxWidth: '100vw', height: '100vh', minHeight: '100vh' }}>
@@ -160,7 +144,7 @@ export default function DonePage({
           transition={{ duration: 0.5, delay: 0.4 }}
           className="text-lg sm:text-xl mb-8 px-4 leading-relaxed"
           style={{ 
-            color: actualSecondaryColor || (isDarkBg ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.75)'),
+            color: actualSecondaryColor,
             fontSize: '17px',
             fontWeight: 400,
             letterSpacing: '-0.01em',
@@ -178,11 +162,16 @@ export default function DonePage({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: buttonOpacity !== undefined ? buttonOpacity : 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
-            whileHover={{ scale: 1.05, opacity: 1, boxShadow: `0 8px 24px ${actualColor}40` }}
+            whileHover={{ 
+              scale: 1.05, 
+              opacity: 1, 
+              boxShadow: `0 8px 24px ${actualColor}40`,
+              background: `linear-gradient(135deg, ${actualColor} 0%, ${actualSecondaryColor} 100%)`
+            }}
             whileTap={{ scale: 0.95 }}
             className={`inline-flex items-center gap-2.5 px-7 py-4 ${shapeClass} text-white font-semibold shadow-lg transition-all duration-300`}
             style={{ 
-              backgroundColor: actualColor, 
+              background: `linear-gradient(135deg, ${actualColor} 0%, ${actualSecondaryColor} 100%)`,
               opacity: buttonOpacity !== undefined ? buttonOpacity : 1,
               fontSize: '15px',
               fontWeight: 600,

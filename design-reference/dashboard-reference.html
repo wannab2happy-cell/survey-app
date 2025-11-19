@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대시보드 디자인 레퍼런스</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#26C6DA',
+                        'primary-hover': '#20B2C3',
+                        secondary: '#F59E0B',
+                        success: '#10B981',
+                        error: '#EF4444',
+                        warning: '#F59E0B',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .compact-stat-item {
+            transition: all 0.2s ease;
+        }
+        
+        .compact-stat-item:hover {
+            background-color: #f9fafb;
+        }
+        
+        .alert-item {
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .activity-item {
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .chart-container {
+            min-height: 250px;
+        }
+        
+        .filter-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: #f3f4f6;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen p-6">
+        <div class="max-w-7xl mx-auto space-y-6">
+            <!-- 헤더 -->
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900 mb-2">대시보드 디자인 레퍼런스</h1>
+                        <p class="text-gray-600">설문 운영 현황을 한눈에 확인하세요</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
+                            🔔 알럿 (3)
+                        </button>
+                        <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors text-sm font-medium">
+                            실시간: ON
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 컴팩트 통계 바 -->
+            <div class="bg-white rounded-xl shadow-md p-4 border border-gray-200">
+                <div class="flex flex-wrap gap-4">
+                    <div class="flex-1 min-w-[140px] text-center px-4 py-3 border-r border-gray-200 last:border-r-0 compact-stat-item">
+                        <p class="text-xs text-gray-500 mb-1">전체 설문</p>
+                        <p class="text-2xl font-bold text-purple-600">10</p>
+                    </div>
+                    <div class="flex-1 min-w-[140px] text-center px-4 py-3 border-r border-gray-200 last:border-r-0 compact-stat-item">
+                        <p class="text-xs text-gray-500 mb-1">활성 설문</p>
+                        <p class="text-2xl font-bold text-green-600">5</p>
+                    </div>
+                    <div class="flex-1 min-w-[140px] text-center px-4 py-3 border-r border-gray-200 last:border-r-0 compact-stat-item">
+                        <p class="text-xs text-gray-500 mb-1">총 응답 수</p>
+                        <p class="text-2xl font-bold text-blue-600">120</p>
+                    </div>
+                    <div class="flex-1 min-w-[140px] text-center px-4 py-3 border-r border-gray-200 last:border-r-0 compact-stat-item">
+                        <p class="text-xs text-gray-500 mb-1">응답률</p>
+                        <p class="text-2xl font-bold text-orange-600">85%</p>
+                    </div>
+                    <div class="flex-1 min-w-[140px] text-center px-4 py-3 border-r border-gray-200 last:border-r-0 compact-stat-item">
+                        <p class="text-xs text-gray-500 mb-1">접속자</p>
+                        <p class="text-2xl font-bold text-indigo-600">25</p>
+                    </div>
+                    <div class="flex-1 min-w-[140px] text-center px-4 py-3 compact-stat-item">
+                        <p class="text-xs text-gray-500 mb-1">소요시간</p>
+                        <p class="text-2xl font-bold text-gray-600">3:45</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 필터 영역 -->
+            <div class="bg-white rounded-xl shadow-md p-4 border border-gray-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-gray-900">필터</h2>
+                    <div class="flex items-center gap-2">
+                        <button class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            📋 컴팩트
+                        </button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">설문 선택</label>
+                        <div class="relative">
+                            <button class="w-full px-4 py-2.5 text-left text-sm font-medium border-2 border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all flex items-center justify-between hover:border-gray-400">
+                                <span class="text-gray-900">전체 설문</span>
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">시작일</label>
+                        <input type="date" class="w-full px-4 py-2.5 text-sm font-medium border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all hover:border-gray-400" value="2024-12-01">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">종료일</label>
+                        <input type="date" class="w-full px-4 py-2.5 text-sm font-medium border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all hover:border-gray-400" value="2024-12-19">
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <button class="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 hover:text-gray-900 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            초기화
+                        </button>
+                        <button class="flex-1 px-4 py-2.5 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors border-2 border-primary focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            PDF 내보내기
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 메인 콘텐츠 영역: 실시간 모니터링 + 차트 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 실시간 모니터링 영역 (좌측) -->
+                <div class="lg:col-span-1 space-y-4">
+                    <!-- 알럿 패널 -->
+                    <div class="bg-white rounded-xl shadow-md p-4 border border-gray-200">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-gray-900">🔔 실시간 알럿</h3>
+                            <span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">3</span>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="alert-item p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-yellow-800">응답 수 급증</p>
+                                        <p class="text-xs text-yellow-600 mt-1">설문 "고객 만족도 조사" 응답 수 급증 (+50)</p>
+                                        <p class="text-xs text-gray-500 mt-1">5분 전</p>
+                                    </div>
+                                    <button class="text-yellow-600 hover:text-yellow-800">✕</button>
+                                </div>
+                            </div>
+                            <div class="alert-item p-3 bg-green-50 border-l-4 border-green-400 rounded-lg">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-green-800">목표 달성</p>
+                                        <p class="text-xs text-green-600 mt-1">설문 "제품 피드백" 목표 응답 수 달성</p>
+                                        <p class="text-xs text-gray-500 mt-1">10분 전</p>
+                                    </div>
+                                    <button class="text-green-600 hover:text-green-800">✕</button>
+                                </div>
+                            </div>
+                            <div class="alert-item p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-yellow-800">응답률 저하</p>
+                                        <p class="text-xs text-yellow-600 mt-1">설문 "의견 조사" 응답률 저하 (-10%)</p>
+                                        <p class="text-xs text-gray-500 mt-1">15분 전</p>
+                                    </div>
+                                    <button class="text-yellow-600 hover:text-yellow-800">✕</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 활동 피드 -->
+                    <div class="bg-white rounded-xl shadow-md p-4 border border-gray-200">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-gray-900">📊 실시간 활동</h3>
+                            <button class="text-sm text-gray-500 hover:text-gray-700">전체 보기 →</button>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="activity-item p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                    <p class="text-sm text-gray-700 flex-1">설문 "A" 새로운 응답 1개</p>
+                                    <p class="text-xs text-gray-500">방금 전</p>
+                                </div>
+                            </div>
+                            <div class="activity-item p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                    <p class="text-sm text-gray-700 flex-1">설문 "B" 새로운 응답 3개</p>
+                                    <p class="text-xs text-gray-500">1분 전</p>
+                                </div>
+                            </div>
+                            <div class="activity-item p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                    <p class="text-sm text-gray-700 flex-1">설문 "C" 새로운 응답 2개</p>
+                                    <p class="text-xs text-gray-500">2분 전</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 차트 영역 (우측) -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- 응답 추이 차트 -->
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-gray-900">응답 추이</h3>
+                            <div class="flex items-center gap-2">
+                                <span class="filter-badge">최근 7일</span>
+                                <button class="text-sm text-gray-500 hover:text-gray-700">전체 화면</button>
+                            </div>
+                        </div>
+                        <div class="chart-container bg-gray-50 rounded-lg p-4 flex items-center justify-center">
+                            <p class="text-gray-500">차트 영역 (라인 차트)</p>
+                        </div>
+                    </div>
+
+                    <!-- 설문별 성과 차트 -->
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-gray-900">설문별 성과</h3>
+                            <div class="flex items-center gap-2">
+                                <span class="filter-badge">상위 5개</span>
+                                <button class="text-sm text-gray-500 hover:text-gray-700">전체 화면</button>
+                            </div>
+                        </div>
+                        <div class="chart-container bg-gray-50 rounded-lg p-4 flex items-center justify-center">
+                            <p class="text-gray-500">차트 영역 (바 차트)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 큰 카드 모드 (참고용) -->
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">큰 카드 모드 (참고용)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 shadow-md">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
+                                <span class="text-2xl">📋</span>
+                            </div>
+                        </div>
+                        <div class="text-white">
+                            <p class="text-sm opacity-90 mb-1">전체 설문</p>
+                            <p class="text-3xl font-bold">10</p>
+                        </div>
+                    </div>
+                    <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 shadow-md">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
+                                <span class="text-2xl">✅</span>
+                            </div>
+                        </div>
+                        <div class="text-white">
+                            <p class="text-sm opacity-90 mb-1">활성 설문</p>
+                            <p class="text-3xl font-bold">5</p>
+                        </div>
+                    </div>
+                    <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 shadow-md">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
+                                <span class="text-2xl">📝</span>
+                            </div>
+                        </div>
+                        <div class="text-white">
+                            <p class="text-sm opacity-90 mb-1">총 응답 수</p>
+                            <p class="text-3xl font-bold">120</p>
+                        </div>
+                    </div>
+                    <div class="stat-card bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 shadow-md">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
+                                <span class="text-2xl">📈</span>
+                            </div>
+                        </div>
+                        <div class="text-white">
+                            <p class="text-sm opacity-90 mb-1">평균 응답률</p>
+                            <p class="text-3xl font-bold">85%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 인사이트 카드 (참고용) -->
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">인사이트 카드 (참고용)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors">
+                        <p class="text-sm text-gray-700 leading-relaxed">
+                            <strong class="text-blue-600 font-semibold">활성 설문:</strong> 현재 5개의 설문이 진행 중입니다.
+                        </p>
+                    </div>
+                    <div class="p-4 bg-green-50 rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
+                        <p class="text-sm text-gray-700 leading-relaxed">
+                            <strong class="text-green-600 font-semibold">총 응답 수:</strong> 지금까지 120개의 응답을 받았습니다.
+                        </p>
+                    </div>
+                    <div class="p-4 bg-purple-50 rounded-lg border border-purple-200 hover:bg-purple-100 transition-colors">
+                        <p class="text-sm text-gray-700 leading-relaxed">
+                            <strong class="text-purple-600 font-semibold">전체 설문:</strong> 총 10개의 설문이 생성되었습니다.
+                        </p>
+                    </div>
+                    <div class="p-4 bg-orange-50 rounded-lg border border-orange-200 hover:bg-orange-100 transition-colors">
+                        <p class="text-sm text-gray-700 leading-relaxed">
+                            <strong class="text-orange-600 font-semibold">평균 응답률:</strong> 평균 85%의 응답률을 기록하고 있습니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

@@ -222,10 +222,13 @@ export default function SurveyPageV2() {
     );
   }
 
-  const primaryColor = survey.branding?.primaryColor || survey.cover?.primaryColor || '#6B46C1';
+  // 템플릿 색상 추출 (3가지 색상 모두 활용)
+  const primaryColor = survey.branding?.primaryColor || '#6B46C1';      // 강조 색상: 버튼, 링크, 강조 텍스트, 진행률 바, 선택된 항목
+  const secondaryColor = survey.branding?.secondaryColor || '#A78BFA';  // 보조 색상: 호버 상태, 보조 요소, 그라데이션, 경계선
+  const tertiaryColor = survey.branding?.backgroundColor || survey.branding?.tertiaryColor || '#F3F4F6'; // 배경 색상: 전체 배경, 카드 배경
+  
   const buttonShape = survey.branding?.buttonShape || 'rounded-lg';
   const buttonOpacity = survey.branding?.buttonOpacity !== undefined ? survey.branding?.buttonOpacity : 0.9;
-  const backgroundColor = survey.branding?.backgroundColor || '#1a1f2e';
   // 커버의 배경 이미지가 우선, 없으면 브랜딩의 배경 이미지 사용
   const bgImageBase64 = survey.cover?.bgImageBase64 || survey.branding?.bgImageBase64 || '';
   const questions = survey.questions || [];
@@ -234,7 +237,16 @@ export default function SurveyPageV2() {
   // 단계별 렌더링
   switch (currentStep) {
     case STEP_START:
-      return <StartPage survey={survey} onStart={handleStart} color={primaryColor} buttonShape={buttonShape} buttonOpacity={buttonOpacity} backgroundColor={backgroundColor} bgImageBase64={bgImageBase64} />;
+      return <StartPage 
+        survey={survey} 
+        onStart={handleStart} 
+        color={primaryColor}
+        secondaryColor={secondaryColor}
+        backgroundColor={tertiaryColor}
+        buttonShape={buttonShape} 
+        buttonOpacity={buttonOpacity} 
+        bgImageBase64={bgImageBase64} 
+      />;
 
     case STEP_QUESTION:
       if (currentQuestionIndex >= 0 && currentQuestionIndex < questions.length) {
@@ -251,15 +263,25 @@ export default function SurveyPageV2() {
             onPrevious={handlePrevious}
             showPrevious={true}
             color={primaryColor}
+            secondaryColor={secondaryColor}
+            backgroundColor={tertiaryColor}
             buttonShape={buttonShape}
             buttonOpacity={buttonOpacity}
-            backgroundColor={survey.branding?.questionBackgroundColor || backgroundColor}
             bgImageBase64={survey.branding?.questionBgImageBase64 || survey.cover?.bgImageBase64 || bgImageBase64}
             koreanSpacingWrap={koreanSpacingWrap}
           />
         );
       }
-      return <StartPage survey={survey} onStart={handleStart} color={primaryColor} buttonShape={buttonShape} buttonOpacity={buttonOpacity} backgroundColor={backgroundColor} bgImageBase64={bgImageBase64} />;
+      return <StartPage 
+        survey={survey} 
+        onStart={handleStart} 
+        color={primaryColor}
+        secondaryColor={secondaryColor}
+        backgroundColor={tertiaryColor}
+        buttonShape={buttonShape} 
+        buttonOpacity={buttonOpacity} 
+        bgImageBase64={bgImageBase64} 
+      />;
 
     case STEP_REVIEW:
       return (
@@ -270,18 +292,36 @@ export default function SurveyPageV2() {
           onSubmit={handleSubmit}
           onSubmitLoading={isSubmitting}
           color={primaryColor}
+          secondaryColor={secondaryColor}
+          backgroundColor={tertiaryColor}
           buttonShape={buttonShape}
           buttonOpacity={buttonOpacity}
-          backgroundColor={backgroundColor}
           bgImageBase64={bgImageBase64}
         />
       );
 
     case STEP_DONE:
-      return <DonePage survey={survey} color={primaryColor} buttonShape={buttonShape} buttonOpacity={buttonOpacity} backgroundColor={backgroundColor} bgImageBase64={bgImageBase64} />;
+      return <DonePage 
+        survey={survey} 
+        color={primaryColor}
+        secondaryColor={secondaryColor}
+        backgroundColor={tertiaryColor}
+        buttonShape={buttonShape} 
+        buttonOpacity={buttonOpacity} 
+        bgImageBase64={bgImageBase64} 
+      />;
 
     default:
-      return <StartPage survey={survey} onStart={handleStart} color={primaryColor} buttonShape={buttonShape} buttonOpacity={buttonOpacity} backgroundColor={backgroundColor} bgImageBase64={bgImageBase64} />;
+      return <StartPage 
+        survey={survey} 
+        onStart={handleStart} 
+        color={primaryColor}
+        secondaryColor={secondaryColor}
+        backgroundColor={tertiaryColor}
+        buttonShape={buttonShape} 
+        buttonOpacity={buttonOpacity} 
+        bgImageBase64={bgImageBase64} 
+      />;
   }
 }
 

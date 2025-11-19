@@ -216,11 +216,34 @@ export async function submitSurveyResponse(req, res) {
       });
     }
 
-    // 답변과 질문 개수 일치 확인
-    if (answers.length !== survey.questions.length) {
+    // 각 답변의 형식 검증
+    for (const answer of answers) {
+      if (!answer.questionId) {
+        return res.status(400).json({ 
+          success: false,
+          message: "답변에 questionId가 필요합니다." 
+        });
+      }
+      if (answer.value === undefined || answer.value === null) {
+        return res.status(400).json({ 
+          success: false,
+          message: "답변에 value가 필요합니다." 
+        });
+      }
+    }
+
+    // 필수 질문에 대한 답변 확인
+    const requiredQuestions = survey.questions.filter(q => q.required);
+    const answeredQuestionIds = answers.map(a => String(a.questionId));
+    const missingRequiredAnswers = requiredQuestions.filter(q => {
+      const questionId = String(q._id || q.id);
+      return !answeredQuestionIds.includes(questionId);
+    });
+    
+    if (missingRequiredAnswers.length > 0) {
       return res.status(400).json({ 
         success: false,
-        message: "모든 질문에 답변을 제공해야 합니다." 
+        message: `필수 질문에 답변을 제공해야 합니다. (${missingRequiredAnswers.length}개 누락)` 
       });
     }
 

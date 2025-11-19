@@ -475,46 +475,91 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                             onQuestionsChange('update', { questionId: question.id, updatedQuestion: updated });
                         }}
                         onQuestionTypeChange={(qIdx, newType) => {
-                            const question = questions[qIdx];
-                            // 역매핑: 프론트엔드 타입 -> 설정 타입
-                            const typeMapping = {
-                                'radio': 'single_choice',
-                                'checkbox': 'multiple_choice',
-                                'radio_image': 'image_choice',
-                                'checkbox_image': 'image_choice',
-                                'yes_no': 'yes_no',
-                                'dropdown': 'dropdown',
-                                'star_rating': 'star_rating',
-                                'scale': 'scale',
-                                'textarea': 'textarea',
-                                'text': 'text',
-                                'email': 'email',
-                                'phone': 'phone',
-                                'descriptive': 'textarea'
-                            };
-                            const mappedType = typeMapping[newType] || newType;
-                            const config = getQuestionConfig(mappedType);
-                            
-                            const updated = { ...question, type: config.frontendType || newType };
-                            if (!config.needsOptions) {
-                                updated.options = [];
-                            } else if ((updated.options || []).length === 0) {
-                                let defaultOptions = [];
-                                if (config.defaultOptions === 2) {
-                                    defaultOptions = [
-                                        { id: Date.now(), text: '옵션 1', imageBase64: config.hasImage ? '' : undefined },
-                                        { id: Date.now() + 1, text: '옵션 2', imageBase64: config.hasImage ? '' : undefined }
-                                    ];
-                                } else if (Array.isArray(config.defaultOptions)) {
-                                    defaultOptions = config.defaultOptions.map((opt, idx) => ({
-                                        id: Date.now() + idx,
-                                        text: String(opt),
-                                        imageBase64: config.hasImage ? '' : undefined
-                                    }));
+                            try {
+                                // 질문이 존재하는지 확인
+                                if (!questions || qIdx < 0 || qIdx >= questions.length) {
+                                    console.error('[Step3_Questions] 질문 인덱스 오류:', { qIdx, questionsLength: questions?.length });
+                                    return;
                                 }
-                                updated.options = defaultOptions;
+                                
+                                const question = questions[qIdx];
+                                if (!question) {
+                                    console.error('[Step3_Questions] 질문이 존재하지 않습니다:', { qIdx });
+                                    return;
+                                }
+                                
+                                // 역매핑: 프론트엔드 타입 -> 설정 타입
+                                const typeMapping = {
+                                    'radio': 'single_choice',
+                                    'checkbox': 'multiple_choice',
+                                    'radio_image': 'image_choice',
+                                    'checkbox_image': 'image_choice',
+                                    'yes_no': 'yes_no',
+                                    'dropdown': 'dropdown',
+                                    'star_rating': 'star_rating',
+                                    'scale': 'scale',
+                                    'textarea': 'textarea',
+                                    'text': 'text',
+                                    'email': 'email',
+                                    'phone': 'phone',
+                                    'descriptive': 'textarea'
+                                };
+                                const mappedType = typeMapping[newType] || newType;
+                                const config = getQuestionConfig(mappedType);
+                                
+                                if (!config) {
+                                    console.error('[Step3_Questions] 질문 설정을 찾을 수 없습니다:', { mappedType, newType });
+                                    return;
+                                }
+                                
+                                // 질문 업데이트 객체 생성
+                                const updated = { 
+                                    ...question, 
+                                    type: config.frontendType || newType 
+                                };
+                                
+                                // 옵션 처리
+                                if (!config.needsOptions) {
+                                    // 옵션이 필요 없는 타입이면 옵션 제거
+                                    updated.options = [];
+                                } else {
+                                    // 옵션이 필요한 타입이면
+                                    const currentOptions = Array.isArray(question.options) ? question.options : [];
+                                    
+                                    if (currentOptions.length === 0) {
+                                        // 옵션이 없으면 기본 옵션 생성
+                                        let defaultOptions = [];
+                                        if (config.defaultOptions === 2) {
+                                            defaultOptions = [
+                                                { id: Date.now(), text: '옵션 1', imageBase64: config.hasImage ? '' : undefined },
+                                                { id: Date.now() + 1, text: '옵션 2', imageBase64: config.hasImage ? '' : undefined }
+                                            ];
+                                        } else if (Array.isArray(config.defaultOptions)) {
+                                            defaultOptions = config.defaultOptions.map((opt, idx) => ({
+                                                id: Date.now() + idx,
+                                                text: String(opt),
+                                                imageBase64: config.hasImage ? '' : undefined
+                                            }));
+                                        }
+                                        updated.options = defaultOptions;
+                                    } else {
+                                        // 기존 옵션이 있으면 유지 (타입만 변경)
+                                        updated.options = currentOptions;
+                                    }
+                                }
+                                
+                                // 질문 ID 확인
+                                const questionId = question.id || question._id;
+                                if (!questionId) {
+                                    console.error('[Step3_Questions] 질문 ID가 없습니다:', { question });
+                                    return;
+                                }
+                                
+                                // 업데이트 실행
+                                onQuestionsChange('update', { questionId, updatedQuestion: updated });
+                            } catch (error) {
+                                console.error('[Step3_Questions] 질문 형식 변경 오류:', error, { qIdx, newType });
                             }
-                            onQuestionsChange('update', { questionId: question.id, updatedQuestion: updated });
                         }}
                     />
                     <div ref={questionsEndRef} />

@@ -46,20 +46,44 @@ export default function Topbar() {
 
   const breadcrumbs = getBreadcrumb();
 
+  // Admin 고정 색상 (템플릿과 무관)
+  const ADMIN_TEXT_ACTIVE = '#111827';
+  const ADMIN_TEXT_INACTIVE = '#4B5563';
+  const ADMIN_TEXT_HOVER = '#111827';
+  const ADMIN_DIVIDER = '#9CA3AF';
+
   return (
-    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 fixed top-0 left-64 right-0 z-10">
+    <header 
+      className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 fixed top-0 left-64 right-0 z-10"
+      style={{ 
+        backgroundColor: '#FFFFFF',
+        borderBottomColor: '#E5E7EB'
+      }}
+    >
       {/* 브레드크럼 */}
       <nav className="flex items-center gap-2">
         {breadcrumbs.map((crumb, idx) => (
           <div key={idx} className="flex items-center gap-2">
-            {idx > 0 && <span className="text-gray-400">/</span>}
+            {idx > 0 && <span style={{ color: ADMIN_DIVIDER }}>/</span>}
             <Link
               to={crumb.path}
-              className={`text-sm ${
-                idx === breadcrumbs.length - 1
-                  ? 'text-gray-900 font-semibold'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
+              className="text-sm font-medium transition-colors"
+              style={idx === breadcrumbs.length - 1 ? {
+                color: ADMIN_TEXT_ACTIVE,
+                fontWeight: 600
+              } : {
+                color: ADMIN_TEXT_INACTIVE
+              }}
+              onMouseEnter={(e) => {
+                if (idx !== breadcrumbs.length - 1) {
+                  e.currentTarget.style.color = ADMIN_TEXT_HOVER;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (idx !== breadcrumbs.length - 1) {
+                  e.currentTarget.style.color = ADMIN_TEXT_INACTIVE;
+                }
+              }}
             >
               {crumb.label}
             </Link>

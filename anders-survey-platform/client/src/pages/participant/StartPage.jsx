@@ -7,10 +7,11 @@ import { sanitizeHTML } from '../../utils/htmlSanitizer';
 export default function StartPage({ 
   survey, 
   onStart, 
-  color = '#6B46C1', // Primary 색상 기본값
+  color = '#6B46C1', // Primary 색상 (강조 색상): 버튼, 링크, 강조 텍스트
+  secondaryColor = '#A78BFA', // Secondary 색상 (보조 색상): 호버, 그라데이션, 보조 요소
+  backgroundColor = '#F3F4F6', // Tertiary 색상 (배경 색상): 전체 배경
   buttonShape = 'rounded-lg', 
   buttonOpacity = 0.9,
-  backgroundColor = '#e7e7e7', // 샘플과 동일한 배경색
   bgImageBase64 = ''
 }) {
   const coverImage = survey?.cover?.image || survey?.coverImage;
@@ -26,7 +27,19 @@ export default function StartPage({
         ? '#6B46C1'
         : (color || '#6B46C1'));
 
-  // 배경 스타일 결정
+  const actualSecondaryColor = typeof secondaryColor === 'string' && secondaryColor.startsWith('#') 
+    ? secondaryColor 
+    : (typeof secondaryColor === 'string' && secondaryColor.includes('var') 
+        ? '#A78BFA'
+        : (secondaryColor || '#A78BFA'));
+
+  const actualBackgroundColor = typeof backgroundColor === 'string' && backgroundColor.startsWith('#') 
+    ? backgroundColor 
+    : (typeof backgroundColor === 'string' && backgroundColor.includes('var') 
+        ? '#F3F4F6'
+        : (backgroundColor || '#F3F4F6'));
+
+  // 배경 스타일 결정 (그라데이션 + 배경 이미지)
   const getBackgroundStyle = () => {
     const isValidImage = bgImageBase64 && 
       bgImageBase64.trim() !== '' && 
@@ -38,11 +51,12 @@ export default function StartPage({
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        backgroundColor: backgroundColor
+        backgroundColor: actualBackgroundColor
       };
     }
+    // 배경 이미지가 없으면 그라데이션 배경 사용 (배경색 + 보조색 활용)
     return {
-      backgroundColor: backgroundColor
+      background: `linear-gradient(135deg, ${actualBackgroundColor} 0%, ${actualSecondaryColor}15 50%, ${actualBackgroundColor} 100%)`
     };
   };
 
@@ -127,7 +141,7 @@ export default function StartPage({
           </div>
         )}
 
-        {/* 3. 설문지 제목 */}
+        {/* 3. 설문지 제목 - Primary 색상 적용 */}
         <motion.h1
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -136,7 +150,7 @@ export default function StartPage({
           style={{ 
             fontSize: '27px',
             fontWeight: 700,
-            color: '#1a1a1a',
+            color: actualColor, // Primary 색상으로 강조
             letterSpacing: '-0.02em',
             lineHeight: '1.4',
             marginBottom: '12px',
@@ -145,7 +159,7 @@ export default function StartPage({
           dangerouslySetInnerHTML={{ __html: sanitizeHTML(title || '') }}
         />
 
-        {/* 4. 부제목 */}
+        {/* 4. 부제목 - Secondary 색상 적용 */}
         {subtitle && (
           <motion.p
             initial={{ opacity: 0, y: 10 }}
@@ -154,7 +168,7 @@ export default function StartPage({
             className="m-0 text-center mx-auto"
             style={{ 
               fontSize: '14px',
-              color: '#666',
+              color: actualSecondaryColor, // Secondary 색상으로 보조 강조
               fontWeight: 400,
               lineHeight: '1.6',
               marginBottom: '32px',
@@ -164,54 +178,46 @@ export default function StartPage({
           />
         )}
 
-        {/* 5. 커버 이미지 영역 */}
-        {coverImage ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-            className="w-full overflow-hidden"
-            style={{ 
-              height: '200px',
-              borderRadius: '20px',
-              marginTop: '0px',
-              marginBottom: '32px',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)'
-            }}
-          >
-            <img
-              src={coverImage}
-              alt="Cover"
-              className="w-full h-full object-cover"
-              style={{ borderRadius: '20px' }}
-              onError={(e) => {
-                e.target.style.display = 'none';
+        {/* 5. 커버 이미지 영역 - 항상 동일한 높이 유지 (버튼 위치 고정) */}
+        <div 
+          className="w-full"
+          style={{
+            height: '200px',
+            marginTop: '0px',
+            marginBottom: '32px'
+          }}
+        >
+          {coverImage ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+              className="w-full h-full overflow-hidden"
+              style={{ 
+                borderRadius: '20px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)'
+              }}
+            >
+              <img
+                src={coverImage}
+                alt="Cover"
+                className="w-full h-full object-cover"
+                style={{ borderRadius: '20px' }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            </motion.div>
+          ) : (
+            // 이미지가 없을 때도 동일한 높이의 투명 공간 유지
+            <div 
+              className="w-full h-full"
+              style={{
+                borderRadius: '20px'
               }}
             />
-          </motion.div>
-        ) : (
-          <div 
-            className="w-full border-2 border-dashed flex flex-col items-center justify-center text-center"
-            style={{
-              height: '200px',
-              borderRadius: '20px',
-              borderColor: '#e0e0e0',
-              background: 'linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%)',
-              color: '#999',
-              fontSize: '13px',
-              fontWeight: 500,
-              marginTop: '0px',
-              marginBottom: '32px',
-              padding: '24px'
-            }}
-          >
-            <svg className="w-8 h-8 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span>커버 이미지 영역</span>
-            <span style={{ fontSize: '11px', marginTop: '4px', color: '#bbb' }}>1280×720 권장</span>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* 6. 설문 참여수 표시 공간 (on/off) - 항상 공간 확보 */}
         <div
@@ -244,13 +250,17 @@ export default function StartPage({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.4 }}
-          whileHover={{ scale: 1.02, boxShadow: `0 8px 24px ${actualColor}40` }}
+          whileHover={{ 
+            scale: 1.02, 
+            boxShadow: `0 8px 24px ${actualColor}40`,
+            background: `linear-gradient(135deg, ${actualColor} 0%, ${actualSecondaryColor} 100%)`
+          }}
           whileTap={{ scale: 0.98 }}
           onClick={onStart}
           className={`w-[80%] ${shapeClass} border-none text-white cursor-pointer mx-auto block flex items-center justify-center gap-2`}
           style={{
             padding: '13px 18px',
-            backgroundColor: actualColor,
+            background: `linear-gradient(135deg, ${actualColor} 0%, ${actualSecondaryColor} 100%)`,
             opacity: buttonOpacity !== undefined ? buttonOpacity : 1,
             fontSize: '15px',
             fontWeight: 600,

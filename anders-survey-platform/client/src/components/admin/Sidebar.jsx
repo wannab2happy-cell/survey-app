@@ -63,18 +63,31 @@ export default function Sidebar({ onLogout }) {
     return location.pathname.startsWith(path);
   };
 
+  // Admin 고정 색상 (템플릿과 무관)
+  const ADMIN_COLOR = '#26C6DA';
+  const ADMIN_COLOR_HOVER = '#00ACC1';
+  const ADMIN_TEXT_COLOR = '#FFFFFF';
+  const ADMIN_INACTIVE_COLOR = '#6B7280';
+  const ADMIN_HOVER_BG = '#F9FAFB';
+
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col fixed left-0 top-0 z-50">
+    <aside 
+      className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col fixed left-0 top-0 z-50"
+      style={{ 
+        backgroundColor: '#FFFFFF',
+        borderRightColor: '#E5E7EB'
+      }}
+    >
       {/* 로고 */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-gray-200" style={{ borderBottomColor: '#E5E7EB' }}>
         <div className="flex items-center gap-3">
           <div 
             className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-sm"
-            style={{ backgroundColor: '#26C6DA' }}
+            style={{ backgroundColor: ADMIN_COLOR }}
           >
             S
           </div>
-          <h1 className="text-xl font-bold text-gray-900">설문 플랫폼</h1>
+          <h1 className="text-xl font-bold" style={{ color: '#111827' }}>설문 플랫폼</h1>
         </div>
       </div>
 
@@ -88,25 +101,33 @@ export default function Sidebar({ onLogout }) {
               <li key={idx}>
                 <Link
                   to={item.path}
-                  className={`
-                    flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200
-                    ${active 
-                      ? 'font-medium shadow-sm' 
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    }
-                  `}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 font-medium"
                   style={active ? { 
-                    backgroundColor: '#26C6DA',
-                    color: '#FFFFFF'
-                  } : {}}
+                    backgroundColor: ADMIN_COLOR,
+                    color: ADMIN_TEXT_COLOR
+                  } : {
+                    color: ADMIN_INACTIVE_COLOR
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!active) {
+                      e.currentTarget.style.backgroundColor = ADMIN_HOVER_BG;
+                      e.currentTarget.style.color = '#111827';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!active) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = ADMIN_INACTIVE_COLOR;
+                    }
+                  }}
                 >
                   <IconComponent 
                     className="w-5 h-5" 
-                    style={active ? { color: '#FFFFFF' } : { color: '#6B7280' }}
+                    style={active ? { color: ADMIN_TEXT_COLOR } : { color: ADMIN_INACTIVE_COLOR }}
                   />
                   <span 
                     className="text-sm"
-                    style={active ? { color: '#FFFFFF' } : {}}
+                    style={active ? { color: ADMIN_TEXT_COLOR } : { color: ADMIN_INACTIVE_COLOR }}
                   >
                     {item.label}
                   </span>
@@ -118,27 +139,35 @@ export default function Sidebar({ onLogout }) {
       </nav>
 
       {/* 하단 계정정보 및 로그아웃 */}
-      <div className="p-4 border-t border-gray-200 space-y-1">
+      <div className="p-4 border-t border-gray-200 space-y-1" style={{ borderTopColor: '#E5E7EB' }}>
         {/* 계정정보 */}
         <Link
           to="/admin/account"
-          className={`
-            w-full px-4 py-2.5 rounded-lg transition-all duration-200 text-left flex items-center gap-3 font-medium text-sm
-            ${location.pathname === '/admin/account'
-              ? 'shadow-sm'
-              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-            }
-          `}
+          className="w-full px-4 py-2.5 rounded-lg transition-all duration-200 text-left flex items-center gap-3 font-medium text-sm"
           style={location.pathname === '/admin/account' ? { 
-            backgroundColor: '#26C6DA',
-            color: '#FFFFFF'
-          } : {}}
+            backgroundColor: ADMIN_COLOR,
+            color: ADMIN_TEXT_COLOR
+          } : {
+            color: ADMIN_INACTIVE_COLOR
+          }}
+          onMouseEnter={(e) => {
+            if (location.pathname !== '/admin/account') {
+              e.currentTarget.style.backgroundColor = ADMIN_HOVER_BG;
+              e.currentTarget.style.color = '#111827';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (location.pathname !== '/admin/account') {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = ADMIN_INACTIVE_COLOR;
+            }
+          }}
         >
           <UserIcon 
             className="w-5 h-5" 
-            style={location.pathname === '/admin/account' ? { color: '#FFFFFF' } : { color: '#6B7280' }}
+            style={location.pathname === '/admin/account' ? { color: ADMIN_TEXT_COLOR } : { color: ADMIN_INACTIVE_COLOR }}
           />
-          <span style={location.pathname === '/admin/account' ? { color: '#FFFFFF' } : {}}>
+          <span style={location.pathname === '/admin/account' ? { color: ADMIN_TEXT_COLOR } : { color: ADMIN_INACTIVE_COLOR }}>
             계정정보
           </span>
         </Link>
@@ -156,9 +185,18 @@ export default function Sidebar({ onLogout }) {
               }
             }
           }}
-          className="w-full px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 text-left flex items-center gap-3 font-medium text-sm"
+          className="w-full px-4 py-2.5 rounded-lg transition-all duration-200 text-left flex items-center gap-3 font-medium text-sm"
+          style={{ color: ADMIN_INACTIVE_COLOR }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = ADMIN_HOVER_BG;
+            e.currentTarget.style.color = '#111827';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.color = ADMIN_INACTIVE_COLOR;
+          }}
         >
-          <LogoutIcon className="w-5 h-5 text-gray-500" />
+          <LogoutIcon className="w-5 h-5" style={{ color: ADMIN_INACTIVE_COLOR }} />
           <span>로그아웃</span>
         </button>
       </div>

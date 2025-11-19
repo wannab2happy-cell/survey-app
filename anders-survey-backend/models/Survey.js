@@ -32,13 +32,19 @@ const BrandingSchema = new mongoose.Schema({
   font: { type: String, default: 'Noto Sans KR' },
   buttonShape: { type: String, default: 'rounded-lg' },
   logoBase64: { type: String, default: '' },
-  bgImageBase64: { type: String, default: '' }
+  bgImageBase64: { type: String, default: '' },
+  backgroundColor: { type: String, default: '#1a1f2e' } // 배경색 추가
 }, { _id: false });
 
 const CoverSchema = new mongoose.Schema({
   title: { type: String, default: '' },
   description: { type: String, default: '' },
-  imageBase64: { type: String, default: '' }
+  imageBase64: { type: String, default: '' },
+  logoBase64: { type: String, default: '' },
+  bgImageBase64: { type: String, default: '' }, // 배경 이미지 추가
+  skipCover: { type: Boolean, default: false }, // 커버 페이지 건너뛰기 설정
+  showParticipantCount: { type: Boolean, default: false }, // 설문 참여 수 표시 여부
+  buttonText: { type: String, default: '시작하기' } // 시작 버튼 텍스트
 }, { _id: false });
 
 const EndingSchema = new mongoose.Schema({

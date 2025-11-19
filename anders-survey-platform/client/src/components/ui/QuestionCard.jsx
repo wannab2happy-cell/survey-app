@@ -9,7 +9,8 @@ export default function QuestionCard({
   required = false,
   children,
   error = null,
-  color = 'var(--primary)'
+  color = 'var(--primary)', // Primary 색상 (강조 색상)
+  secondaryColor = null // Secondary 색상 (보조 색상)
 }) {
   // 브랜딩 색상 처리
   const actualColor = typeof color === 'string' && color.startsWith('#') 
@@ -17,6 +18,12 @@ export default function QuestionCard({
     : (typeof color === 'string' && color.includes('var') 
         ? '#7C3AED'
         : (color || '#7C3AED'));
+
+  const actualSecondaryColor = secondaryColor && typeof secondaryColor === 'string' && secondaryColor.startsWith('#')
+    ? secondaryColor
+    : (secondaryColor && typeof secondaryColor === 'string' && secondaryColor.includes('var')
+        ? '#A78BFA'
+        : (secondaryColor || '#6B7280')); // 기본값: 회색
 
   return (
     <motion.div
@@ -38,12 +45,13 @@ export default function QuestionCard({
           Q{questionNumber}
         </div>
         <h2 
-          className="text-lg text-gray-900 leading-relaxed font-medium"
+          className="leading-relaxed font-medium"
           style={{
             fontSize: '18px',
             fontWeight: 600,
             letterSpacing: '-0.01em',
-            lineHeight: '1.6'
+            lineHeight: '1.6',
+            color: actualSecondaryColor // Secondary 색상으로 부제목 느낌
           }}
         >
           {title}

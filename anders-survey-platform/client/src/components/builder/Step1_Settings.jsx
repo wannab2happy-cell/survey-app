@@ -124,44 +124,49 @@ export default function Step1_Settings({ form, handleFormChange, onBrandingChang
             <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <h2 className="text-xl font-bold text-text-main mb-6">스타일</h2>
                 
-                {/* 템플릿 및 브랜딩 섹션 */}
-                <div className="bg-gray-50 rounded-lg border border-gray-200 p-5">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex-1">
-                            <h3 className="text-base font-semibold text-text-main mb-1">템플릿 및 브랜딩</h3>
-                            <p className="text-xs text-text-sub">
-                                원하는 스타일을 선택하면 자동으로 색상과 디자인이 적용됩니다
-                            </p>
+                {/* 참가자 화면 스타일 (템플릿) */}
+                <div className="mb-6">
+                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border-2 border-blue-200 p-5">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <div className="w-1 h-5 bg-blue-500 rounded-full"></div>
+                                    <h3 className="text-base font-semibold text-text-main">참가자 화면 스타일</h3>
+                                    <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded">설문 참여 화면</span>
+                                </div>
+                                <p className="text-xs text-text-sub ml-3">
+                                    설문 참가자가 보게 될 화면의 색상과 디자인을 선택하세요
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowTemplates(!showTemplates)}
+                                className="p-2 text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm flex-shrink-0 ml-4"
+                                style={{ backgroundColor: '#26C6DA' }}
+                                aria-label={showTemplates ? '접기' : '템플릿 선택'}
+                            >
+                                {showTemplates ? (
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                    </svg>
+                                ) : (
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                )}
+                            </button>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => setShowTemplates(!showTemplates)}
-                            className="p-2 text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm flex-shrink-0 ml-4"
-                            style={{ backgroundColor: '#26C6DA' }}
-                            aria-label={showTemplates ? '접기' : '템플릿 선택'}
-                        >
-                            {showTemplates ? (
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                                </svg>
-                            ) : (
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            )}
-                        </button>
+                        
+                        {/* 템플릿 선택 영역 */}
+                        {showTemplates && (
+                            <div className="mt-4 pt-4 border-t border-blue-200">
+                                <CoverTemplates
+                                    onTemplateSelect={handleTemplateSelect}
+                                    currentBranding={form.branding || {}}
+                                />
+                            </div>
+                        )}
                     </div>
-                    
-                    {/* 템플릿 선택 영역 */}
-                    {showTemplates && (
-                        <div className="mt-4 pt-4 border-t border-gray-200">
-                            <CoverTemplates
-                                onTemplateSelect={handleTemplateSelect}
-                                currentBranding={form.branding || {}}
-                            />
-                        </div>
-                    )}
-                    
                 </div>
             </section>
 

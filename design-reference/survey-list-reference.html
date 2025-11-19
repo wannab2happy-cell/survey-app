@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>설문 목록 디자인 레퍼런스</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#26C6DA',
+                        'primary-hover': '#20B2C3',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        
+        .survey-row {
+            transition: all 0.2s ease;
+        }
+        
+        .survey-row:hover {
+            background-color: #f9fafb;
+        }
+        
+        .action-icon {
+            transition: all 0.2s ease;
+        }
+        
+        .action-icon:hover {
+            transform: scale(1.1);
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen p-6">
+        <div class="max-w-7xl mx-auto space-y-6">
+            <!-- 헤더 -->
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900 mb-2">설문 목록 디자인 레퍼런스</h1>
+                        <p class="text-gray-600">설문을 관리하고 편집하세요</p>
+                    </div>
+                    <button class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors font-semibold shadow-lg hover:shadow-xl">
+                        + 새 설문 만들기
+                    </button>
+                </div>
+            </div>
+
+            <!-- 필터 및 검색 -->
+            <div class="bg-white rounded-xl shadow-md p-4 border border-gray-200">
+                <div class="space-y-4">
+                    <!-- 첫 번째 줄: 검색 및 뷰 전환 -->
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <div class="flex-1 min-w-[200px]">
+                            <input
+                                type="text"
+                                placeholder="설문 제목으로 검색..."
+                                class="w-full border-2 border-gray-200 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary"
+                            />
+                        </div>
+                        <div class="flex items-center gap-2 border-2 border-gray-200 rounded-lg p-1">
+                            <button class="px-3 py-1.5 rounded text-sm font-medium bg-primary text-white">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                </svg>
+                            </button>
+                            <button class="px-3 py-1.5 rounded text-sm font-medium text-gray-600 hover:bg-gray-100">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 두 번째 줄: 상태 필터, 정렬, 일괄 작업 -->
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <div class="relative w-40">
+                            <button class="w-full px-4 py-2.5 text-left text-sm font-medium border-2 border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all flex items-center justify-between hover:border-gray-400">
+                                <span class="text-gray-900">전체</span>
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="relative w-40">
+                            <button class="w-full px-4 py-2.5 text-left text-sm font-medium border-2 border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all flex items-center justify-between hover:border-gray-400">
+                                <span class="text-gray-900">최근 수정일</span>
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <button class="px-3 py-2 border-2 border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+                            ↓
+                        </button>
+                        
+                        <span class="text-sm text-gray-500 ml-auto">
+                            총 10개
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 아이콘 액션 메뉴 예시 (표 뷰) -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <input type="checkbox" class="w-4 h-4 text-primary rounded focus:ring-primary">
+                                </th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">제목</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">수정일</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">응답 수</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">작업</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr class="survey-row">
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <input type="checkbox" class="w-4 h-4 text-primary rounded focus:ring-primary">
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="text-sm font-medium text-gray-900">고객 만족도 조사</div>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <span class="status-badge px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                        <span class="status-dot bg-green-500 mr-1.5"></span>
+                                        활성
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                    2024-12-19 14:30
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                    45
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <button class="action-icon p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="편집">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </button>
+                                        <button class="action-icon p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all" title="결과보기">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                            </svg>
+                                        </button>
+                                        <button class="action-icon p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all" title="Raw 데이터 다운로드">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </button>
+                                        <button class="action-icon p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all" title="설문 진행/정지">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                            </svg>
+                                        </button>
+                                        <button class="action-icon p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="공유 링크">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                            </svg>
+                                        </button>
+                                        <button class="action-icon p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="삭제">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="survey-row">
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <input type="checkbox" class="w-4 h-4 text-primary rounded focus:ring-primary">
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="text-sm font-medium text-gray-900">제품 피드백</div>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <span class="status-badge px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                        <span class="status-dot bg-blue-500 mr-1.5"></span>
+                                        예약됨
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                    2024-12-18 10:15
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                    32
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <button class="action-icon p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="편집">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </button>
+                                        <button class="action-icon p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all" title="결과보기">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                            </svg>
+                                        </button>
+                                        <button class="action-icon p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all" title="Raw 데이터 다운로드">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </button>
+                                        <button class="action-icon p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all" title="설문 진행/정지">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </button>
+                                        <button class="action-icon p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="공유 링크">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                            </svg>
+                                        </button>
+                                        <button class="action-icon p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="삭제">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 아이콘 액션 메뉴 예시 (카드 뷰) -->
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">카드 뷰 - 아이콘 액션 메뉴 예시</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">고객 만족도 조사</h3>
+                                <p class="text-sm text-gray-600 line-clamp-2">고객 만족도를 조사하는 설문입니다.</p>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                활성
+                            </span>
+                        </div>
+                        
+                        <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                            <span>생성: 2024-12-19</span>
+                            <span>응답: 45개</span>
+                        </div>
+                        
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <button class="action-icon p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="편집">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </button>
+                            <button class="action-icon p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all" title="결과보기">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </button>
+                            <button class="action-icon p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all" title="Raw 데이터 다운로드">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </button>
+                            <button class="action-icon p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all" title="설문 진행/정지">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                </svg>
+                            </button>
+                            <button class="action-icon p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="공유 링크">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                </svg>
+                            </button>
+                            <button class="action-icon p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="삭제">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 드롭다운 메뉴 예시 -->
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">드롭다운 메뉴 예시 (아이콘 클릭 시)</h3>
+                <div class="flex items-center gap-4">
+                    <div class="relative">
+                        <button class="action-icon p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-all border border-gray-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                            </svg>
+                        </button>
+                        <!-- 드롭다운 메뉴 (호버 시 표시) -->
+                        <div class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity">
+                            <div class="py-1">
+                                <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                    <span>📝</span>
+                                    <span>편집하기</span>
+                                </button>
+                                <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                    <span>📊</span>
+                                    <span>결과보기</span>
+                                </button>
+                                <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                    <span>📥</span>
+                                    <span>Raw 데이터 다운로드</span>
+                                </button>
+                                <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                    <span>▶️</span>
+                                    <span>설문 진행</span>
+                                </button>
+                                <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                    <span>🔗</span>
+                                    <span>공유 링크</span>
+                                </button>
+                                <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                    <span>📋</span>
+                                    <span>설문 복사</span>
+                                </button>
+                                <hr class="my-1 border-gray-200">
+                                <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                    <span>🗑️</span>
+                                    <span>삭제</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-500">위 버튼을 호버하면 드롭다운 메뉴가 표시됩니다.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

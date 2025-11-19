@@ -1,11 +1,13 @@
 // client/src/components/builder/Step2_Cover.jsx (모던 UI 개선)
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import ImageUpload from '../ImageUpload';
 import { DocumentIcon } from '../icons';
 import RichTextEditor from '../ui/RichTextEditor';
+import UnsplashImagePicker from '../ui/UnsplashImagePicker';
 
 export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
+    const [showUnsplashPicker, setShowUnsplashPicker] = useState(false);
     
     const handleCoverChange = useCallback((key, value) => {
         onCoverChange('cover', key, value); 
@@ -81,21 +83,72 @@ export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
                         />
                     </div>
 
-                    {/* 타이틀 이미지 */}
-                    <div>
-                        <ImageUpload
-                            label="타이틀 이미지"
-                            imageBase64={cover.imageBase64 || ''}
-                            onImageChange={(e) => {
-                                if (e && e.target) {
-                                    handleCoverChange('imageBase64', e.target.value || '');
-                                }
-                            }}
-                            maxSizeMB={8}
-                            recommendedSize="1280×720"
-                            compact={true}
-                        />
-                    </div>
+                    {/* 타이틀 이미지 - 이미지가 있을 때만 표시 */}
+                    {cover.imageBase64 && cover.imageBase64.trim() !== '' && (
+                        <div>
+                            <ImageUpload
+                                label="타이틀 이미지"
+                                imageBase64={cover.imageBase64 || ''}
+                                onImageChange={(e) => {
+                                    if (e && e.target) {
+                                        handleCoverChange('imageBase64', e.target.value || '');
+                                    }
+                                }}
+                                maxSizeMB={8}
+                                recommendedSize="1280×720"
+                                compact={true}
+                            />
+                        </div>
+                    )}
+                    
+                    {/* 타이틀 이미지 추가 버튼 - 이미지가 없을 때만 표시 */}
+                    {(!cover.imageBase64 || cover.imageBase64.trim() === '') && (
+                        <div>
+                            <label className="block text-sm font-medium text-text-sub mb-2">
+                                타이틀 이미지
+                            </label>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const input = document.createElement('input');
+                                        input.type = 'file';
+                                        input.accept = 'image/*';
+                                        input.onchange = (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                const reader = new FileReader();
+                                                reader.onloadend = () => {
+                                                    handleCoverChange('imageBase64', reader.result);
+                                                };
+                                                reader.readAsDataURL(file);
+                                            }
+                                        };
+                                        input.click();
+                                    }}
+                                    className="flex-1 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all text-sm font-medium flex items-center justify-center gap-2"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    이미지 선택
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowUnsplashPicker(true)}
+                                    className="px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all text-sm font-medium flex items-center justify-center gap-2"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                    Unsplash
+                                </button>
+                            </div>
+                            <p className="mt-1 text-xs text-text-sub">
+                                최대 8MB · 추천 사이즈: 1280×720
+                            </p>
+                        </div>
+                    )}
 
                     {/* 배경 이미지 */}
                     <div>
@@ -191,6 +244,17 @@ export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
                     </div>
                 </div>
             </div>
+
+            {/* Unsplash 이미지 선택 모달 */}
+            <UnsplashImagePicker
+                isOpen={showUnsplashPicker}
+                onClose={() => setShowUnsplashPicker(false)}
+                onSelect={(e) => {
+                    if (e && e.target) {
+                        handleCoverChange('imageBase64', e.target.value || '');
+                    }
+                }}
+            />
         </div>
     );
 }
