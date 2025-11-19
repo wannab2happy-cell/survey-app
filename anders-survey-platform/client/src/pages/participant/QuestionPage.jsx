@@ -11,6 +11,7 @@ import BottomNav from '../../components/ui/BottomNav';
 import ErrorHint from '../../components/ui/ErrorHint';
 
 export default function QuestionPage({
+  survey,
   question,
   questionNumber,
   totalQuestions,
@@ -36,9 +37,17 @@ export default function QuestionPage({
 
   const questionId = question._id || question.id;
   const questionType = (question.type || '').toUpperCase().trim();
-  const normalizedOptions = (question.options || []).map(opt =>
-    typeof opt === 'string' ? opt : (opt.text || opt.label || opt.content || String(opt))
-  );
+  const normalizedOptions = (question.options || []).map(opt => {
+    if (typeof opt === 'string') {
+      return opt;
+    }
+    // 이모지가 있으면 이모지와 텍스트를 결합
+    const text = opt.text || opt.label || opt.content || String(opt);
+    if (opt.emoji && opt.emoji.trim()) {
+      return `[${opt.emoji.trim()}] ${text}`;
+    }
+    return text;
+  });
 
   // 색상 처리
   const actualColor = typeof color === 'string' && color.startsWith('#') 
@@ -168,15 +177,9 @@ export default function QuestionPage({
         backgroundColor: actualBackgroundColor // 이미지 로딩 전 배경색
       };
     }
-    // 배경 이미지가 없으면 그라데이션 배경 사용
-    // background와 backgroundColor를 함께 사용하면 backgroundColor가 우선되므로 background만 사용
-    const gradientStyle = `linear-gradient(135deg, ${actualBackgroundColor} 0%, ${actualSecondaryColor}08 50%, ${actualBackgroundColor} 100%)`;
-    console.log('그라데이션 스타일:', gradientStyle);
-    console.log('actualBackgroundColor:', actualBackgroundColor);
-    console.log('actualSecondaryColor:', actualSecondaryColor);
+    // 배경 이미지가 없으면 단색 배경 사용
     return {
-      background: gradientStyle,
-      backgroundImage: 'none' // 명시적으로 이미지 없음 설정
+      backgroundColor: actualBackgroundColor
     };
   };
 
@@ -247,32 +250,54 @@ export default function QuestionPage({
 
       case 'DROPDOWN':
         return (
-          <select
-            value={localAnswer || ''}
-            onChange={(e) => handleAnswerChange(e.target.value)}
-            className={`w-[80%] mx-auto px-5 py-3.5 ${shapeClass} border-2 transition-all block`}
-            style={{ 
-              ...inputStyle,
-              fontSize: '15px',
-              fontWeight: 400,
-              letterSpacing: '-0.01em',
-              '--tw-ring-color': `${actualColor}40`
-            }}
-            onFocus={(e) => {
-              e.target.style.borderColor = actualColor;
-              e.target.style.setProperty('border-color', actualColor, 'important');
-            }}
-            onBlur={(e) => {
-              const defaultColor = inputStyle.defaultBorderColor || inputStyle.borderColor;
-              e.target.style.borderColor = defaultColor;
-              e.target.style.setProperty('border-color', defaultColor, 'important');
-            }}
-          >
-            <option value="">선택해주세요</option>
-            {normalizedOptions.map((option, idx) => (
-              <option key={idx} value={option}>{option}</option>
-            ))}
-          </select>
+          <div className="relative w-[80%] mx-auto">
+            <select
+              value={localAnswer || ''}
+              onChange={(e) => handleAnswerChange(e.target.value)}
+              className={`w-full px-5 py-3.5 ${shapeClass} border-2 transition-all block appearance-none cursor-pointer`}
+              style={{ 
+                ...inputStyle,
+                fontSize: '15px',
+                fontWeight: 400,
+                letterSpacing: '-0.01em',
+                '--tw-ring-color': `${actualColor}40`,
+                paddingRight: '2.75rem',
+                boxShadow: inputStyle.boxShadow || '0 2px 4px rgba(0, 0, 0, 0.05)',
+                backgroundColor: inputStyle.backgroundColor || 'rgba(255, 255, 255, 0.8)'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = actualColor;
+                e.target.style.setProperty('border-color', actualColor, 'important');
+                e.target.style.boxShadow = `0 0 0 3px ${actualColor}20, 0 2px 8px rgba(0, 0, 0, 0.1)`;
+              }}
+              onBlur={(e) => {
+                const defaultColor = inputStyle.defaultBorderColor || inputStyle.borderColor;
+                e.target.style.borderColor = defaultColor;
+                e.target.style.setProperty('border-color', defaultColor, 'important');
+                e.target.style.boxShadow = inputStyle.boxShadow || '0 2px 4px rgba(0, 0, 0, 0.05)';
+              }}
+            >
+              <option value="" disabled style={{ color: '#9CA3AF' }}>선택해주세요</option>
+              {normalizedOptions.map((option, idx) => (
+                <option key={idx} value={option} style={{ color: '#1F2937', backgroundColor: '#FFFFFF' }}>{option}</option>
+              ))}
+            </select>
+            {/* 커스텀 화살표 아이콘 */}
+            <div 
+              className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none"
+              style={{ zIndex: 1 }}
+            >
+              <svg 
+                className="w-5 h-5 transition-colors duration-200" 
+                style={{ color: localAnswer ? actualColor : '#9CA3AF' }}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
         );
 
       case 'STAR_RATING':
@@ -476,14 +501,6 @@ export default function QuestionPage({
   };
 
   const bgStyle = getBackgroundStyle();
-  
-  // 디버깅용 로그
-  if (!bgImageBase64 || bgImageBase64.trim() === '') {
-    console.log('배경 이미지 없음 - 그라데이션 적용 시도');
-    console.log('bgStyle:', bgStyle);
-    console.log('actualBackgroundColor:', actualBackgroundColor);
-    console.log('actualSecondaryColor:', actualSecondaryColor);
-  }
 
   return (
     <motion.div 
@@ -511,7 +528,7 @@ export default function QuestionPage({
       </div>
 
       {/* 메인 콘텐츠 - 상단 정렬 */}
-      <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-start overflow-y-auto px-4" style={{ paddingTop: '72px', paddingBottom: '100px', maxHeight: 'calc(100vh - 140px)' }}>
+      <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-start overflow-y-auto px-4" style={{ paddingTop: '72px', paddingBottom: '180px', maxHeight: 'calc(100vh - 140px)' }}>
         {/* 질문 카드 */}
         <div className="w-full max-w-md mt-4">
           <QuestionCard
@@ -525,6 +542,7 @@ export default function QuestionPage({
             {renderQuestionContent()}
           </QuestionCard>
         </div>
+
       </div>
 
       {/* 하단 네비게이션 - 하단 고정 */}
@@ -541,6 +559,24 @@ export default function QuestionPage({
           buttonShape={buttonShape}
         />
       </div>
+
+      {/* 로고 - 다음 버튼 아래에 고정 */}
+      {(survey?.branding?.logoBase64 || survey?.cover?.logoBase64) && (
+        <div className="absolute left-0 right-0 z-10 flex justify-center" style={{ bottom: '20px' }}>
+          <img 
+            src={survey?.branding?.logoBase64 || survey?.cover?.logoBase64} 
+            alt="Logo" 
+            className="max-h-10 max-w-[160px] object-contain"
+            style={{ 
+              opacity: 1,
+              filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))'
+            }}
+            onError={(e) => {
+              e.target.style.display = 'none';
+            }}
+          />
+        </div>
+      )}
     </motion.div>
   );
 }

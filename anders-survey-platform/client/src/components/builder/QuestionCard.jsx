@@ -94,6 +94,7 @@ const QuestionCard = (props) => {
   // 모달 상태
   const [showDropdownModal, setShowDropdownModal] = useState(false);
   const [dropdownText, setDropdownText] = useState('');
+  const dragStartRef = useRef({ x: 0, y: 0, isModalContent: false, isDragging: false });
   
   // 입력 필드 로컬 상태 (입력 반응성 향상)
   // 초기값은 questionText로 설정하되, useEffect에서 동기화 보장
@@ -200,6 +201,42 @@ const QuestionCard = (props) => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // 빈 의존성 배열로 한 번만 등록 (무한 루프 방지)
+
+  // 드롭다운 모달 전역 마우스 이벤트 리스너 (화면 밖에서도 감지)
+  useEffect(() => {
+    if (!showDropdownModal) return;
+
+    const handleGlobalMouseMove = (e) => {
+      if (dragStartRef.current.x !== 0 || dragStartRef.current.y !== 0) {
+        const deltaX = Math.abs(e.clientX - dragStartRef.current.x);
+        const deltaY = Math.abs(e.clientY - dragStartRef.current.y);
+        if (deltaX > 5 || deltaY > 5) {
+          dragStartRef.current.isDragging = true;
+        }
+      }
+    };
+
+    const handleGlobalMouseUp = (e) => {
+      // 모달 컨텐츠에서 시작된 드래그가 아니고, 드래그가 아닌 경우에만 닫기
+      if (!dragStartRef.current.isModalContent && !dragStartRef.current.isDragging) {
+        // 배경 클릭인지 확인
+        const target = e.target;
+        if (target && target.classList && target.classList.contains('modal-backdrop')) {
+          setShowDropdownModal(false);
+        }
+      }
+      // 상태 초기화
+      dragStartRef.current = { x: 0, y: 0, isModalContent: false, isDragging: false };
+    };
+
+    document.addEventListener('mousemove', handleGlobalMouseMove);
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [showDropdownModal]);
   
   // 옵션이 외부에서 변경되면 로컬 상태도 동기화
   useEffect(() => {
@@ -287,11 +324,18 @@ const QuestionCard = (props) => {
     // 조합 완료 후 부모 상태 업데이트
     if (onQuestionChange && typeof onQuestionChange === 'function') {
       try {
-        onQuestionChange(index, 'text', value);
-        onQuestionChange(index, 'title', value);
-        onQuestionChange(index, 'content', value);
+        // text, title, content를 모두 한 번에 업데이트
+        onQuestionChange(index, { text: value, title: value, content: value });
       } catch (error) {
         console.error('[QuestionCard] onQuestionChange 오류:', error);
+        // 객체 전달이 실패하면 개별 호출로 폴백
+        try {
+          onQuestionChange(index, 'text', value);
+          onQuestionChange(index, 'title', value);
+          onQuestionChange(index, 'content', value);
+        } catch (fallbackError) {
+          console.error('[QuestionCard] 폴백 업데이트 오류:', fallbackError);
+        }
       }
     }
     
@@ -318,11 +362,19 @@ const QuestionCard = (props) => {
       // 즉시 부모 상태에 저장 (탭 전환 시에도 데이터 유지)
       if (onQuestionChange && typeof onQuestionChange === 'function') {
         try {
-          onQuestionChange(index, 'text', value);
-          onQuestionChange(index, 'title', value);
-          onQuestionChange(index, 'content', value);
+          // text, title, content를 모두 한 번에 업데이트
+          // 객체로 전달하여 한 번의 호출로 모든 필드를 업데이트
+          onQuestionChange(index, { text: value, title: value, content: value });
         } catch (error) {
           console.error('[QuestionCard] onQuestionChange 오류:', error);
+          // 객체 전달이 실패하면 개별 호출로 폴백
+          try {
+            onQuestionChange(index, 'text', value);
+            onQuestionChange(index, 'title', value);
+            onQuestionChange(index, 'content', value);
+          } catch (fallbackError) {
+            console.error('[QuestionCard] 폴백 업데이트 오류:', fallbackError);
+          }
         }
       }
       
@@ -433,53 +485,34 @@ const QuestionCard = (props) => {
       return;
     }
     
+    // 새 옵션 배열 생성 (기존 옵션의 id를 유지하거나 새로 생성)
     const newOptions = lines.map((line, idx) => {
       const emojiMatch = line.match(/^\[([^\]]+)\]\s*(.+)$/);
       if (emojiMatch) {
         return {
-          id: Date.now() + idx,
+          id: options[idx]?.id || Date.now() + idx,
           text: emojiMatch[2].trim(),
-          emoji: emojiMatch[1].trim()
+          emoji: emojiMatch[1].trim(),
+          imageBase64: options[idx]?.imageBase64 || ''
         };
       }
       return {
-        id: Date.now() + idx,
-        text: line.trim()
+        id: options[idx]?.id || Date.now() + idx,
+        text: line.trim(),
+        emoji: undefined,
+        imageBase64: options[idx]?.imageBase64 || ''
       };
     });
     
-    // 기존 옵션과 새 옵션의 개수 차이 계산
-    const diff = newOptions.length - options.length;
-    
-    // 부족한 옵션 추가
-    if (diff > 0) {
-      for (let i = 0; i < diff; i++) {
-        onAddOption(index, false);
-      }
-    }
-    
-    // 모든 옵션 업데이트 (동기적으로 처리)
-    newOptions.forEach((opt, optIdx) => {
-      if (optIdx < options.length + diff) {
-        // 옵션 텍스트 업데이트
-        onOptionChange(index, optIdx, 'text', opt.text);
-        // 이모지가 있으면 업데이트, 없으면 제거
-        if (opt.emoji) {
-          onOptionChange(index, optIdx, 'emoji', opt.emoji);
-        } else {
-          // 이모지 제거 (옵션이 이모지를 지원하는 경우)
-          const currentOption = options[optIdx];
-          if (currentOption && currentOption.emoji) {
-            onOptionChange(index, optIdx, 'emoji', '');
-          }
-        }
-      }
-    });
-    
-    // 초과 옵션 제거 (뒤에서부터 제거하여 인덱스 문제 방지)
-    if (diff < 0) {
-      for (let i = options.length - 1; i >= newOptions.length; i--) {
-        onRemoveOption(index, i);
+    // onQuestionChange를 사용하여 전체 옵션 배열을 한 번에 업데이트
+    if (onQuestionChange && typeof onQuestionChange === 'function') {
+      try {
+        onQuestionChange(index, 'options', newOptions);
+        console.log('[QuestionCard] 드롭다운 옵션 저장 완료:', newOptions);
+      } catch (error) {
+        console.error('[QuestionCard] 옵션 저장 오류:', error);
+        alert('옵션 저장 중 오류가 발생했습니다.');
+        return;
       }
     }
     
@@ -978,57 +1011,190 @@ const QuestionCard = (props) => {
       {/* 드롭다운 편집 모달 */}
       {showDropdownModal && (
         <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[99999] p-4"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[99999] p-4 modal-backdrop"
+          onMouseDown={(e) => {
+            // 드래그 시작 위치 저장 (배경에서만)
+            if (e.target === e.currentTarget) {
+              dragStartRef.current = { 
+                x: e.clientX, 
+                y: e.clientY, 
+                isModalContent: false,
+                isDragging: false
+              };
+            }
+          }}
           onClick={(e) => {
-            e.stopPropagation();
-            setShowDropdownModal(false);
+            // 배경 클릭 시에만 모달 닫기 (드래그가 아닐 때)
+            if (e.target === e.currentTarget && !dragStartRef.current.isDragging && !dragStartRef.current.isModalContent) {
+              setShowDropdownModal(false);
+            }
           }}
           style={{ zIndex: 99999 }}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-xl p-6 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto"
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              dragStartRef.current.isModalContent = true;
+            }}
+            onMouseDown={(e) => {
+              e.stopPropagation();
+              // 모달 내부에서 드래그 시작 시 배경 드래그 상태 초기화
+              dragStartRef.current.isModalContent = true;
+              dragStartRef.current.isDragging = false;
+              dragStartRef.current.x = 0;
+              dragStartRef.current.y = 0;
+            }}
+            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+            style={{ boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)' }}
           >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-text-main">드롭다운 항목 편집</h3>
-              <button
-                onClick={() => setShowDropdownModal(false)}
-                className="text-text-sub hover:text-text-main text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-lg hover:bg-bg transition-colors"
-              >
-                ×
-              </button>
+            {/* 헤더 */}
+            <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#26C6DA20' }}>
+                    <svg className="w-5 h-5" style={{ color: '#26C6DA' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">드롭다운 항목 편집</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">각 항목을 한 줄씩 입력하세요</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDropdownModal(false)}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
-            <div className="mb-4 text-sm text-text-sub space-y-1">
-              <p>• 항목을 줄바꿈으로 나눠 입력하세요.</p>
-              <p>• 이모지 아이콘을 사용하려면 대괄호([]) 안에 넣어주세요.</p>
-              <p className="text-xs">예: [🐶] 강아지</p>
+
+            {/* 본문 */}
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              {/* 안내 섹션 */}
+              <div className="mb-4 p-4 rounded-xl border" style={{ backgroundColor: '#F0F9FF', borderColor: '#BAE6FD' }}>
+                <div className="flex items-start gap-2">
+                  <svg className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#0284C7' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="flex-1 text-sm" style={{ color: '#0C4A6E' }}>
+                    <p className="font-semibold mb-1.5">입력 방법</p>
+                    <ul className="space-y-1 text-xs">
+                      <li className="flex items-start gap-1.5">
+                        <span className="font-semibold">•</span>
+                        <span>각 항목을 한 줄씩 입력하세요</span>
+                      </li>
+                      <li className="flex items-start gap-1.5">
+                        <span className="font-semibold">•</span>
+                        <span>이모지는 대괄호 안에 넣으세요: <code className="px-1 py-0.5 rounded bg-white/50">[🐶] 강아지</code></span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* 입력 필드 */}
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  항목 목록
+                </label>
+                <textarea
+                  value={dropdownText}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    setDropdownText(e.target.value);
+                  }}
+                  rows={12}
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-primary focus:border-primary transition-all font-mono text-sm resize-none"
+                  style={{
+                    backgroundColor: '#FAFAFA',
+                    lineHeight: '1.8'
+                  }}
+                  placeholder="항목 1&#10;항목 2&#10;항목 3&#10;[🎉] 특별 옵션"
+                  onFocus={(e) => {
+                    e.stopPropagation();
+                    e.target.style.backgroundColor = '#FFFFFF';
+                    e.target.style.borderColor = '#26C6DA';
+                    dragStartRef.current.isModalContent = true;
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.backgroundColor = '#FAFAFA';
+                    e.target.style.borderColor = '#E5E7EB';
+                  }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    dragStartRef.current.isModalContent = true;
+                    dragStartRef.current.isDragging = false;
+                    dragStartRef.current.x = 0;
+                    dragStartRef.current.y = 0;
+                  }}
+                  onMouseMove={(e) => {
+                    e.stopPropagation();
+                    dragStartRef.current.isModalContent = true;
+                  }}
+                  onKeyDown={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onKeyUp={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    dragStartRef.current.isModalContent = true;
+                  }}
+                />
+                <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+                  <span>현재 {dropdownText.split('\n').filter(line => line.trim()).length}개 항목</span>
+                  <span>Enter로 줄바꿈</span>
+                </div>
+              </div>
+
+              {/* 미리보기 */}
+              {dropdownText.trim() && (
+                <div className="mt-4 p-4 rounded-xl border border-gray-200 bg-gray-50">
+                  <p className="text-xs font-semibold text-gray-600 mb-2">미리보기</p>
+                  <div className="space-y-1.5">
+                    {dropdownText.split('\n').filter(line => line.trim()).slice(0, 5).map((item, idx) => (
+                      <div key={idx} className="px-3 py-2 bg-white rounded-lg border border-gray-200 text-sm text-gray-700">
+                        {idx + 1}. {item.trim()}
+                      </div>
+                    ))}
+                    {dropdownText.split('\n').filter(line => line.trim()).length > 5 && (
+                      <p className="text-xs text-gray-400 text-center py-1">
+                        ... 외 {dropdownText.split('\n').filter(line => line.trim()).length - 5}개 항목
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-            <textarea
-              value={dropdownText}
-              onChange={(e) => setDropdownText(e.target.value)}
-              rows={10}
-              className="w-full border border-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary font-mono text-sm"
-              placeholder="항목 1&#10;항목 2&#10;항목 3"
-            />
-            <div className="flex gap-3 mt-4">
+
+            {/* 푸터 버튼 */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex gap-3">
               <button
                 type="button"
                 onClick={() => setShowDropdownModal(false)}
-                className="flex-1 px-4 py-2 border rounded-lg transition font-medium"
+                className="flex-1 px-5 py-2.5 border-2 rounded-xl transition-all font-semibold text-sm"
                 style={{
                   backgroundColor: '#FFFFFF',
                   color: '#6B7280',
                   borderColor: '#E5E7EB'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#F3F4F6';
-                  e.currentTarget.style.borderColor = '#26C6DA';
+                  e.currentTarget.style.backgroundColor = '#F9FAFB';
+                  e.currentTarget.style.borderColor = '#D1D5DB';
+                  e.currentTarget.style.color = '#374151';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = '#FFFFFF';
                   e.currentTarget.style.borderColor = '#E5E7EB';
+                  e.currentTarget.style.color = '#6B7280';
                 }}
               >
                 취소
@@ -1036,7 +1202,7 @@ const QuestionCard = (props) => {
               <button
                 type="button"
                 onClick={handleSaveDropdownModal}
-                className="flex-1 px-4 py-2 rounded-lg transition-colors font-semibold shadow-sm hover:shadow-md"
+                className="flex-1 px-5 py-2.5 rounded-xl transition-all font-semibold text-sm shadow-sm hover:shadow-md flex items-center justify-center gap-2"
                 style={{
                   backgroundColor: '#26C6DA',
                   color: '#FFFFFF',
@@ -1044,12 +1210,17 @@ const QuestionCard = (props) => {
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = '#00ACC1';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = '#26C6DA';
+                  e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
-                확인
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                저장하기
               </button>
             </div>
           </motion.div>

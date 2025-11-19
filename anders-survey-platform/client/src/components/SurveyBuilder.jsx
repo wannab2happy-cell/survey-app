@@ -83,7 +83,8 @@ const getInitialSurveyData = () => ({
         description: '귀하의 소중한 의견에 감사드립니다.',
         imageBase64: '',
         linkUrl: '',
-        linkText: '더 알아보기'
+        linkText: '더 알아보기',
+        showRestartButton: false
     },
     isPublic: true,
     password: '',

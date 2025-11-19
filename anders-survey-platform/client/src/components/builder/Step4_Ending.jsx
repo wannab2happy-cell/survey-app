@@ -1,6 +1,6 @@
 // client/src/components/builder/Step4_Ending.jsx (모던 UI 개선)
 
-import { useCallback } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import ImageUpload from '../ImageUpload';
 import { CheckCircleIcon } from '../icons';
 import RichTextEditor from '../ui/RichTextEditor';
@@ -12,8 +12,18 @@ export default function Step4_Ending({ ending, onEndingChange, onImageChange }) 
         description: '', 
         imageBase64: '',
         linkUrl: '',
-        linkText: '더 알아보기'
+        linkText: '더 알아보기',
+        showRestartButton: false
     };
+    
+    const [showRestartButton, setShowRestartButton] = useState(safeEnding.showRestartButton || false);
+
+    // ending이 변경될 때 showRestartButton 상태 동기화
+    useEffect(() => {
+        if (safeEnding.showRestartButton !== undefined && safeEnding.showRestartButton !== showRestartButton) {
+            setShowRestartButton(safeEnding.showRestartButton);
+        }
+    }, [safeEnding.showRestartButton]);
 
     const handleEndingChange = useCallback((key, value) => {
         onEndingChange('ending', key, value); 
@@ -130,23 +140,28 @@ export default function Step4_Ending({ ending, onEndingChange, onImageChange }) 
                         <label className="text-sm font-medium text-text-sub">
                             다시하기 버튼 표시
                         </label>
-                        <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-primary transition-colors">
-                            <span className="inline-block h-4 w-4 transform rounded-full bg-white transition translate-x-6" />
+                        <button 
+                            type="button"
+                            onClick={() => {
+                                const newValue = !showRestartButton;
+                                setShowRestartButton(newValue);
+                                handleEndingChange('showRestartButton', newValue);
+                            }}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2`}
+                            style={{
+                                padding: '2px',
+                                backgroundColor: showRestartButton ? '#26C6DA' : '#D1D5DB'
+                            }}
+                            aria-label="다시하기 버튼 표시"
+                            aria-checked={showRestartButton}
+                            role="switch"
+                        >
+                            <span className={`inline-block h-4 w-4 rounded-full bg-white transition-all shadow-sm ${
+                                showRestartButton ? 'translate-x-6' : 'translate-x-0'
+                            }`} />
                         </button>
                     </div>
 
-                    {/* anders 로고 & 브랜딩 & 버튼 숨기기 */}
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <label className="text-sm font-medium text-text-sub">
-                                anders 로고 & 브랜딩 & 버튼 숨기기
-                            </label>
-                            <span className="ml-2 px-2 py-0.5 text-xs bg-error/10 text-error rounded">Premium</span>
-                        </div>
-                        <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-border transition-colors">
-                            <span className="inline-block h-4 w-4 transform rounded-full bg-white transition translate-x-1" />
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>

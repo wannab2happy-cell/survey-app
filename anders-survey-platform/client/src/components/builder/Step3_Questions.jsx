@@ -386,8 +386,19 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                         questionTypes={questionTypes}
                         onQuestionsChange={onQuestionsChange}
                         onQuestionChange={(idx, key, value) => {
+                            // 최신 questions 배열을 참조하도록 함수 내부에서 참조
                             const question = questions[idx];
-                            const updated = { ...question, [key]: value };
+                            if (!question) return;
+                            
+                            // 여러 필드를 한 번에 업데이트할 수 있도록 처리
+                            let updated;
+                            if (typeof key === 'object' && key !== null) {
+                                // 객체로 전달된 경우 (여러 필드 한 번에 업데이트)
+                                updated = { ...question, ...key };
+                            } else {
+                                // 단일 필드 업데이트
+                                updated = { ...question, [key]: value };
+                            }
                             onQuestionsChange('update', { questionId: question.id, updatedQuestion: updated });
                         }}
                         onOptionChange={(qIdx, optIdx, key, value) => {

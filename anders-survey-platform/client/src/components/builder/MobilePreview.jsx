@@ -163,6 +163,7 @@ export default function MobilePreview({
             buttonOpacity={buttonOpacity}
             backgroundColor={surveyData?.branding?.questionBackgroundColor || backgroundColor}
             bgImageBase64={surveyData?.branding?.questionBgImageBase64 || bgImageBase64}
+            koreanSpacingWrap={surveyData?.advancedSettings?.koreanSpacingWrap || false}
           />
         </div>
       </>
@@ -198,7 +199,8 @@ export default function MobilePreview({
           <DonePage
             survey={{
               ending: surveyData?.ending,
-              branding: surveyData?.branding
+              branding: surveyData?.branding,
+              cover: surveyData?.cover
             }}
             color={primaryColor}
             secondaryColor={secondaryColor}
@@ -206,6 +208,10 @@ export default function MobilePreview({
             buttonOpacity={buttonOpacity}
             backgroundColor={backgroundColor}
             bgImageBase64={bgImageBase64}
+            onRestart={() => {
+              // 미리보기에서는 실제 동작하지 않지만, 버튼이 표시되도록 핸들러 제공
+              console.log('다시하기 버튼 클릭됨 (미리보기)');
+            }}
           />
         </div>
       </>

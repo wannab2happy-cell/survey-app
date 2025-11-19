@@ -71,9 +71,9 @@ export default function ReviewPage({
         backgroundColor: actualBackgroundColor
       };
     }
-    // 배경 이미지가 없으면 그라데이션 배경 사용
+    // 배경 이미지가 없으면 단색 배경 사용
     return {
-      background: `linear-gradient(135deg, ${actualBackgroundColor} 0%, ${actualSecondaryColor}08 50%, ${actualBackgroundColor} 100%)`
+      backgroundColor: actualBackgroundColor
     };
   };
 

@@ -148,6 +148,14 @@ export default function SurveyPageV2() {
     setCurrentStep(STEP_QUESTION);
   };
 
+  const handleRestart = () => {
+    // 설문을 처음부터 다시 시작
+    setAnswers({});
+    setCurrentQuestionIndex(0);
+    setCurrentStep(STEP_START);
+    navigate(`/s/${slug}/start`);
+  };
+
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
@@ -308,7 +316,8 @@ export default function SurveyPageV2() {
         backgroundColor={tertiaryColor}
         buttonShape={buttonShape} 
         buttonOpacity={buttonOpacity} 
-        bgImageBase64={bgImageBase64} 
+        bgImageBase64={bgImageBase64}
+        onRestart={handleRestart}
       />;
 
     default:

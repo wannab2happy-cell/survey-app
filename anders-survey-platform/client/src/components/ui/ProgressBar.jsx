@@ -30,6 +30,10 @@ export default function ProgressBar({ current, total, color = 'var(--primary)', 
   const secondaryRgb = hexToRgb(actualSecondaryColor) || { r: 229, g: 231, b: 235 };
   const incompleteBgColor = `rgba(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}, 0.25)`;
 
+  // 진행바 배경색을 rgba로 변환 (투명도 90% = 0.9)
+  const primaryRgb = hexToRgb(actualColor) || { r: 124, g: 58, b: 237 };
+  const progressBgColor = `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, 0.9)`;
+
   return (
     <div className="flex items-center gap-3" style={{ maxWidth: '85%', margin: '0 auto' }}>
       {/* 뒤로가기 버튼 */}
@@ -45,20 +49,21 @@ export default function ProgressBar({ current, total, color = 'var(--primary)', 
         </svg>
       </button>
       
-      {/* 진행률 바 - 더 두껍고 입체감 있게 (x2 굵기, 가로로 짧게) */}
+      {/* 진행률 바 - 투명도 90% 적용 */}
       <div 
         className="flex-1 rounded-full overflow-hidden relative"
         style={{ 
           height: '16px',
           backgroundColor: incompleteBgColor,
-          boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
+          boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)',
+          opacity: 0.9
         }}
       >
         <div
           className="h-full rounded-full transition-all duration-500 ease-out relative"
           style={{ 
             width: `${percentage}%`,
-            background: `linear-gradient(to bottom, ${actualColor} 0%, ${actualColor}dd 100%)`,
+            backgroundColor: progressBgColor,
             boxShadow: `
               0 2px 4px ${actualColor}60,
               0 1px 2px rgba(0, 0, 0, 0.2),
@@ -68,12 +73,15 @@ export default function ProgressBar({ current, total, color = 'var(--primary)', 
         />
       </div>
       
-      {/* 진행률 텍스트 */}
+      {/* 진행률 텍스트 - 가시성 개선 */}
       <span 
-        className="text-xs font-semibold text-gray-600 min-w-[2.5rem] text-right flex-shrink-0"
+        className="text-xs font-bold min-w-[2.5rem] text-right flex-shrink-0"
         style={{
-          fontSize: '12px',
-          letterSpacing: '0.02em'
+          fontSize: '13px',
+          letterSpacing: '0.02em',
+          color: '#1F2937', // 진한 회색으로 변경
+          fontWeight: 700,
+          textShadow: '0 1px 2px rgba(255, 255, 255, 0.8)' // 가독성 향상을 위한 텍스트 그림자
         }}
       >
         {current}/{total}
