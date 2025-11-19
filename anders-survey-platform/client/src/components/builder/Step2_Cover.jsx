@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import ImageUpload from '../ImageUpload';
 import { DocumentIcon } from '../icons';
+import RichTextEditor from '../ui/RichTextEditor';
 
 export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
     
@@ -30,72 +31,85 @@ export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
                 <h3 className="text-lg font-bold text-text-main mb-4">커버</h3>
                 
                 <div className="space-y-3">
-                    {/* 1. 로고 업로드 (우측 이미지 순서) */}
+                    {/* 커버 제목 */}
+                    <div>
+                        <label htmlFor="coverTitle" className="block text-sm font-medium text-text-sub mb-2">
+                            커버 제목
+                        </label>
+                        <RichTextEditor
+                            value={cover.title || ''}
+                            onChange={(html) => handleCoverChange('title', html)}
+                            placeholder="설문 참가자에게 표시될 메인 제목입니다"
+                            rows={2}
+                            className="border-gray-300"
+                            defaultFontSize={20}
+                        />
+                        <p className="mt-1 text-xs text-text-sub">
+                            설문 제목을 입력하면 자동으로 복사됩니다. 필요시 별도로 수정할 수 있습니다.
+                        </p>
+                    </div>
+
+                    {/* 부제목 */}
+                    <div>
+                        <label htmlFor="coverDescription" className="block text-sm font-medium text-text-sub mb-2">
+                            부제목
+                        </label>
+                        <RichTextEditor
+                            value={cover.description || ''}
+                            onChange={(html) => handleCoverChange('description', html)}
+                            placeholder="부제목을 입력하세요"
+                            rows={2}
+                            className="border-gray-300"
+                            defaultFontSize={16}
+                        />
+                    </div>
+
+                    {/* 이미지 업로드 섹션 - 한 줄에 하나씩 가로로 길게 */}
+                    {/* 로고 */}
                     <div>
                         <ImageUpload
                             label="로고"
                             imageBase64={cover.logoBase64 || ''}
                             onImageChange={(e) => {
-                                if (e && e.target && e.target.value) {
-                                    handleCoverChange('logoBase64', e.target.value);
+                                if (e && e.target) {
+                                    handleCoverChange('logoBase64', e.target.value || '');
                                 }
                             }}
                             maxSizeMB={8}
-                            recommendedSize="400*400"
+                            recommendedSize="400×400"
                             compact={true}
                         />
                     </div>
 
-                    {/* 2. 설문지 제목 (우측 이미지 순서) */}
-                    <div>
-                        <label htmlFor="coverTitle" className="block text-sm font-medium text-text-sub mb-2">
-                            설문지
-                        </label>
-                        <input
-                            type="text"
-                            id="coverTitle"
-                            value={cover.title || ''}
-                            onChange={(e) => handleCoverChange('title', e.target.value)}
-                            placeholder="설문지"
-                            className="w-full text-lg font-bold text-primary border-0 border-b-2 border-border rounded-none px-0 py-2 focus:ring-0 focus:border-primary transition-all bg-transparent"
-                            style={{ 
-                                borderBottom: '2px solid var(--border, #E5E7EB)',
-                                color: 'var(--primary, #6B46C1)'
-                            }}
-                        />
-                    </div>
-
-                    {/* 3. 부제목 (우측 이미지 순서) */}
-                    <div>
-                        <label htmlFor="coverDescription" className="block text-sm font-medium text-text-sub mb-2">
-                            부제목
-                        </label>
-                        <input
-                            type="text"
-                            id="coverDescription"
-                            value={cover.description || ''}
-                            onChange={(e) => handleCoverChange('description', e.target.value)}
-                            placeholder="부제목"
-                            className="w-full text-sm text-text-sub border-0 border-b-2 border-border rounded-none px-0 py-2 focus:ring-0 focus:border-primary transition-all bg-transparent"
-                            style={{ 
-                                borderBottom: '2px solid var(--border, #E5E7EB)'
-                            }}
-                        />
-                    </div>
-
-                    {/* 4. 타이틀 이미지 (우측 이미지 순서) */}
+                    {/* 타이틀 이미지 */}
                     <div>
                         <ImageUpload
                             label="타이틀 이미지"
                             imageBase64={cover.imageBase64 || ''}
                             onImageChange={(e) => {
-                                if (e && e.target && e.target.value) {
-                                    handleCoverChange('imageBase64', e.target.value);
+                                if (e && e.target) {
+                                    handleCoverChange('imageBase64', e.target.value || '');
                                 }
                             }}
                             maxSizeMB={8}
-                            recommendedSize="1280*720"
-                            showRecentUploads={true}
+                            recommendedSize="1280×720"
+                            compact={true}
+                        />
+                    </div>
+
+                    {/* 배경 이미지 */}
+                    <div>
+                        <ImageUpload
+                            label="배경 이미지"
+                            imageBase64={cover.bgImageBase64 || ''}
+                            onImageChange={(e) => {
+                                if (e && e.target) {
+                                    handleCoverChange('bgImageBase64', e.target.value || '');
+                                }
+                            }}
+                            maxSizeMB={8}
+                            recommendedSize="1920×1080"
+                            compact={true}
                         />
                     </div>
 
@@ -113,10 +127,11 @@ export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
                             aria-label="설문 참여 수 표시"
                             aria-checked={cover.showParticipantCount || false}
                             role="switch"
-                            className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                                cover.showParticipantCount ? 'bg-primary' : 'bg-gray-300'
-                            }`}
-                            style={{ padding: '2px' }}
+                            className="relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                            style={{ 
+                                padding: '2px',
+                                backgroundColor: cover.showParticipantCount ? '#26C6DA' : '#D1D5DB'
+                            }}
                         >
                             <span className={`inline-block h-4 w-4 rounded-full bg-white transition-all shadow-sm ${
                                 cover.showParticipantCount ? 'translate-x-6' : 'translate-x-0'
@@ -124,19 +139,22 @@ export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
                         </button>
                     </div>
 
-                    {/* 6. 설문 시작하기 버튼 프리뷰 (우측 이미지 순서) - 항상 표시 */}
-                    <div className="pt-3" style={{ display: 'block' }}>
-                        <button 
-                            type="button"
-                            className="w-full bg-primary text-white rounded-lg px-6 py-4 text-lg font-medium hover:bg-primary-hover transition-colors flex items-center justify-center gap-2 shadow-md"
+                    {/* 6. 버튼 텍스트 입력 */}
+                    <div>
+                        <label htmlFor="buttonText" className="block text-sm font-medium text-text-sub mb-2">
+                            버튼 텍스트
+                        </label>
+                        <input
+                            type="text"
+                            id="buttonText"
+                            value={cover.buttonText || ''}
+                            onChange={(e) => handleCoverChange('buttonText', e.target.value)}
+                            placeholder="설문 시작하기"
+                            className="w-full text-sm text-text-sub border-0 border-b-2 border-border rounded-none px-0 py-2 focus:ring-0 focus:border-primary transition-all bg-transparent"
                             style={{ 
-                                backgroundColor: 'var(--primary, #6B46C1)',
-                                display: 'block',
-                                visibility: 'visible'
+                                borderBottom: '2px solid var(--border, #E5E7EB)'
                             }}
-                        >
-                            <span>설문 시작하기</span>
-                        </button>
+                        />
                     </div>
                 </div>
             </div>
@@ -151,21 +169,24 @@ export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
                         <label className="text-sm font-medium text-text-sub">
                             커버 페이지 건너뛰기
                         </label>
-                        <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-border transition-colors">
-                            <span className="inline-block h-4 w-4 transform rounded-full bg-white transition translate-x-1" />
-                        </button>
-                    </div>
-
-                    {/* 링크 미리보기 커스텀 */}
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <label className="text-sm font-medium text-text-sub">
-                                링크 미리보기 커스텀
-                            </label>
-                            <span className="ml-2 px-2 py-0.5 text-xs bg-orange-100 text-orange-700 rounded">Essential</span>
-                        </div>
-                        <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-border transition-colors">
-                            <span className="inline-block h-4 w-4 transform rounded-full bg-white transition translate-x-1" />
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const newValue = !cover.skipCover;
+                                handleCoverChange('skipCover', newValue);
+                            }}
+                            aria-label="커버 페이지 건너뛰기"
+                            aria-checked={cover.skipCover || false}
+                            role="switch"
+                            className="relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                            style={{ 
+                                padding: '2px',
+                                backgroundColor: cover.skipCover ? '#26C6DA' : '#D1D5DB'
+                            }}
+                        >
+                            <span className={`inline-block h-4 w-4 rounded-full bg-white transition-all shadow-sm ${
+                                cover.skipCover ? 'translate-x-6' : 'translate-x-0'
+                            }`} />
                         </button>
                     </div>
                 </div>

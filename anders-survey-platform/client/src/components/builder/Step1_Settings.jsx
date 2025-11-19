@@ -1,8 +1,10 @@
-// src/components/builder/Step1_Settings.jsx (최종 코드 - 공유 기능 포함 + 모던 UI)
+// src/components/builder/Step1_Settings.jsx (UI/UX 통일 및 정돈)
 
+import { useState, useEffect } from 'react';
 import ImageUpload from '../ImageUpload';
 import TimePicker from '../TimePicker';
 import { CalendarIcon, ClockIcon } from '../icons';
+import CoverTemplates from './CoverTemplates';
 
 // ISO 8601 문자열을 datetime-local 형식(YYYY-MM-DDTHH:MM)으로 변환하는 헬퍼 함수
 const formatDateTimeLocal = (isoString) => {
@@ -27,341 +29,184 @@ const formatDateTimeLocal = (isoString) => {
 
 export default function Step1_Settings({ form, handleFormChange, onBrandingChange, onImageChange }) {
 
+    const [showTemplates, setShowTemplates] = useState(true);
+    const [localTitle, setLocalTitle] = useState(form?.title || '');
+    const [isComposing, setIsComposing] = useState(false);
+
+    // 한글 입력 조합 시작
+    const handleCompositionStart = () => {
+        setIsComposing(true);
+    };
+
+    // 한글 입력 조합 완료
+    const handleCompositionEnd = (e) => {
+        setIsComposing(false);
+        const value = e.target.value || '';
+        setLocalTitle(value);
+        if (handleFormChange) {
+            handleFormChange('title', value);
+        }
+    };
+
+    // 입력 변경 핸들러
+    const handleTitleChange = (e) => {
+        const value = e.target.value || '';
+        setLocalTitle(value);
+        
+        // 한글 조합 중이면 부모 상태는 업데이트하지 않음
+        if (isComposing) {
+            return;
+        }
+        
+        if (handleFormChange) {
+            handleFormChange('title', value);
+        }
+    };
+
+    // form.title이 외부에서 변경되면 로컬 상태도 동기화
+    useEffect(() => {
+        if (!isComposing && form?.title !== undefined) {
+            setLocalTitle(form.title || '');
+        }
+    }, [form?.title, isComposing]);
+
+    const handleTemplateSelect = (templateData) => {
+        if (onBrandingChange) {
+            Object.entries(templateData.branding).forEach(([key, value]) => {
+                onBrandingChange('branding', key, value);
+            });
+        }
+    };
+
     return (
-        <div className="space-y-4">
-            
-            {/* 1. 기본 설정 및 진행 설정 */}
-            <section className="bg-white rounded-xl shadow-md p-4">
-                <h3 className="text-lg font-bold text-text-main mb-4">설문 기본 정보 및 진행 설정</h3>
+        <div className="space-y-6">
+            {/* 설문지 제목 섹션 */}
+            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-xl font-bold text-text-main mb-4">설문지 정보</h2>
                 
                 <div className="space-y-4">
-                    {/* 설문 제목 */}
                     <div>
-                        <label htmlFor="title" className="block text-sm font-medium text-text-sub mb-2">
-                            설문 제목 <span className="text-error">*</span>
+                        <label htmlFor="surveyTitle" className="block text-sm font-semibold text-text-main mb-2">
+                            설문지 제목 <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
-                            id="title"
-                            value={form?.title || ''}
-                            onChange={(e) => {
-                                if (handleFormChange) {
-                                    handleFormChange('title', e.target.value);
-                                }
+                            id="surveyTitle"
+                            name="title"
+                            value={localTitle}
+                            onChange={handleTitleChange}
+                            onCompositionStart={handleCompositionStart}
+                            onCompositionEnd={handleCompositionEnd}
+                            placeholder="설문지 제목을 입력하세요"
+                            maxLength={100}
+                            className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 text-base focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white hover:border-gray-300"
+                            style={{
+                                borderColor: form?.branding?.primaryColor || '#E5E7EB',
+                                focusRingColor: form?.branding?.primaryColor || '#26C6DA'
                             }}
-                            className="w-full border border-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white text-text-main"
-                            required
-                            placeholder="예: 고객 만족도 설문 조사"
-                            autoComplete="off"
+                            onFocus={(e) => {
+                                e.target.style.borderColor = form?.branding?.primaryColor || '#26C6DA';
+                                e.target.style.boxShadow = `0 0 0 2px ${form?.branding?.primaryColor || '#26C6DA'}40`;
+                            }}
+                            onBlur={(e) => {
+                                e.target.style.borderColor = form?.branding?.primaryColor || '#E5E7EB';
+                                e.target.style.boxShadow = 'none';
+                            }}
                         />
+                        <p className="mt-1 text-xs text-text-sub">
+                            설문지의 제목을 입력하세요. 이 제목은 설문 목록과 관리 화면에 표시됩니다.
+                        </p>
                     </div>
+                </div>
+            </section>
 
-                    {/* 일정 설정 - 모던 디자인 */}
-                    {(form.status === 'active' || form.status === 'scheduled') && (
-                        <div className="mt-6 p-6 rounded-xl bg-bg border border-border shadow-sm">
-                            <div className="flex items-center gap-2 mb-5">
-                                <div className="p-2 bg-primary/10 rounded-lg">
-                                    <ClockIcon className="w-5 h-5 text-primary" />
-                                </div>
-                                <div>
-                                    <h4 className="font-semibold text-text-main">
-                                        {form.status === 'active' ? '설문 종료 일정 설정' : '설문 예약 일정 설정'}
-                                    </h4>
-                                    <p className="text-xs text-text-sub mt-0.5">
-                                        {form.status === 'active' ? '설문이 언제까지 진행될지 설정하세요' : '설문 시작 및 종료 시간을 설정하세요'}
-                                    </p>
-                                </div>
-                            </div>
-                            {/* 예약 진행: 시작일시 아래 종료일시 배치 */}
-                            {form.status === 'scheduled' ? (
-                                <div className="space-y-4">
-                                    {/* 시작 일시 */}
-                                    <div className="bg-white rounded-xl p-4 shadow-sm border border-border">
-                                        <label htmlFor="startAt" className="block text-sm font-medium text-text-sub mb-2 flex items-center gap-2">
-                                            <CalendarIcon className="w-4 h-4 text-primary" />
-                                            시작 일시 <span className="text-error">*</span>
-                                        </label>
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="date"
-                                                id="startAt"
-                                                value={form.startAt ? new Date(form.startAt).toISOString().split('T')[0] : ''}
-                                                onChange={(e) => {
-                                                    const date = e.target.value;
-                                                    const time = form.startAt ? new Date(form.startAt).toTimeString().slice(0, 5) : '12:00';
-                                                    const dateTime = `${date}T${time}:00`;
-                                                    handleFormChange('startAt', dateTime);
-                                                }}
-                                                required
-                                                className="flex-1 border-2 border-border rounded-md shadow-sm px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white"
-                                            />
-                                            <TimePicker
-                                                value={form.startAt}
-                                                onChange={(e) => {
-                                                    const date = form.startAt ? new Date(form.startAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-                                                    const time = e.target.value.split('T')[1] || '12:00:00';
-                                                    handleFormChange('startAt', `${date}T${time}`);
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-                                    
-                                    {/* 종료 일시 */}
-                                    <div className="bg-white rounded-xl p-4 shadow-sm border border-border">
-                                        <label htmlFor="endAt" className="block text-sm font-medium text-text-sub mb-2 flex items-center gap-2">
-                                            <CalendarIcon className="w-4 h-4 text-primary" />
-                                            종료 일시 <span className="text-xs text-text-sub">(선택)</span>
-                                        </label>
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="date"
-                                                id="endAt"
-                                                value={form.endAt ? new Date(form.endAt).toISOString().split('T')[0] : ''}
-                                                onChange={(e) => {
-                                                    const date = e.target.value;
-                                                    const time = form.endAt ? new Date(form.endAt).toTimeString().slice(0, 5) : '12:00';
-                                                    const dateTime = `${date}T${time}:00`;
-                                                    handleFormChange('endAt', dateTime);
-                                                }}
-                                                className="flex-1 border-2 border-border rounded-md shadow-sm px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white"
-                                            />
-                                            <TimePicker
-                                                value={form.endAt}
-                                                onChange={(e) => {
-                                                    const date = form.endAt ? new Date(form.endAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-                                                    const time = e.target.value.split('T')[1] || '12:00:00';
-                                                    handleFormChange('endAt', `${date}T${time}`);
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
+            {/* 스타일 섹션 */}
+            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-xl font-bold text-text-main mb-6">스타일</h2>
+                
+                {/* 템플릿 및 브랜딩 섹션 */}
+                <div className="bg-gray-50 rounded-lg border border-gray-200 p-5">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex-1">
+                            <h3 className="text-base font-semibold text-text-main mb-1">템플릿 및 브랜딩</h3>
+                            <p className="text-xs text-text-sub">
+                                원하는 스타일을 선택하면 자동으로 색상과 디자인이 적용됩니다
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setShowTemplates(!showTemplates)}
+                            className="p-2 text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm flex-shrink-0 ml-4"
+                            style={{ backgroundColor: '#26C6DA' }}
+                            aria-label={showTemplates ? '접기' : '템플릿 선택'}
+                        >
+                            {showTemplates ? (
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                </svg>
                             ) : (
-                                /* 바로 진행: 종료 일시만 표시 */
-                                <div className="bg-white rounded-xl p-4 shadow-sm border border-border">
-                                    <label htmlFor="endAt" className="block text-sm font-medium text-text-sub mb-2 flex items-center gap-2">
-                                        <CalendarIcon className="w-4 h-4 text-primary" />
-                                        종료 일시 <span className="text-xs text-text-sub">(선택)</span>
-                                    </label>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="date"
-                                            id="endAt"
-                                            value={form.endAt ? new Date(form.endAt).toISOString().split('T')[0] : ''}
-                                            onChange={(e) => {
-                                                const date = e.target.value;
-                                                const time = form.endAt ? new Date(form.endAt).toTimeString().slice(0, 5) : '12:00';
-                                                const dateTime = `${date}T${time}:00`;
-                                                handleFormChange('endAt', dateTime);
-                                            }}
-                                            className="flex-1 border-2 border-border rounded-md shadow-sm px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white"
-                                        />
-                                        <TimePicker
-                                            value={form.endAt}
-                                            onChange={(e) => {
-                                                const date = form.endAt ? new Date(form.endAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-                                                const time = e.target.value.split('T')[1] || '12:00:00';
-                                                handleFormChange('endAt', `${date}T${time}`);
-                                            }}
-                                        />
-                                    </div>
-                                </div>
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
                             )}
+                        </button>
+                    </div>
+                    
+                    {/* 템플릿 선택 영역 */}
+                    {showTemplates && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                            <CoverTemplates
+                                onTemplateSelect={handleTemplateSelect}
+                                currentBranding={form.branding || {}}
+                            />
                         </div>
                     )}
+                    
                 </div>
             </section>
 
-            {/* 2. 브랜딩 및 디자인 설정 */}
-            <section className="bg-white rounded-xl shadow-md p-4">
-                <h3 className="text-lg font-bold text-text-main mb-4">브랜딩 및 디자인</h3>
+            {/* 고급 설정 섹션 */}
+            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-xl font-bold text-text-main mb-4">고급 설정</h2>
                 
                 <div className="space-y-4">
-                    {/* 색상, 폰트, 버튼 모양 설정 */}
-                    <div className="grid grid-cols-3 gap-4">
-                        {[
-                            { 
-                                key: 'primaryColor', 
-                                label: '강조 색상', 
-                                desc: '브랜드 강조, 주요 버튼, 진행률, 타이틀'
-                            },
-                            { 
-                                key: 'secondaryColor', 
-                                label: '보조 색상', 
-                                desc: 'Hover, 구획선, 카드 배경 등 보조 요소'
-                            },
-                            { 
-                                key: 'tertiaryColor', 
-                                label: '상태 색상', 
-                                desc: '성공/완료 피드백, 시스템 알림'
-                            }
-                        ].map(({ key, label, desc }) => (
-                            <div key={key}>
-                                <label htmlFor={key} className="block text-sm font-medium text-text-main mb-1">
-                                    {label}
-                                </label>
-                                <p className="text-xs text-text-sub mb-2 leading-relaxed">
-                                    {desc}
-                                </p>
-                                <div className="relative">
-                                    <input
-                                        type="color"
-                                        id={key}
-                                        value={(() => {
-                                            const color = form.branding[key];
-                                            if (!color) {
-                                                // 기본값 매핑
-                                                if (key === 'primaryColor') return '#26C6DA';
-                                                if (key === 'secondaryColor') return '#F59E0B';
-                                                if (key === 'tertiaryColor') return '#10B981';
-                                                return '#26C6DA';
-                                            }
-                                            // CSS 변수인 경우 기본값 반환, 아니면 그대로 사용
-                                            if (color.includes('var(--')) {
-                                                if (key === 'primaryColor') return '#26C6DA';
-                                                if (key === 'secondaryColor') return '#F59E0B';
-                                                if (key === 'tertiaryColor') return '#10B981';
-                                                return '#26C6DA';
-                                            }
-                                            return color;
-                                        })()}
-                                        onChange={(e) => {
-                                            const colorValue = e.target.value;
-                                            onBrandingChange('branding', key, colorValue);
-                                        }}
-                                        className="w-full h-12 cursor-pointer transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                                        style={{
-                                            border: 'none',
-                                            borderRadius: '0',
-                                            padding: '0'
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    
-                    {/* 폰트 및 버튼 모양 */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label htmlFor="font" className="block text-sm font-medium text-text-sub mb-2">
-                                폰트 스타일
+                    {/* 한글 띄어쓰기 유지 및 줄바꿈 설정 */}
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex-1">
+                            <label htmlFor="koreanSpacingWrap" className="text-sm font-medium text-text-main cursor-pointer">
+                                한글 띄어쓰기 유지하고 줄바꿈하기
                             </label>
-                            <select
-                                id="font"
-                                value={form.branding.font}
-                                onChange={(e) => onBrandingChange('branding', 'font', e.target.value)}
-                                className="w-full border border-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-                            >
-                                <option value="Pretendard">Pretendard (기본)</option>
-                                <option value="Noto Sans KR">Noto Sans KR</option>
-                                <option value="serif">Serif</option>
-                                <option value="monospace">Monospace</option>
-                            </select>
+                            <p className="text-xs text-text-sub mt-1">
+                                텍스트 입력 시 한글 단어 단위로 줄바꿈하며 띄어쓰기를 유지합니다
+                            </p>
                         </div>
-                        <div>
-                            <label htmlFor="buttonShape" className="block text-sm font-medium text-text-sub mb-2">
-                                버튼 모양
-                            </label>
-                            <select
-                                id="buttonShape"
-                                value={form.branding.buttonShape}
-                                onChange={(e) => onBrandingChange('branding', 'buttonShape', e.target.value)}
-                                className="w-full border border-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-                            >
-                                <option value="rounded-lg">둥근 모서리 (Rounded)</option>
-                                <option value="rounded-none">직각 (Sharp)</option>
-                                <option value="rounded-full">캡슐형 (Pill)</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    {/* 로고 및 배경 이미지 */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
-                        <ImageUpload
-                            label="로고 이미지"
-                            imageBase64={form.branding.logoBase64}
-                            onImageChange={(e) => onImageChange('branding', 'logoBase64', e)}
-                            hint="설문 상단에 표시될 로고 (권장: 투명 배경)"
-                            compact={true}
-                        />
-                        <ImageUpload
-                            label="전체 배경 이미지"
-                            imageBase64={form.branding.bgImageBase64}
-                            onImageChange={(e) => onImageChange('branding', 'bgImageBase64', e)}
-                            hint="설문 페이지 배경 이미지"
-                            compact={true}
-                        />
-                    </div>
-                </div>
-            </section>
-
-            {/* 3. Head/Foot 커스터마이징 (요구사항 5) */}
-            <section className="bg-white rounded-xl shadow-md p-4">
-                <h3 className="text-lg font-bold text-text-main mb-4">Head/Foot 커스터마이징</h3>
-                
-                <div className="space-y-4">
-                    {/* Head 섹션 */}
-                    <div className="border border-border rounded-lg p-4">
-                        <h4 className="text-lg font-semibold mb-4 text-text-main">Head (상단)</h4>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-text-sub mb-2">배경색</label>
-                                <input
-                                    type="color"
-                                    value={form.head?.background || '#ffffff'}
-                                    onChange={(e) => onBrandingChange('head', 'background', e.target.value)}
-                                    className="w-full h-12 border-2 border-border rounded-lg shadow-sm cursor-pointer hover:border-primary transition"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-text-sub mb-2">제목</label>
-                                <input
-                                    type="text"
-                                    value={form.head?.title || ''}
-                                    onChange={(e) => onBrandingChange('head', 'title', e.target.value)}
-                                    placeholder="Head 제목 입력"
-                                    className="w-full border-2 border-border rounded-lg p-3 focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-                                />
-                            </div>
-                            <ImageUpload
-                                label="Head 이미지"
-                                imageBase64={form.head?.imageBase64 || ''}
-                                onImageChange={(e) => onImageChange('head', 'imageBase64', e)}
-                                hint="Head에 표시될 이미지 (선택)"
-                                compact={true}
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                id="koreanSpacingWrap"
+                                checked={form?.advancedSettings?.koreanSpacingWrap || false}
+                                onChange={(e) => {
+                                    if (handleFormChange) {
+                                        handleFormChange('advancedSettings', {
+                                            ...form?.advancedSettings,
+                                            koreanSpacingWrap: e.target.checked
+                                        });
+                                    }
+                                }}
+                                className="sr-only peer"
                             />
-                        </div>
-                    </div>
-
-                    {/* Foot 섹션 */}
-                    <div className="border border-border rounded-lg p-4">
-                        <h4 className="text-lg font-semibold mb-4 text-text-main">Foot (하단)</h4>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-text-sub mb-2">배경색</label>
-                                <input
-                                    type="color"
-                                    value={form.foot?.background || '#ffffff'}
-                                    onChange={(e) => onBrandingChange('foot', 'background', e.target.value)}
-                                    className="w-full h-12 border-2 border-border rounded-lg shadow-sm cursor-pointer hover:border-primary transition"
-                                />
+                            <div className={`w-11 h-6 rounded-full transition-colors duration-200 ${
+                                form?.advancedSettings?.koreanSpacingWrap 
+                                    ? 'bg-[#26C6DA]' 
+                                    : 'bg-gray-300'
+                            }`}>
+                                <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform duration-200 mt-0.5 ${
+                                    form?.advancedSettings?.koreanSpacingWrap 
+                                        ? 'translate-x-5' 
+                                        : 'translate-x-0.5'
+                                }`} />
                             </div>
-                            <ImageUpload
-                                label="Foot 로고 이미지"
-                                imageBase64={form.foot?.logoBase64 || ''}
-                                onImageChange={(e) => onImageChange('foot', 'logoBase64', e)}
-                                hint="Foot에 표시될 로고 (선택)"
-                                compact={true}
-                            />
-                            <ImageUpload
-                                label="Foot 이미지"
-                                imageBase64={form.foot?.imageBase64 || ''}
-                                onImageChange={(e) => onImageChange('foot', 'imageBase64', e)}
-                                hint="Foot에 표시될 이미지 (선택)"
-                                compact={true}
-                            />
-                        </div>
+                        </label>
                     </div>
                 </div>
             </section>

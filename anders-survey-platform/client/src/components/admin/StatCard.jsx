@@ -4,11 +4,11 @@
 import { motion } from 'framer-motion';
 
 const colorSchemes = {
-  purple: { bg: 'var(--primary)', light: '#E0F7FA' },
+  purple: { bg: '#26C6DA', light: '#E0F7FA' }, // 고정 admin 색상
   blue: { bg: '#3B82F6', light: '#DBEAFE' },
-  orange: { bg: 'var(--secondary)', light: '#FEF3C7' },
-  green: { bg: 'var(--success)', light: '#D1FAE5' },
-  red: { bg: 'var(--error)', light: '#FEE2E2' },
+  orange: { bg: '#F59E0B', light: '#FEF3C7' }, // 고정 admin 색상
+  green: { bg: '#10B981', light: '#D1FAE5' }, // 고정 admin 색상
+  red: { bg: '#EF4444', light: '#FEE2E2' }, // 고정 admin 색상
 };
 
 export default function StatCard({ 
@@ -30,7 +30,9 @@ export default function StatCard({
     >
       <div className="flex items-center justify-between mb-4">
         <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: scheme.light }}>
-          <span className="text-2xl">{icon}</span>
+          <div style={{ color: scheme.bg }}>
+            {icon}
+          </div>
         </div>
       </div>
       <div className="text-white">

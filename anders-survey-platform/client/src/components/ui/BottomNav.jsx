@@ -14,12 +14,18 @@ export default function BottomNav({
   buttonShape = 'rounded-lg'
 }) {
   return (
-    <div className="w-full bg-white border-t border-gray-200 p-4 safe-area-bottom">
+    <div className="w-full bg-white border-t border-gray-200 p-5 safe-area-bottom" style={{ boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.04)' }}>
       <div className="max-w-md mx-auto flex gap-3">
         {showPrevious && (
           <button
             onClick={onPrevious}
-            className={`flex-1 px-6 py-3 ${buttonShape} border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors`}
+            className={`flex-1 px-6 py-3.5 ${buttonShape} border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-all active:scale-95`}
+            style={{
+              fontSize: '15px',
+              fontWeight: 600,
+              letterSpacing: '0.01em',
+              transition: 'all 0.2s ease'
+            }}
           >
             {previousLabel}
           </button>
@@ -27,15 +33,22 @@ export default function BottomNav({
         <button
           onClick={onNext}
           disabled={disabled}
-          className={`flex-1 px-6 py-3 ${buttonShape} font-semibold text-white transition-all ${
+          className={`flex-1 px-6 py-3.5 ${buttonShape} font-semibold text-white transition-all ${
             disabled ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90 active:scale-95'
           }`}
-          style={{ backgroundColor: disabled ? '#9CA3AF' : color }}
+          style={{ 
+            backgroundColor: disabled ? '#9CA3AF' : color,
+            fontSize: '15px',
+            fontWeight: 600,
+            letterSpacing: '0.01em',
+            boxShadow: disabled ? 'none' : `0 4px 12px ${color}30`,
+            transition: 'all 0.2s ease'
+          }}
         >
           <span className="flex items-center justify-center gap-2">
             {nextLabel}
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ strokeWidth: 2.5 }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
           </span>
         </button>

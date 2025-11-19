@@ -12,7 +12,9 @@ export default function ReviewPage({
   onSubmit,
   onSubmitLoading = false,
   color = 'var(--primary)',
-  buttonShape = 'rounded-lg'
+  buttonShape = 'rounded-lg',
+  backgroundColor = '#1a1f2e',
+  bgImageBase64 = ''
 }) {
   const [expandedQuestion, setExpandedQuestion] = useState(null);
 
@@ -34,96 +36,126 @@ export default function ReviewPage({
     return String(answer);
   };
 
+  // 배경 스타일 결정 (이미지가 있으면 이미지 사용, 없으면 색상 사용)
+  const getBackgroundStyle = () => {
+    // bgImageBase64가 유효한지 확인 (빈 문자열이 아니고, data:image/로 시작하거나 http로 시작하는지)
+    const isValidImage = bgImageBase64 && 
+      bgImageBase64.trim() !== '' && 
+      (bgImageBase64.startsWith('data:image/') || bgImageBase64.startsWith('http://') || bgImageBase64.startsWith('https://'));
+    
+    if (isValidImage) {
+      return {
+        backgroundImage: `url(${bgImageBase64})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundColor: backgroundColor // 이미지 로딩 전 배경색
+      };
+    }
+    return {
+      backgroundColor: backgroundColor
+    };
+  };
+
+  const bgStyle = getBackgroundStyle();
+
   return (
-    <div className="min-h-screen bg-bg pb-24">
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">응답 검토</h1>
-          <p className="text-gray-600">응답을 확인하고 제출해주세요</p>
-        </motion.div>
-
-        {/* 필수 항목 누락 경고 */}
-        {missingQuestions.length > 0 && (
+    <div className="h-screen w-full max-w-full flex flex-col overflow-hidden safe-area-bottom" style={{ ...bgStyle, width: '100%', maxWidth: '100vw', height: '100vh' }}>
+      {/* 스크롤 가능한 콘텐츠 영역 */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 rounded-xl bg-red-50 border-2 border-red-200"
+            className="mb-6 sm:mb-8 text-center"
           >
-            <p className="text-red-600 font-semibold mb-2">
-              필수 항목이 누락되었습니다 ({missingQuestions.length}개)
-            </p>
-            <ul className="list-disc list-inside text-sm text-red-600">
-              {missingQuestions.map((q, idx) => (
-                <li key={idx}>{q.title || q.text || q.content || `질문 ${idx + 1}`}</li>
-              ))}
-            </ul>
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">응답 검토</h1>
+            <p className="text-base sm:text-lg text-gray-600">응답을 확인하고 제출해주세요</p>
           </motion.div>
-        )}
 
-        {/* 응답 목록 */}
-        <div className="space-y-4">
-          {questions.map((question, idx) => {
-            const questionId = question._id || question.id;
-            const answer = answers[questionId];
-            const isExpanded = expandedQuestion === questionId;
+          {/* 필수 항목 누락 경고 */}
+          {missingQuestions.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4 sm:mb-6 p-4 sm:p-5 rounded-xl bg-red-50 border-2 border-red-200"
+            >
+              <p className="text-red-600 font-semibold mb-3 text-sm sm:text-base">
+                필수 항목이 누락되었습니다 ({missingQuestions.length}개)
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-xs sm:text-sm text-red-600">
+                {missingQuestions.map((q, idx) => (
+                  <li key={idx}>{q.title || q.text || q.content || `질문 ${idx + 1}`}</li>
+                ))}
+              </ul>
+            </motion.div>
+          )}
 
-            return (
-              <motion.div
-                key={questionId}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="bg-white rounded-xl shadow-md p-6"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg font-bold" style={{ color }}>
-                        Q{idx + 1}.
-                      </span>
-                      {question.required && (
-                        <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-600 font-medium">
-                          필수
+          {/* 응답 목록 */}
+          <div className="space-y-4 sm:space-y-5 pb-4">
+            {questions.map((question, idx) => {
+              const questionId = question._id || question.id;
+              const answer = answers[questionId];
+              const isExpanded = expandedQuestion === questionId;
+
+              return (
+                <motion.div
+                  key={questionId}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="bg-white rounded-xl shadow-lg border border-gray-100 p-5 sm:p-6"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold text-white" style={{ backgroundColor: color }}>
+                          {idx + 1}
                         </span>
-                      )}
+                        {question.required && (
+                          <span className="text-xs px-2.5 py-1 rounded-full bg-red-100 text-red-600 font-semibold">
+                            필수
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 leading-relaxed mb-3">
+                        {question.title || question.text || question.content || '질문'}
+                      </h3>
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {question.title || question.text || question.content || '질문'}
-                    </h3>
+                    <button
+                      onClick={() => onEdit(idx)}
+                      className={`w-full sm:w-auto sm:ml-4 px-5 py-2.5 ${buttonShape} border-2 border-gray-300 text-gray-700 text-sm sm:text-base font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all whitespace-nowrap`}
+                    >
+                      수정
+                    </button>
                   </div>
-                  <button
-                    onClick={() => onEdit(idx)}
-                    className={`ml-4 px-4 py-2 ${buttonShape} border-2 border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors`}
-                  >
-                    수정
-                  </button>
-                </div>
-                <div className="mt-4 p-4 rounded-lg bg-gray-50">
-                  <p className="text-gray-700">
-                    {formatAnswer(question, answer)}
-                  </p>
-                </div>
-              </motion.div>
-            );
-          })}
+                  <div className="mt-4 p-4 sm:p-5 rounded-lg bg-gray-50 border border-gray-100">
+                    <p className="text-base sm:text-lg text-gray-800 break-words leading-relaxed font-medium">
+                      {formatAnswer(question, answer)}
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* 하단 네비게이션 */}
-      <BottomNav
-        onNext={onSubmit}
-        onPrevious={() => onEdit(questions.length - 1)}
-        showPrevious={true}
-        nextLabel={onSubmitLoading ? '제출 중...' : '제출 완료'}
-        previousLabel="이전"
-        disabled={onSubmitLoading || missingQuestions.length > 0}
-        color={color}
-        buttonShape={buttonShape}
-      />
+      {/* 하단 네비게이션 (고정) */}
+      <div className="flex-shrink-0 px-4 sm:px-6 pb-4 sm:pb-6 pt-3 sm:pt-4 border-t border-gray-200" style={{ backgroundColor: bgStyle.backgroundColor || 'rgba(255, 255, 255, 0.95)', backdropFilter: bgImageBase64 ? 'blur(8px)' : 'none' }}>
+        <div className="max-w-2xl mx-auto">
+          <BottomNav
+            onNext={onSubmit}
+            onPrevious={() => onEdit(questions.length - 1)}
+            showPrevious={true}
+            nextLabel={onSubmitLoading ? '제출 중...' : '제출 완료'}
+            previousLabel="이전"
+            disabled={onSubmitLoading || missingQuestions.length > 0}
+            color={color}
+            buttonShape={buttonShape}
+          />
+        </div>
+      </div>
     </div>
   );
 }

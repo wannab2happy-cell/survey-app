@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import SurveyBuilder from './components/SurveyBuilder';
 import SurveyPage from './pages/SurveyPage';
 import SurveyPageV2 from './pages/SurveyPageV2';
@@ -14,9 +14,10 @@ const isAuthenticated = () => !!localStorage.getItem('token');
 const PrivateRoute = ({ element: Element }) =>
   isAuthenticated() ? Element : <Navigate to="/login" />;
 
-function App() {
-  // Feature Toggle: Theme V2 활성화 여부 확인
+function AppContent() {
+  const location = useLocation();
   const themeV2Enabled = isThemeV2Enabled();
+  const isAdmin = location.pathname.startsWith('/admin');
   
   // 로그아웃 핸들러
   const handleLogout = () => {
@@ -25,8 +26,7 @@ function App() {
   };
   
   return (
-    <BrowserRouter>
-      <div className={themeV2Enabled ? 'theme-v2' : 'theme-legacy'}>
+    <div className={`${themeV2Enabled ? 'theme-v2' : 'theme-legacy'} ${isAdmin ? 'admin-theme' : ''}`}>
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
@@ -54,7 +54,14 @@ function App() {
           />
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   );
 }

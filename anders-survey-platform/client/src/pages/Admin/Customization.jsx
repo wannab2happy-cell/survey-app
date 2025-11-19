@@ -56,13 +56,22 @@ const refreshGlobalTheme = (theme) => {
   const root = document.documentElement.style;
   const primary = theme.colorSet.primary;
   
-  // Primary 색상 업데이트
+  // Primary 색상 업데이트 (Admin 영역은 제외)
+  // Admin 영역은 .admin-theme에서 --primary를 고정값으로 오버라이드하므로 영향 없음
   root.setProperty('--color-primary', primary);
   
   // Customization에서 설정하는 다른 서브 색상도 업데이트
   root.setProperty('--color-sub1', theme.colorSet.sub1);
   root.setProperty('--color-sub2', theme.colorSet.sub2);
   root.setProperty('--color-sub3', theme.colorSet.sub3);
+  
+  // Admin 영역의 --primary는 강제로 고정값 유지
+  const adminTheme = document.querySelector('.admin-theme');
+  if (adminTheme) {
+    adminTheme.style.setProperty('--primary', '#26C6DA', 'important');
+    adminTheme.style.setProperty('--color-primary', '#26C6DA', 'important');
+    adminTheme.style.setProperty('--color-accent', '#26C6DA', 'important');
+  }
 };
 /* ---------------------------------------------------- */
 

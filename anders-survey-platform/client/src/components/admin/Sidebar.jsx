@@ -1,15 +1,53 @@
 // 관리자용 좌측 사이드바
-// anders 스타일: 고정 너비, 보라색 활성 상태
+// 모던 단색 아이콘 디자인
 
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
+// 단색 SVG 아이콘 컴포넌트
+const DashboardIcon = ({ className = "w-5 h-5" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  </svg>
+);
+
+const ListIcon = ({ className = "w-5 h-5" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+  </svg>
+);
+
+const PlusIcon = ({ className = "w-5 h-5" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+  </svg>
+);
+
+
+const SettingsIcon = ({ className = "w-5 h-5" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+);
+
+const UserIcon = ({ className = "w-5 h-5" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+  </svg>
+);
+
+const LogoutIcon = ({ className = "w-5 h-5" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+  </svg>
+);
+
 const menuItems = [
-  { path: '/admin/dashboard', label: '대시보드', icon: '📊' },
-  { path: '/admin', label: '설문 목록', icon: '📋' },
-  { path: '/admin/builder', label: '설문 만들기', icon: '➕' },
-  { path: '/admin/analytics', label: '분석', icon: '📈' },
-  { path: '/admin/settings', label: '설정', icon: '⚙️' },
+  { path: '/admin/dashboard', label: '대시보드', icon: DashboardIcon },
+  { path: '/admin', label: '설문 목록', icon: ListIcon },
+  { path: '/admin/builder', label: '설문 만들기', icon: PlusIcon },
+  { path: '/admin/settings', label: '설정', icon: SettingsIcon },
 ];
 
 export default function Sidebar({ onLogout }) {
@@ -26,11 +64,14 @@ export default function Sidebar({ onLogout }) {
   };
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col fixed left-0 top-0">
+    <aside className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col fixed left-0 top-0 z-50">
       {/* 로고 */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-xl bg-primary">
+          <div 
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-sm"
+            style={{ backgroundColor: '#26C6DA' }}
+          >
             S
           </div>
           <h1 className="text-xl font-bold text-gray-900">설문 플랫폼</h1>
@@ -38,24 +79,37 @@ export default function Sidebar({ onLogout }) {
       </div>
 
       {/* 메뉴 */}
-      <nav className="flex-1 p-4">
-        <ul className="space-y-2">
+      <nav className="flex-1 p-4 overflow-y-auto">
+        <ul className="space-y-1">
           {menuItems.map((item, idx) => {
             const active = isActive(item.path);
+            const IconComponent = item.icon;
             return (
               <li key={idx}>
                 <Link
                   to={item.path}
                   className={`
-                    flex items-center gap-3 px-4 py-3 rounded-xl transition-all
+                    flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200
                     ${active 
-                      ? 'bg-primary text-white font-semibold shadow-md' 
-                      : 'text-text-sub hover:bg-gray-50'
+                      ? 'font-medium shadow-sm' 
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }
                   `}
+                  style={active ? { 
+                    backgroundColor: '#26C6DA',
+                    color: '#FFFFFF'
+                  } : {}}
                 >
-                  <span className="text-xl">{item.icon}</span>
-                  <span>{item.label}</span>
+                  <IconComponent 
+                    className="w-5 h-5" 
+                    style={active ? { color: '#FFFFFF' } : { color: '#6B7280' }}
+                  />
+                  <span 
+                    className="text-sm"
+                    style={active ? { color: '#FFFFFF' } : {}}
+                  >
+                    {item.label}
+                  </span>
                 </Link>
               </li>
             );
@@ -63,8 +117,33 @@ export default function Sidebar({ onLogout }) {
         </ul>
       </nav>
 
-      {/* 하단 프로필/로그아웃 */}
-      <div className="p-4 border-t border-gray-200">
+      {/* 하단 계정정보 및 로그아웃 */}
+      <div className="p-4 border-t border-gray-200 space-y-1">
+        {/* 계정정보 */}
+        <Link
+          to="/admin/account"
+          className={`
+            w-full px-4 py-2.5 rounded-lg transition-all duration-200 text-left flex items-center gap-3 font-medium text-sm
+            ${location.pathname === '/admin/account'
+              ? 'shadow-sm'
+              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+            }
+          `}
+          style={location.pathname === '/admin/account' ? { 
+            backgroundColor: '#26C6DA',
+            color: '#FFFFFF'
+          } : {}}
+        >
+          <UserIcon 
+            className="w-5 h-5" 
+            style={location.pathname === '/admin/account' ? { color: '#FFFFFF' } : { color: '#6B7280' }}
+          />
+          <span style={location.pathname === '/admin/account' ? { color: '#FFFFFF' } : {}}>
+            계정정보
+          </span>
+        </Link>
+        
+        {/* 로그아웃 */}
         <button
           type="button"
           onClick={() => {
@@ -72,19 +151,17 @@ export default function Sidebar({ onLogout }) {
               if (onLogout) {
                 onLogout();
               } else {
-                // onLogout이 없을 경우 폴백 처리
                 localStorage.removeItem('token');
                 window.location.href = '/login';
               }
             }
           }}
-          className="w-full px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors text-left flex items-center gap-3 font-medium"
+          className="w-full px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 text-left flex items-center gap-3 font-medium text-sm"
         >
-          <span>🚪</span>
+          <LogoutIcon className="w-5 h-5 text-gray-500" />
           <span>로그아웃</span>
         </button>
       </div>
     </aside>
   );
 }
-

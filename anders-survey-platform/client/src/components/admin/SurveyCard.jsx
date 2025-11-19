@@ -67,7 +67,8 @@ export default function SurveyCard({ survey, delay = 0 }) {
         {survey?._id || survey?.id ? (
           <Link
             to={`/admin/results/${survey._id || survey.id}`}
-            className="flex-1 px-4 py-2 rounded-lg text-white font-medium hover:opacity-90 transition-opacity text-center bg-primary"
+            className="flex-1 px-4 py-2 rounded-lg text-white font-medium hover:opacity-90 transition-opacity text-center"
+            style={{ backgroundColor: '#26C6DA' }} // 고정 admin 색상
           >
             결과 보기
           </Link>

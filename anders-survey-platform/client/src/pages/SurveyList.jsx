@@ -1,12 +1,13 @@
 // SurveyList.jsx (필터, 삭제 기능 추가)
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
 import { DocumentIcon, PlusIcon, EditIcon, ChevronRightIcon, PlayIcon } from '../components/icons';
 import { isThemeV2Enabled } from '../utils/featureToggle';
 import StatCard from '../components/admin/StatCard';
-import SurveyCard from '../components/admin/SurveyCard';
+import { motion } from 'framer-motion';
+import CustomSelect from '../components/ui/CustomSelect';
 
 const loadSurveyListFromLocal = () => {
   const list = JSON.parse(localStorage.getItem('surveyList') || '[]');
@@ -77,14 +78,21 @@ export default function SurveyList({ onLogout }) {
   const [loading, setLoading] = useState(true);
   const [selectedSurveys, setSelectedSurveys] = useState(new Set());
   const [statusFilter, setStatusFilter] = useState('all'); // all, scheduled, active (ongoing), completed
-  // 추가: 검색, 정렬, 뷰 전환
+  // 추가: 검색, 정렬
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('updatedAt'); // 'title', 'updatedAt', 'responses'
   const [sortOrder, setSortOrder] = useState('desc'); // 'asc', 'desc'
-  const [viewMode, setViewMode] = useState('card'); // 'card', 'table'
   const navigate = useNavigate();
   const location = useLocation();
   const themeV2Enabled = isThemeV2Enabled();
+  // 추가: 메시지 상태 (토스트 메시지용)
+  const [message, setMessage] = useState({ type: '', text: '' });
+  // 추가: 작업 중 상태 (일괄 작업 시)
+  const [processing, setProcessing] = useState(false);
+  // 추가: 개별 작업 상태 (삭제, 상태 변경)
+  const [processingItems, setProcessingItems] = useState(new Set());
+  // 삭제 확인 중인 항목 추적 (동기적으로 관리)
+  const deletingRef = useRef(new Set());
 
   useEffect(() => {
     const fetchSurveys = async () => {
@@ -93,46 +101,79 @@ export default function SurveyList({ onLogout }) {
       
       try {
         const response = await axiosInstance.get('/surveys');
+        let apiSurveys = [];
+        
         if (response.data.success && Array.isArray(response.data.data)) {
-          const apiSurveys = response.data.data.map((survey) => ({
-            id: survey._id || survey.id,
-            title: survey.title,
-            status: survey.status || 'inactive',
-            updatedAt: survey.createdAt || survey.updatedAt
-              ? new Date(survey.createdAt || survey.updatedAt).toLocaleString()
-              : 'N/A',
-            source: 'api',
-          }));
-          allSurveys.push(...apiSurveys);
+          apiSurveys = response.data.data.map((survey) => {
+            // 데이터 검증
+            if (!survey || (!survey._id && !survey.id)) {
+              console.warn('유효하지 않은 설문 데이터:', survey);
+              return null;
+            }
+            
+            return {
+              id: survey._id || survey.id,
+              title: survey.title || '제목 없음',
+              status: survey.status || 'inactive',
+              updatedAt: survey.createdAt || survey.updatedAt
+                ? new Date(survey.createdAt || survey.updatedAt).toLocaleString('ko-KR')
+                : 'N/A',
+              source: 'api',
+            };
+          }).filter(s => s !== null);
         } else if (Array.isArray(response.data)) {
-          const apiSurveys = response.data.map((survey) => ({
-            id: survey._id || survey.id,
-            title: survey.title,
-            status: survey.status || 'inactive',
-            updatedAt: survey.createdAt || survey.updatedAt
-              ? new Date(survey.createdAt || survey.updatedAt).toLocaleString()
-              : 'N/A',
-            source: 'api',
-          }));
-          allSurveys.push(...apiSurveys);
+          apiSurveys = response.data.map((survey) => {
+            // 데이터 검증
+            if (!survey || (!survey._id && !survey.id)) {
+              console.warn('유효하지 않은 설문 데이터:', survey);
+              return null;
+            }
+            
+            return {
+              id: survey._id || survey.id,
+              title: survey.title || '제목 없음',
+              status: survey.status || 'inactive',
+              updatedAt: survey.createdAt || survey.updatedAt
+                ? new Date(survey.createdAt || survey.updatedAt).toLocaleString('ko-KR')
+                : 'N/A',
+              source: 'api',
+            };
+          }).filter(s => s !== null);
         }
+        
+        allSurveys.push(...apiSurveys);
       } catch (err) {
-        console.log('API에서 설문 목록 로드 실패, 로컬 스토리지 사용:', err);
+        console.error('API에서 설문 목록 로드 실패:', err);
+        // API 실패 시에도 로컬 스토리지 데이터는 로드 시도
       }
       
-      const localSurveys = loadSurveyListFromLocal();
-      allSurveys.push(...localSurveys);
+      // 로컬 스토리지에서 데이터 로드 (API 실패 시 대비)
+      try {
+        const localSurveys = loadSurveyListFromLocal();
+        allSurveys.push(...localSurveys);
+      } catch (localErr) {
+        console.error('로컬 스토리지에서 설문 목록 로드 실패:', localErr);
+      }
       
+      // 중복 제거 및 데이터 검증
       const uniqueSurveys = [];
       const seenIds = new Set();
       for (const survey of allSurveys) {
-        if (survey.id && !seenIds.has(survey.id)) {
+        if (survey && survey.id && !seenIds.has(survey.id)) {
           seenIds.add(survey.id);
-          uniqueSurveys.push(survey);
+          // 최종 데이터 검증
+          if (survey.title && survey.status) {
+            uniqueSurveys.push(survey);
+          } else {
+            console.warn('불완전한 설문 데이터:', survey);
+          }
         }
       }
       
       setSurveys(uniqueSurveys);
+      if (uniqueSurveys.length === 0 && allSurveys.length > 0) {
+        showMessage('warning', '일부 설문 데이터를 로드할 수 없습니다.');
+      }
       setLoading(false);
     };
     
@@ -191,15 +232,49 @@ export default function SurveyList({ onLogout }) {
     navigate('/login', { replace: true });
   };
 
-  // 삭제 핸들러 (요구사항 7)
+  // 메시지 표시 및 자동 숨김
+  const showMessage = (type, text, duration = 3000) => {
+    setMessage({ type, text });
+    if (duration > 0) {
+      setTimeout(() => setMessage({ type: '', text: '' }), duration);
+    }
+  };
+
+  // 삭제 핸들러 (요구사항 7) - 확인 1회만 진행
   const handleDelete = async (surveyId, e) => {
-    e.preventDefault();
-    e.stopPropagation();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     
-    if (!window.confirm('정말로 이 설문을 삭제하시겠습니까?')) {
+    // 동기적으로 중복 호출 확인 (ref 사용)
+    if (deletingRef.current.has(surveyId)) {
       return;
     }
-
+    
+    // 이미 처리 중이면 무시 (중복 호출 방지)
+    if (processingItems.has(surveyId)) {
+      return;
+    }
+    
+    // 확인 전에 ref에 추가하여 동기적으로 중복 호출 차단
+    deletingRef.current.add(surveyId);
+    setProcessingItems(prev => new Set(prev).add(surveyId));
+    
+    // 삭제 확인 (1회만)
+    const confirmed = window.confirm('정말로 이 설문을 삭제하시겠습니까?');
+    
+    if (!confirmed) {
+      // 취소 시 플래그 제거
+      deletingRef.current.delete(surveyId);
+      setProcessingItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(surveyId);
+        return newSet;
+      });
+      return;
+    }
+    
     try {
       await axiosInstance.delete(`/surveys/${surveyId}`);
       setSurveys(prev => prev.filter(s => s.id !== surveyId));
@@ -208,37 +283,80 @@ export default function SurveyList({ onLogout }) {
         newSet.delete(surveyId);
         return newSet;
       });
+      showMessage('success', '설문이 삭제되었습니다.');
     } catch (err) {
       console.error('삭제 실패:', err);
-      alert('설문 삭제에 실패했습니다.');
+      const errorMessage = err.response?.data?.message || err.message || '설문 삭제에 실패했습니다.';
+      showMessage('error', errorMessage);
+    } finally {
+      deletingRef.current.delete(surveyId);
+      setProcessingItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(surveyId);
+        return newSet;
+      });
     }
   };
 
-  // 다중 선택 삭제 (요구사항 7)
+  // 다중 선택 삭제 (요구사항 7) - 확인 1회만 진행
   const handleBulkDelete = async () => {
     if (selectedSurveys.size === 0) {
-      alert('삭제할 설문을 선택해주세요.');
+      showMessage('warning', '삭제할 설문을 선택해주세요.');
       return;
     }
 
+    // 이미 처리 중이면 무시 (중복 호출 방지)
+    if (processing) {
+      return;
+    }
+
+    // 삭제 확인 (1회만)
     if (!window.confirm(`선택한 ${selectedSurveys.size}개의 설문을 삭제하시겠습니까?`)) {
       return;
     }
 
+    setProcessing(true);
+    const selectedIds = Array.from(selectedSurveys);
+    const results = [];
+    const errors = [];
+
     try {
-      const deletePromises = Array.from(selectedSurveys).map(id => 
-        axiosInstance.delete(`/surveys/${id}`).catch(err => {
+      const deletePromises = selectedIds.map(async (id) => {
+        try {
+          await axiosInstance.delete(`/surveys/${id}`);
+          results.push(id);
+          return { id, success: true };
+        } catch (err) {
           console.error(`설문 ${id} 삭제 실패:`, err);
-          return null;
-        })
-      );
+          const survey = surveys.find(s => s.id === id);
+          errors.push({
+            id,
+            title: survey?.title || '제목 없음',
+            error: err.response?.data?.message || err.message || '알 수 없는 오류',
+          });
+          return { id, success: false };
+        }
+      });
       
       await Promise.all(deletePromises);
-      setSurveys(prev => prev.filter(s => !selectedSurveys.has(s.id)));
+      
+      // 성공한 항목만 제거
+      setSurveys(prev => prev.filter(s => !results.includes(s.id)));
       setSelectedSurveys(new Set());
+      
+      // 결과 메시지 표시
+      if (errors.length === 0) {
+        showMessage('success', `${results.length}개의 설문이 삭제되었습니다.`);
+      } else if (results.length > 0) {
+        showMessage('warning', `${results.length}개 삭제 성공, ${errors.length}개 실패: ${errors.map(e => e.title).join(', ')}`);
+      } else {
+        showMessage('error', `모든 설문 삭제에 실패했습니다.`);
+      }
     } catch (err) {
       console.error('일괄 삭제 실패:', err);
-      alert('일부 설문 삭제에 실패했습니다.');
+      showMessage('error', '일괄 삭제 중 오류가 발생했습니다.');
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -265,7 +383,7 @@ export default function SurveyList({ onLogout }) {
   // 추가: 일괄 상태 변경
   const handleBulkStatusChange = async (newStatus) => {
     if (selectedSurveys.size === 0) {
-      alert('상태를 변경할 설문을 선택해주세요.');
+      showMessage('warning', '상태를 변경할 설문을 선택해주세요.');
       return;
     }
 
@@ -273,26 +391,51 @@ export default function SurveyList({ onLogout }) {
       return;
     }
 
+    setProcessing(true);
+    const selectedIds = Array.from(selectedSurveys);
+    const results = [];
+    const errors = [];
+
     try {
-      const updatePromises = Array.from(selectedSurveys).map(id => 
-        axiosInstance.put(`/surveys/${id}`, { status: newStatus }).catch(err => {
+      const updatePromises = selectedIds.map(async (id) => {
+        try {
+          await axiosInstance.put(`/surveys/${id}`, { status: newStatus });
+          results.push(id);
+          return { id, success: true };
+        } catch (err) {
           console.error(`설문 ${id} 상태 변경 실패:`, err);
-          return null;
-        })
-      );
+          const survey = surveys.find(s => s.id === id);
+          errors.push({
+            id,
+            title: survey?.title || '제목 없음',
+            error: err.response?.data?.message || err.message || '알 수 없는 오류',
+          });
+          return { id, success: false };
+        }
+      });
       
       await Promise.all(updatePromises);
       
-      // 로컬 상태 업데이트
+      // 성공한 항목만 상태 업데이트
       setSurveys(prev => prev.map(s => 
-        selectedSurveys.has(s.id) ? { ...s, status: newStatus } : s
+        results.includes(s.id) ? { ...s, status: newStatus } : s
       ));
       
       setSelectedSurveys(new Set());
-      alert('상태가 성공적으로 변경되었습니다.');
+      
+      // 결과 메시지 표시
+      if (errors.length === 0) {
+        showMessage('success', `${results.length}개의 설문 상태가 변경되었습니다.`);
+      } else if (results.length > 0) {
+        showMessage('warning', `${results.length}개 변경 성공, ${errors.length}개 실패: ${errors.map(e => e.title).join(', ')}`);
+      } else {
+        showMessage('error', `모든 설문 상태 변경에 실패했습니다.`);
+      }
     } catch (err) {
       console.error('일괄 상태 변경 실패:', err);
-      alert('일부 설문의 상태 변경에 실패했습니다.');
+      showMessage('error', '일괄 상태 변경 중 오류가 발생했습니다.');
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -305,35 +448,52 @@ export default function SurveyList({ onLogout }) {
   if (themeV2Enabled) {
     return (
       <div className="space-y-6">
-        {/* 통계 카드 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatCard 
-            title="전체 설문" 
-            value={totalSurveys} 
-            icon="📋" 
-            color="purple" 
-            delay={0}
-          />
-          <StatCard 
-            title="활성 설문" 
-            value={activeSurveys} 
-            icon="✅" 
-            color="green" 
-            delay={0.1}
-          />
-          <StatCard 
-            title="총 응답 수" 
-            value={totalResponses} 
-            icon="📊" 
-            color="blue" 
-            delay={0.2}
-          />
+        {/* 메시지 표시 */}
+        {message.text && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`p-4 rounded-lg flex items-center justify-between ${
+              message.type === 'success' 
+                ? 'bg-green-100 border border-green-300 text-green-800' 
+                : message.type === 'warning'
+                ? 'bg-yellow-100 border border-yellow-300 text-yellow-800'
+                : message.type === 'error'
+                ? 'bg-red-100 border border-red-300 text-red-800'
+                : 'bg-blue-100 border border-blue-300 text-blue-800'
+            }`}
+          >
+            <span>{message.text}</span>
+            <button
+              onClick={() => setMessage({ type: '', text: '' })}
+              className="ml-2 text-current opacity-70 hover:opacity-100 transition-opacity"
+              aria-label="닫기"
+            >
+              ✕
+            </button>
+          </motion.div>
+        )}
+        
+        {/* 통계 카드 - 작은 카드 사이즈 */}
+        <div className="flex items-center gap-3">
+          <div className="px-3 py-2 bg-white border border-gray-200 rounded-lg shadow-sm flex items-center gap-2">
+            <span className="text-xs text-text-sub">전체</span>
+            <span className="text-sm font-semibold text-text-main">{totalSurveys}</span>
+          </div>
+          <div className="px-3 py-2 bg-white border border-gray-200 rounded-lg shadow-sm flex items-center gap-2">
+            <span className="text-xs text-text-sub">활성</span>
+            <span className="text-sm font-semibold text-text-main">{activeSurveys}</span>
+          </div>
+          <div className="px-3 py-2 bg-white border border-gray-200 rounded-lg shadow-sm flex items-center gap-2">
+            <span className="text-xs text-text-sub">응답</span>
+            <span className="text-sm font-semibold text-text-main">{totalResponses}</span>
+          </div>
         </div>
 
         {/* 필터 및 검색 */}
-        <div className="bg-white rounded-xl shadow-md p-4">
+        <div className="bg-white rounded-xl shadow-md p-4 border border-gray-200">
           <div className="space-y-4">
-            {/* 첫 번째 줄: 검색 및 뷰 전환 */}
+            {/* 첫 번째 줄: 검색 */}
             <div className="flex items-center gap-4 flex-wrap">
               {/* 검색 입력 */}
               <div className="flex-1 min-w-[200px]">
@@ -342,76 +502,50 @@ export default function SurveyList({ onLogout }) {
                   placeholder="설문 제목으로 검색..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full border-2 border-gray-200 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary"
+                  className="w-full px-4 py-2.5 text-sm font-medium border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all hover:border-gray-400"
                 />
-              </div>
-              
-              {/* 뷰 전환 버튼 */}
-              <div className="flex items-center gap-2 border-2 border-gray-200 rounded-lg p-1">
-                <button
-                  type="button"
-                  onClick={() => setViewMode('card')}
-                  className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                    viewMode === 'card'
-                      ? 'bg-primary text-white'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                  aria-label="카드 뷰"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('table')}
-                  className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                    viewMode === 'table'
-                      ? 'bg-primary text-white'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                  aria-label="표 뷰"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                </button>
               </div>
             </div>
             
             {/* 두 번째 줄: 상태 필터, 정렬, 일괄 작업 */}
             <div className="flex items-center gap-4 flex-wrap">
-              <label className="text-sm font-medium text-gray-700">상태 필터:</label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="border-2 border-gray-200 rounded-lg px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-              >
-                <option value="all">전체</option>
-                <option value="scheduled">예약됨</option>
-                <option value="active">진행 중</option>
-                <option value="completed">완료</option>
-              </select>
+              <div className="flex items-center gap-2">
+                <CustomSelect
+                  value={statusFilter}
+                  onChange={(value) => setStatusFilter(value)}
+                  options={[
+                    { value: 'all', label: '전체' },
+                    { value: 'scheduled', label: '예약됨' },
+                    { value: 'active', label: '진행 중' },
+                    { value: 'completed', label: '완료' },
+                  ]}
+                  placeholder="상태 선택"
+                  className="w-40"
+                />
+              </div>
               
-              <label className="text-sm font-medium text-gray-700 ml-4">정렬:</label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="border-2 border-gray-200 rounded-lg px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-              >
-                <option value="updatedAt">최근 수정일</option>
-                <option value="title">제목</option>
-                <option value="responses">응답 수</option>
-              </select>
-              
-              <button
-                type="button"
-                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                className="px-3 py-2 border-2 border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-                aria-label={sortOrder === 'asc' ? '내림차순 정렬' : '오름차순 정렬'}
-              >
-                {sortOrder === 'asc' ? '↑' : '↓'}
-              </button>
+              <div className="flex items-center gap-2">
+                <CustomSelect
+                  value={sortBy}
+                  onChange={(value) => setSortBy(value)}
+                  options={[
+                    { value: 'updatedAt', label: '최근 수정일' },
+                    { value: 'title', label: '제목' },
+                    { value: 'responses', label: '응답 수' },
+                  ]}
+                  placeholder="정렬 기준"
+                  className="w-40"
+                />
+                
+                <button
+                  type="button"
+                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                  className="px-3 py-2.5 border-2 border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  aria-label={sortOrder === 'asc' ? '내림차순 정렬' : '오름차순 정렬'}
+                >
+                  {sortOrder === 'asc' ? '↑' : '↓'}
+                </button>
+              </div>
               
               <span className="text-sm text-gray-500 ml-auto">
                 총 {filteredSurveys.length}개
@@ -420,28 +554,33 @@ export default function SurveyList({ onLogout }) {
               {/* 일괄 작업 버튼 */}
               {selectedSurveys.size > 0 && (
                 <div className="flex items-center gap-2">
-                  <select
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        handleBulkStatusChange(e.target.value);
-                        e.target.value = '';
-                      }
-                    }}
-                    className="border-2 border-gray-200 rounded-lg px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  >
-                    <option value="">일괄 상태 변경 ({selectedSurveys.size}개)</option>
-                    <option value="active">진행 중으로 변경</option>
-                    <option value="paused">일시 정지로 변경</option>
-                    <option value="scheduled">예약으로 변경</option>
-                    <option value="inactive">비활성화로 변경</option>
-                  </select>
+                  <div className="relative">
+                    <CustomSelect
+                      value=""
+                      onChange={(value) => {
+                        if (value) {
+                          handleBulkStatusChange(value);
+                        }
+                      }}
+                      disabled={processing}
+                      options={[
+                        { value: 'active', label: '진행 중으로 변경' },
+                        { value: 'paused', label: '일시 정지로 변경' },
+                        { value: 'scheduled', label: '예약으로 변경' },
+                        { value: 'inactive', label: '비활성화로 변경' },
+                      ]}
+                      placeholder={`일괄 상태 변경 (${selectedSurveys.size}개)`}
+                      className="w-48"
+                    />
+                  </div>
                   <button
                     type="button"
                     onClick={handleBulkDelete}
-                    className="px-4 py-2 rounded-lg text-sm text-white font-medium hover:opacity-90 transition-opacity"
+                    disabled={processing}
+                    className={`px-4 py-2.5 rounded-lg text-sm text-white font-medium hover:opacity-90 transition-opacity ${processing ? 'opacity-50 cursor-not-allowed' : ''}`}
                     style={{ backgroundColor: '#EF4444' }}
                   >
-                    선택 삭제
+                    {processing ? '처리 중...' : '선택 삭제'}
                   </button>
                 </div>
               )}
@@ -471,9 +610,9 @@ export default function SurveyList({ onLogout }) {
               첫 설문 만들기
             </Link>
           </div>
-        ) : viewMode === 'table' ? (
-          /* 표 뷰 */
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        ) : (
+          /* 리스트 뷰 (테이블) */
+          <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
@@ -525,28 +664,38 @@ export default function SurveyList({ onLogout }) {
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                           {survey.totalResponses || 0}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
                               onClick={() => navigate(`/admin/builder/${survey.id}`)}
-                              className="text-primary hover:text-primary-hover"
+                              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                              title="편집"
                             >
-                              편집
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
                             </button>
                             <button
                               type="button"
                               onClick={() => navigate(`/admin/results/${survey.id}`)}
-                              className="text-blue-600 hover:text-blue-700"
+                              className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
+                              title="결과보기"
                             >
-                              결과
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                              </svg>
                             </button>
                             <button
                               type="button"
                               onClick={(e) => handleDelete(survey.id, e)}
-                              className="text-red-600 hover:text-red-700"
+                              disabled={processingItems.has(survey.id)}
+                              className={`p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all ${processingItems.has(survey.id) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              title="삭제"
                             >
-                              삭제
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
                             </button>
                           </div>
                         </td>
@@ -557,17 +706,6 @@ export default function SurveyList({ onLogout }) {
               </table>
             </div>
           </div>
-        ) : (
-          /* 카드 뷰 (기존) */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredSurveys.map((survey, idx) => (
-              <SurveyCard 
-                key={survey.id} 
-                survey={survey} 
-                delay={idx * 0.05}
-              />
-            ))}
-          </div>
         )}
       </div>
     );
@@ -577,6 +715,32 @@ export default function SurveyList({ onLogout }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
+        {/* 메시지 표시 */}
+        {message.text && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`p-4 rounded-lg flex items-center justify-between mb-4 ${
+              message.type === 'success' 
+                ? 'bg-green-100 border border-green-300 text-green-800' 
+                : message.type === 'warning'
+                ? 'bg-yellow-100 border border-yellow-300 text-yellow-800'
+                : message.type === 'error'
+                ? 'bg-red-100 border border-red-300 text-red-800'
+                : 'bg-blue-100 border border-blue-300 text-blue-800'
+            }`}
+          >
+            <span>{message.text}</span>
+            <button
+              onClick={() => setMessage({ type: '', text: '' })}
+              className="ml-2 text-current opacity-70 hover:opacity-100 transition-opacity"
+              aria-label="닫기"
+            >
+              ✕
+            </button>
+          </motion.div>
+        )}
+        
         {/* 헤더 */}
         <header className="mb-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
@@ -613,17 +777,18 @@ export default function SurveyList({ onLogout }) {
         <div className="mb-6 bg-white rounded-xl shadow-lg p-4 border border-gray-200">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-gray-700">상태 필터:</label>
-              <select
+              <CustomSelect
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="border-2 border-gray-200 rounded-lg px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-[#2dafb9] focus:border-[#2dafb9]"
-              >
-                <option value="all">전체</option>
-                <option value="scheduled">예약됨</option>
-                <option value="active">진행 중</option>
-                <option value="completed">완료</option>
-              </select>
+                onChange={(value) => setStatusFilter(value)}
+                options={[
+                  { value: 'all', label: '전체' },
+                  { value: 'scheduled', label: '예약됨' },
+                  { value: 'active', label: '진행 중' },
+                  { value: 'completed', label: '완료' },
+                ]}
+                placeholder="상태 선택"
+                className="w-40"
+              />
               <span className="text-sm text-gray-500">
                 총 {filteredSurveys.length}개
               </span>
@@ -632,9 +797,10 @@ export default function SurveyList({ onLogout }) {
             {selectedSurveys.size > 0 && (
               <button
                 onClick={handleBulkDelete}
-                className="admin-btn px-4 py-2 rounded-lg text-sm"
+                disabled={processing}
+                className={`admin-btn px-4 py-2 rounded-lg text-sm ${processing ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                선택 삭제 ({selectedSurveys.size})
+                {processing ? '처리 중...' : `선택 삭제 (${selectedSurveys.size})`}
               </button>
             )}
           </div>
@@ -762,8 +928,10 @@ export default function SurveyList({ onLogout }) {
 
                     {/* 삭제 버튼 */}
                     <button
+                      type="button"
                       onClick={(e) => handleDelete(survey.id, e)}
-                      className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      disabled={processingItems.has(survey.id)}
+                      className={`p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all ${processingItems.has(survey.id) ? 'opacity-50 cursor-not-allowed' : ''}`}
                       title="삭제"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

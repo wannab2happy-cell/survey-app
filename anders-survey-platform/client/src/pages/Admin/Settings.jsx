@@ -2,6 +2,7 @@
 // Theme V2 스타일: 시스템 설정 및 계정 관리
 
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axiosInstance from '../../api/axiosInstance';
 import { 
@@ -12,13 +13,7 @@ import {
 } from '../../utils/simulation';
 
 export default function Settings() {
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
   const [apiKeys, setApiKeys] = useState([]);
   const [newApiKeyName, setNewApiKeyName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -53,58 +48,6 @@ export default function Settings() {
   const [simulationResults, setSimulationResults] = useState(null);
   const [apiTestResults, setApiTestResults] = useState(null);
 
-  // 비밀번호 변경 핸들러
-  const handlePasswordChange = async () => {
-    if (!passwordForm.currentPassword || !passwordForm.newPassword) {
-      setMessage({ type: 'error', text: '모든 필드를 입력해주세요.' });
-      return;
-    }
-    
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setMessage({ type: 'error', text: '새 비밀번호가 일치하지 않습니다.' });
-      return;
-    }
-    
-    if (passwordForm.newPassword.length < 6) {
-      setMessage({ type: 'error', text: '비밀번호는 최소 6자 이상이어야 합니다.' });
-      return;
-    }
-
-    setLoading(true);
-    setMessage({ type: '', text: '' });
-    
-    try {
-      // 비밀번호 변경 API 호출
-      // 주의: 백엔드에 /auth/change-password 엔드포인트가 구현되어 있어야 합니다
-      const response = await axiosInstance.put('/auth/change-password', {
-        currentPassword: passwordForm.currentPassword,
-        newPassword: passwordForm.newPassword,
-      });
-      
-      if (response.data.success) {
-        setMessage({ type: 'success', text: '비밀번호가 성공적으로 변경되었습니다.' });
-        setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-        setShowPasswordModal(false);
-      } else {
-        setMessage({ type: 'error', text: response.data.message || '비밀번호 변경에 실패했습니다.' });
-      }
-    } catch (apiError) {
-      // API가 없는 경우를 대비한 폴백 (개발 환경)
-      if (apiError.response?.status === 404 || apiError.code === 'ERR_NETWORK') {
-        console.warn('비밀번호 변경 API가 아직 구현되지 않았습니다. 백엔드에 /auth/change-password 엔드포인트를 추가해주세요.');
-        setMessage({ type: 'info', text: '비밀번호 변경 기능은 백엔드 API 구현 후 활성화됩니다. 현재는 UI만 제공됩니다.' });
-        setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-        setShowPasswordModal(false);
-      } else {
-        setMessage({ 
-          type: 'error', 
-          text: apiError.response?.data?.message || '비밀번호 변경에 실패했습니다.' 
-        });
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // API 키 생성 핸들러
   const handleCreateApiKey = () => {
@@ -192,7 +135,7 @@ export default function Settings() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-text-main mb-2">시스템 설정</h1>
-        <p className="text-text-sub">계정 관리 및 시스템 설정을 변경하세요</p>
+        <p className="text-text-sub">시스템 전반의 설정을 관리하세요</p>
       </div>
 
       {/* 프로젝트 설정 안내 */}
@@ -202,9 +145,10 @@ export default function Settings() {
         transition={{ duration: 0.3 }}
         className="bg-white rounded-xl shadow-md p-6"
       >
-        <h3 className="text-xl font-bold text-text-main mb-3">프로젝트 설정</h3>
+        <h3 className="text-xl font-bold text-text-main mb-3">시스템 설정</h3>
         <p className="text-text-sub">
-          이곳에서 사용자 계정 관리, API 키 설정, 시스템 백업/복구 등의 관리자 기능을 설정할 수 있습니다.
+          이곳에서 API 키 설정, 권한 관리, 알림 설정, 시스템 모니터링 등의 관리자 기능을 설정할 수 있습니다.
+          개인 계정 정보는 <Link to="/admin/account" className="text-primary hover:underline">계정 정보</Link> 페이지에서 관리하세요.
         </p>
       </motion.div>
 
@@ -317,8 +261,7 @@ export default function Settings() {
                 }
               }}
               disabled={simulationRunning}
-              className="px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm shadow-md hover:shadow-lg"
-              style={{ backgroundColor: 'var(--primary)', color: 'white' }}
+              className="btn-primary"
             >
               {simulationRunning ? '실행 중...' : '전체 시뮬레이션 실행'}
             </button>
@@ -347,8 +290,8 @@ export default function Settings() {
                 }
               }}
               disabled={simulationRunning}
-              className="px-4 py-2.5 bg-secondary text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm shadow-md hover:shadow-lg"
-              style={{ backgroundColor: 'var(--secondary)', color: 'white' }}
+              className="btn-secondary"
+              style={{ backgroundColor: '#F59E0B', color: '#ffffff', borderColor: '#F59E0B' }}
             >
               설문 생성만
             </button>
@@ -375,8 +318,8 @@ export default function Settings() {
                 }
               }}
               disabled={simulationRunning}
-              className="px-4 py-2.5 bg-success text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm shadow-md hover:shadow-lg"
-              style={{ backgroundColor: 'var(--success)', color: 'white' }}
+              className="btn-secondary"
+              style={{ backgroundColor: '#10B981', color: '#ffffff', borderColor: '#10B981' }}
             >
               API 엔드포인트 테스트
             </button>
@@ -483,24 +426,6 @@ export default function Settings() {
         </motion.div>
       )}
 
-      {/* 관리자 계정 */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-        className="bg-white rounded-xl shadow-md p-6"
-      >
-        <h3 className="text-lg font-bold text-text-main mb-2">관리자 계정</h3>
-        <p className="text-text-sub mb-4">
-          현재 로그인된 관리자 계정 정보를 확인하고 비밀번호를 변경합니다.
-        </p>
-        <button 
-          className="px-6 py-2.5 rounded-lg text-white font-medium hover:bg-primary-hover transition-colors bg-primary"
-          onClick={() => setShowPasswordModal(true)}
-        >
-          비밀번호 변경
-        </button>
-      </motion.div>
 
       {/* API 연동 */}
       <motion.div
@@ -515,9 +440,13 @@ export default function Settings() {
         </p>
         <div className="space-y-4">
           <button 
-            className="px-6 py-2.5 rounded-lg text-white font-medium hover:bg-primary-hover transition-colors bg-primary"
+            type="button"
+            className="btn-primary"
             onClick={() => setShowApiKeyModal(true)}
           >
+            <svg className="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
             API 키 관리
           </button>
           
@@ -532,15 +461,24 @@ export default function Settings() {
                   </div>
                   <div className="flex gap-2 ml-4">
                     <button
+                      type="button"
                       onClick={() => handleCopyApiKey(key.key)}
-                      className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-primary-hover transition"
+                      className="btn-secondary text-xs"
                     >
+                      <svg className="btn-icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
                       복사
                     </button>
                     <button
+                      type="button"
                       onClick={() => handleDeleteApiKey(key.id)}
-                      className="px-3 py-1 text-xs bg-error text-white rounded hover:opacity-90 transition"
+                      className="btn-secondary text-xs"
+                      style={{ backgroundColor: '#EF4444', color: '#ffffff', borderColor: '#EF4444' }}
                     >
+                      <svg className="btn-icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
                       삭제
                     </button>
                   </div>
@@ -564,9 +502,13 @@ export default function Settings() {
             <p className="text-text-sub text-sm">사용자 초대 및 권한 부여를 관리합니다.</p>
           </div>
           <button
+            type="button"
             onClick={() => setShowUserModal(true)}
-            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors font-medium text-sm"
+            className="btn-primary"
           >
+            <svg className="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
             사용자 초대
           </button>
         </div>
@@ -596,6 +538,7 @@ export default function Settings() {
                   <option value="viewer">뷰어</option>
                 </select>
                 <button
+                  type="button"
                   onClick={() => {
                     if (window.confirm(`${user.name}을(를) 삭제하시겠습니까?`)) {
                       setUsers(users.filter(u => u.id !== user.id));
@@ -603,8 +546,12 @@ export default function Settings() {
                       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
                     }
                   }}
-                  className="px-3 py-1 text-xs bg-error text-white rounded hover:opacity-90 transition"
+                  className="btn-secondary text-xs"
+                  style={{ backgroundColor: '#EF4444', color: '#ffffff', borderColor: '#EF4444' }}
                 >
+                  <svg className="btn-icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
                   삭제
                 </button>
               </div>
@@ -633,12 +580,14 @@ export default function Settings() {
               aria-label="설문 마감 알림"
               aria-checked={notifications.surveyClosed}
               role="switch"
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                notifications.surveyClosed ? 'bg-primary' : 'bg-gray-300'
-              }`}
+              className="relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              style={{
+                padding: '2px',
+                backgroundColor: notifications.surveyClosed ? '#26C6DA' : '#D1D5DB'
+              }}
             >
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                notifications.surveyClosed ? 'translate-x-6' : 'translate-x-1'
+              <span className={`inline-block h-4 w-4 rounded-full bg-white transition-all shadow-sm ${
+                notifications.surveyClosed ? 'translate-x-6' : 'translate-x-0'
               }`} />
             </button>
           </div>
@@ -654,12 +603,14 @@ export default function Settings() {
               aria-label="응답 증가 알림"
               aria-checked={notifications.responseIncrease}
               role="switch"
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                notifications.responseIncrease ? 'bg-primary' : 'bg-gray-300'
-              }`}
+              className="relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              style={{
+                padding: '2px',
+                backgroundColor: notifications.responseIncrease ? '#26C6DA' : '#D1D5DB'
+              }}
             >
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                notifications.responseIncrease ? 'translate-x-6' : 'translate-x-1'
+              <span className={`inline-block h-4 w-4 rounded-full bg-white transition-all shadow-sm ${
+                notifications.responseIncrease ? 'translate-x-6' : 'translate-x-0'
               }`} />
             </button>
           </div>
@@ -675,12 +626,14 @@ export default function Settings() {
               aria-label="서버 부하 알림"
               aria-checked={notifications.serverLoad}
               role="switch"
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                notifications.serverLoad ? 'bg-primary' : 'bg-gray-300'
-              }`}
+              className="relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              style={{
+                padding: '2px',
+                backgroundColor: notifications.serverLoad ? '#26C6DA' : '#D1D5DB'
+              }}
             >
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                notifications.serverLoad ? 'translate-x-6' : 'translate-x-1'
+              <span className={`inline-block h-4 w-4 rounded-full bg-white transition-all shadow-sm ${
+                notifications.serverLoad ? 'translate-x-6' : 'translate-x-0'
               }`} />
             </button>
           </div>
@@ -696,12 +649,14 @@ export default function Settings() {
                   aria-label="이메일 알림"
                   aria-checked={notifications.email}
                   role="switch"
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                    notifications.email ? 'bg-primary' : 'bg-gray-300'
-                  }`}
+                  className="relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                  style={{
+                    padding: '2px',
+                    backgroundColor: notifications.email ? '#26C6DA' : '#D1D5DB'
+                  }}
                 >
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                    notifications.email ? 'translate-x-6' : 'translate-x-1'
+                  <span className={`inline-block h-4 w-4 rounded-full bg-white transition-all shadow-sm ${
+                    notifications.email ? 'translate-x-6' : 'translate-x-0'
                   }`} />
                 </button>
               </div>
@@ -713,12 +668,14 @@ export default function Settings() {
                   aria-label="푸시 알림"
                   aria-checked={notifications.push}
                   role="switch"
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                    notifications.push ? 'bg-primary' : 'bg-gray-300'
-                  }`}
+                  className="relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                  style={{
+                    padding: '2px',
+                    backgroundColor: notifications.push ? '#26C6DA' : '#D1D5DB'
+                  }}
                 >
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                    notifications.push ? 'translate-x-6' : 'translate-x-1'
+                  <span className={`inline-block h-4 w-4 rounded-full bg-white transition-all shadow-sm ${
+                    notifications.push ? 'translate-x-6' : 'translate-x-0'
                   }`} />
                 </button>
               </div>
@@ -793,103 +750,6 @@ export default function Settings() {
         </div>
       </motion.div>
 
-      {/* 비밀번호 변경 모달 */}
-      {showPasswordModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowPasswordModal(false)}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl"
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-text-main">비밀번호 변경</h3>
-              <button
-                onClick={() => {
-                  setShowPasswordModal(false);
-                  setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-                  setMessage({ type: '', text: '' });
-                }}
-                className="text-text-sub hover:text-text-main text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-lg hover:bg-bg transition-colors"
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-text-sub mb-2">
-                  현재 비밀번호
-                </label>
-                <input
-                  type="password"
-                  value={passwordForm.currentPassword}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                  className="w-full border border-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-                  placeholder="현재 비밀번호를 입력하세요"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-text-sub mb-2">
-                  새 비밀번호
-                </label>
-                <input
-                  type="password"
-                  value={passwordForm.newPassword}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                  className="w-full border border-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-                  placeholder="새 비밀번호를 입력하세요 (최소 6자)"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-text-sub mb-2">
-                  새 비밀번호 확인
-                </label>
-                <input
-                  type="password"
-                  value={passwordForm.confirmPassword}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                  className="w-full border border-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-                  placeholder="새 비밀번호를 다시 입력하세요"
-                />
-              </div>
-              
-              {message.text && (
-                <div className={`p-3 rounded-lg text-sm ${
-                  message.type === 'success' 
-                    ? 'bg-success/10 text-success' 
-                    : 'bg-error/10 text-error'
-                }`}>
-                  {message.text}
-                </div>
-              )}
-              
-              <div className="flex gap-3">
-                <button
-                  onClick={handlePasswordChange}
-                  disabled={loading}
-                  className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                >
-                  {loading ? '변경 중...' : '변경하기'}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowPasswordModal(false);
-                    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-                    setMessage({ type: '', text: '' });
-                  }}
-                  className="px-4 py-2 bg-bg border border-border rounded-lg hover:bg-primary/10 transition text-text-sub font-medium"
-                >
-                  취소
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
-
       {/* API 키 관리 모달 */}
       {showApiKeyModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowApiKeyModal(false)}>
@@ -924,9 +784,13 @@ export default function Settings() {
                     placeholder="API 키 이름을 입력하세요"
                   />
                   <button
+                    type="button"
                     onClick={handleCreateApiKey}
-                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors font-medium"
+                    className="btn-primary"
                   >
+                    <svg className="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
                     생성
                   </button>
                 </div>
@@ -941,9 +805,14 @@ export default function Settings() {
                       <div className="flex items-center justify-between mb-2">
                         <p className="font-medium text-text-main">{key.name}</p>
                         <button
+                          type="button"
                           onClick={() => handleDeleteApiKey(key.id)}
-                          className="px-3 py-1 text-xs bg-error text-white rounded hover:opacity-90 transition"
+                          className="btn-secondary text-xs"
+                          style={{ backgroundColor: '#EF4444', color: '#ffffff', borderColor: '#EF4444' }}
                         >
+                          <svg className="btn-icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
                           삭제
                         </button>
                       </div>
@@ -952,9 +821,13 @@ export default function Settings() {
                           {key.key}
                         </code>
                         <button
+                          type="button"
                           onClick={() => handleCopyApiKey(key.key)}
-                          className="px-3 py-2 bg-primary text-white rounded hover:bg-primary-hover transition text-sm font-medium"
+                          className="btn-secondary text-sm"
                         >
+                          <svg className="btn-icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
                           복사
                         </button>
                       </div>
@@ -1060,8 +933,9 @@ export default function Settings() {
               
               <div className="flex gap-3">
                 <button
+                  type="button"
                   onClick={handleInviteUser}
-                  className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors font-medium"
+                  className="btn-primary flex-1"
                 >
                   초대하기
                 </button>

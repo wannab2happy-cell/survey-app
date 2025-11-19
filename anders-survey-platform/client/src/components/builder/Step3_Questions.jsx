@@ -3,15 +3,47 @@
 import { useCallback, useState, useEffect, useRef } from 'react';
 import { PERSONAL_INFO_FIELDS } from '../../constants.js';
 import QuestionList from './QuestionList';
+import ImageUpload from '../ImageUpload';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function Step3_Questions({ questions, lastQuestionId, personalInfo, onQuestionsChange, onPersonalInfoChange, onImageChange }) {
+export default function Step3_Questions({ questions, lastQuestionId, personalInfo, onQuestionsChange, onPersonalInfoChange, onImageChange, branding, onBrandingChange }) {
     
     const safePersonalInfo = personalInfo || { enabled: false, fields: [], consentText: '', consentRequired: false, customFields: [] };
     const [showQuestionTypeModal, setShowQuestionTypeModal] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState('all'); // 'all', 'input', 'choice', 'rating'
     const questionsEndRef = useRef(null);
     const lastQuestionCountRef = useRef(questions.length);
+    
+    // 한글 입력 처리를 위한 상태
+    const [isComposing, setIsComposing] = useState(false);
+    const [localConsentText, setLocalConsentText] = useState(safePersonalInfo.consentText || '');
+    const [localCustomFieldLabels, setLocalCustomFieldLabels] = useState({});
+
+    // 한글 입력 조합 시작
+    const handleCompositionStart = useCallback(() => {
+        setIsComposing(true);
+    }, []);
+
+    // 한글 입력 조합 완료 (consentText)
+    const handleConsentTextCompositionEnd = useCallback((e) => {
+        setIsComposing(false);
+        const value = e.target.value || '';
+        setLocalConsentText(value);
+        onPersonalInfoChange('personalInfo', 'consentText', value);
+    }, [onPersonalInfoChange]);
+
+    // consentText 입력 변경 핸들러
+    const handleConsentTextChange = useCallback((e) => {
+        const value = e.target.value || '';
+        setLocalConsentText(value);
+        
+        // 한글 조합 중이면 부모 상태는 업데이트하지 않음
+        if (isComposing) {
+            return;
+        }
+        
+        onPersonalInfoChange('personalInfo', 'consentText', value);
+    }, [isComposing, onPersonalInfoChange]);
 
     const getNextQuestionId = useCallback(() => {
         const maxId = questions.reduce((max, q) => Math.max(max, q.id || 0), 0);
@@ -37,22 +69,87 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
         return configs[type] || configs['single_choice'];
     }, []);
 
-    // 질문 유형 목록 (카테고리별 분류)
+    // 단색 SVG 아이콘 컴포넌트 (크기 30% 축소: w-8 h-8 -> w-6 h-6)
+    const IconText = () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+    );
+    const IconTextarea = () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+    );
+    const IconEmail = () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+    );
+    const IconPhone = () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+        </svg>
+    );
+    const IconRadio = () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+    );
+    const IconCheckbox = () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+    );
+    const IconYesNo = () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+    );
+    const IconDropdown = () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+    );
+    const IconImage = () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+    );
+    const IconScale = () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+    );
+    const IconStar = () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+        </svg>
+    );
+
+    // 질문 유형 목록 (요청된 순서대로 정렬)
     const questionTypes = [
-        // 입력 유형
-        { value: 'text', label: '텍스트 입력', icon: '📝', category: 'input', description: '짧은 텍스트 입력' },
-        { value: 'textarea', label: '서술형 (텍스트)', icon: '📄', category: 'input', description: '긴 텍스트 입력' },
-        { value: 'email', label: '이메일 주소 입력', icon: '✉️', category: 'input', description: '이메일 형식 검증' },
-        { value: 'phone', label: '전화번호 입력', icon: '📞', category: 'input', description: '전화번호 형식 검증' },
-        // 선택 유형
-        { value: 'single_choice', label: '단일 선택', icon: '📊', category: 'choice', description: '하나만 선택' },
-        { value: 'multiple_choice', label: '다중 선택', icon: '☑️', category: 'choice', description: '여러 개 선택' },
-        { value: 'yes_no', label: '예/아니오', icon: '✅', category: 'choice', description: '예 또는 아니오' },
-        { value: 'dropdown', label: '드롭다운', icon: '📋', category: 'choice', description: '드롭다운 목록' },
-        { value: 'image_choice', label: '이미지 선택', icon: '🖼️', category: 'choice', description: '이미지로 선택' },
-        // 평가 유형
-        { value: 'scale', label: '척도 (Likert)', icon: '📏', category: 'rating', description: '척도 평가' },
-        { value: 'star_rating', label: '별점 평가', icon: '⭐', category: 'rating', description: '별점으로 평가' }
+        // 1. 텍스트 입력 -> 단답형
+        { value: 'text', label: '단답형', icon: IconText, category: 'input', description: '짧은 텍스트 입력' },
+        // 2. 서술형
+        { value: 'textarea', label: '서술형', icon: IconTextarea, category: 'input', description: '긴 텍스트 입력' },
+        // 3. 단일 선택
+        { value: 'single_choice', label: '단일 선택', icon: IconRadio, category: 'choice', description: '하나만 선택' },
+        // 4. 다중 선택
+        { value: 'multiple_choice', label: '다중 선택', icon: IconCheckbox, category: 'choice', description: '여러 개 선택' },
+        // 5. 예/아니오
+        { value: 'yes_no', label: '예/아니오', icon: IconYesNo, category: 'choice', description: '예 또는 아니오' },
+        // 6. 드롭다운
+        { value: 'dropdown', label: '드롭다운', icon: IconDropdown, category: 'choice', description: '드롭다운 목록' },
+        // 7. 척도
+        { value: 'scale', label: '척도', icon: IconScale, category: 'rating', description: '척도 평가' },
+        // 8. 별점 평가
+        { value: 'star_rating', label: '별점 평가', icon: IconStar, category: 'rating', description: '별점으로 평가' },
+        // 9. 이미지 선택
+        { value: 'image_choice', label: '이미지 선택', icon: IconImage, category: 'choice', description: '이미지로 선택' },
+        // 10. 이메일 주소
+        { value: 'email', label: '이메일 주소', icon: IconEmail, category: 'input', description: '이메일 형식 검증' },
+        // 11. 전화번호
+        { value: 'phone', label: '전화번호', icon: IconPhone, category: 'input', description: '전화번호 형식 검증' }
     ];
 
     const handleAddCustomField = useCallback(() => {
@@ -78,6 +175,32 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
         onPersonalInfoChange('personalInfo', 'customFields', newCustomFields);
     }, [safePersonalInfo.customFields, onPersonalInfoChange]);
 
+    // 커스텀 필드 label 입력 변경 핸들러
+    const handleCustomFieldLabelChange = useCallback((fieldId, e) => {
+        const value = e.target.value || '';
+        setLocalCustomFieldLabels(prev => ({ ...prev, [fieldId]: value }));
+        
+        // 한글 조합 중이면 부모 상태는 업데이트하지 않음
+        if (isComposing) {
+            return;
+        }
+        
+        handleUpdateCustomField(fieldId, 'label', value);
+    }, [isComposing, handleUpdateCustomField]);
+
+    // 커스텀 필드 label 한글 입력 조합 완료
+    const handleCustomFieldLabelCompositionEnd = useCallback((fieldId, e) => {
+        setIsComposing(false);
+        const value = e.target.value || '';
+        setLocalCustomFieldLabels(prev => ({ ...prev, [fieldId]: value }));
+        handleUpdateCustomField(fieldId, 'label', value);
+    }, [handleUpdateCustomField]);
+
+    // personalInfo 변경 시 로컬 상태 동기화
+    useEffect(() => {
+        setLocalConsentText(safePersonalInfo.consentText || '');
+    }, [safePersonalInfo.consentText]);
+
     const handleInfoFieldChange = useCallback((field, isChecked) => {
         let newFields;
         const currentFields = safePersonalInfo.fields || []; 
@@ -94,9 +217,26 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
     useEffect(() => {
         if (questions.length !== lastQuestionCountRef.current) {
             if (questions.length > lastQuestionCountRef.current) {
-                // 새 질문이 추가되었을 때 스크롤
+                // 새 질문이 추가되었을 때 부모 컨테이너 내에서만 스크롤
                 setTimeout(() => {
-                    questionsEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    if (questionsEndRef.current) {
+                        // 부모 컨테이너 찾기 (overflow-y-auto가 있는 부모)
+                        const parentContainer = questionsEndRef.current.closest('.overflow-y-auto');
+                        if (parentContainer) {
+                            // 요소의 위치를 부모 컨테이너 기준으로 계산
+                            const elementRect = questionsEndRef.current.getBoundingClientRect();
+                            const containerRect = parentContainer.getBoundingClientRect();
+                            
+                            // 요소가 컨테이너 밖에 있으면 스크롤
+                            const relativeTop = elementRect.top - containerRect.top + parentContainer.scrollTop;
+                            
+                            parentContainer.scrollTo({
+                                top: relativeTop - 20, // 약간의 여백
+                                behavior: 'smooth'
+                            });
+                        }
+                        // 부모 컨테이너가 없으면 스크롤하지 않음 (전체 브라우저 스크롤 방지)
+                    }
                 }, 200);
             }
             lastQuestionCountRef.current = questions.length;
@@ -215,10 +355,10 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
     }, [getNextQuestionId, onQuestionsChange, getQuestionConfig]);
 
     return (
-        <div className="space-y-4">
-            {/* 문제 섹션 */}
-            <div className="bg-white rounded-xl shadow-md p-4">
-                    <div className="flex items-center justify-between mb-4">
+        <div className="h-full flex flex-col overflow-hidden" style={{ height: '100%', maxHeight: '100%' }}>
+            {/* 문제 섹션 - 고정 헤더 */}
+            <div className="flex-shrink-0 bg-white rounded-xl shadow-md p-4 mb-4">
+                    <div className="flex items-center justify-between">
                     <h3 className="text-lg font-bold text-text-main">문제</h3>
                     {/* 질문 추가 버튼 - 상단에 고정 */}
                     <button
@@ -236,12 +376,15 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                         <span>+ 추가</span>
                     </button>
                 </div>
+            </div>
                 
-                {/* 질문 목록 - 항상 렌더링하여 Hook 오류 방지 */}
-                <QuestionList
-                    questions={questions}
-                    questionTypes={questionTypes}
-                    onQuestionsChange={onQuestionsChange}
+                {/* 질문 목록 및 개인 정보 수집 설정 - 스크롤 가능 영역 */}
+                <div className="flex-1 overflow-y-auto min-h-0" style={{ overflowY: 'auto', minHeight: 0 }}>
+                    <div className="space-y-4">
+                    <QuestionList
+                        questions={questions}
+                        questionTypes={questionTypes}
+                        onQuestionsChange={onQuestionsChange}
                         onQuestionChange={(idx, key, value) => {
                             const question = questions[idx];
                             const updated = { ...question, [key]: value };
@@ -268,9 +411,18 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                             const updated = { ...question, options: [...(question.options || []), newOption] };
                             onQuestionsChange('update', { questionId: question.id, updatedQuestion: updated });
                         }}
-                        onRemoveOption={(qIdx, optIdx) => {
+                        onDeleteOption={(qIdx, optIdx) => {
+                            console.log('[Step3_Questions] 옵션 삭제:', { qIdx, optIdx, questionId: questions[qIdx]?.id });
                             const question = questions[qIdx];
-                            const updated = { ...question, options: (question.options || []).filter((_, i) => i !== optIdx) };
+                            if (!question) {
+                                console.error('[Step3_Questions] 질문을 찾을 수 없습니다:', qIdx);
+                                return;
+                            }
+                            const currentOptions = question.options || [];
+                            console.log('[Step3_Questions] 현재 옵션:', currentOptions);
+                            const updatedOptions = currentOptions.filter((_, i) => i !== optIdx);
+                            console.log('[Step3_Questions] 삭제 후 옵션:', updatedOptions);
+                            const updated = { ...question, options: updatedOptions };
                             onQuestionsChange('update', { questionId: question.id, updatedQuestion: updated });
                         }}
                         onDelete={(qIdx) => {
@@ -285,8 +437,24 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                         }}
                         onToggleRequired={(qIdx) => {
                             const question = questions[qIdx];
-                            const updated = { ...question, required: !question.required };
-                            onQuestionsChange('update', { questionId: question.id, updatedQuestion: updated });
+                            if (!question) {
+                                console.error('[Step3_Questions] 질문을 찾을 수 없습니다:', qIdx);
+                                return;
+                            }
+                            const questionId = question.id || question._id;
+                            if (!questionId) {
+                                console.error('[Step3_Questions] 질문 ID가 없습니다:', question);
+                                return;
+                            }
+                            // required 값을 명시적으로 boolean으로 변환 (undefined는 false로 처리)
+                            const currentRequired = Boolean(question.required);
+                            const newRequired = !currentRequired;
+                            // question 객체를 복사하되, required만 명시적으로 업데이트
+                            const updated = { 
+                                ...question, 
+                                required: newRequired 
+                            };
+                            onQuestionsChange('update', { questionId: questionId, updatedQuestion: updated });
                         }}
                         onQuestionImageChange={(qIdx, e) => {
                             const question = questions[qIdx];
@@ -349,9 +517,10 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                             onQuestionsChange('update', { questionId: question.id, updatedQuestion: updated });
                         }}
                     />
+                    <div ref={questionsEndRef} />
                     
-                    {/* 질문 추가 버튼 - 질문 목록 아래 (더 눈에 띄게) */}
-                    <div ref={questionsEndRef} className="pt-2">
+                    {/* 질문 추가 버튼 - 하단 */}
+                    <div className="pt-4 border-t border-gray-100 mt-4 pb-4">
                         <button
                             type="button"
                             onClick={() => {
@@ -370,10 +539,9 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                             <span className="font-semibold">질문 추가</span>
                         </button>
                     </div>
-            </div>
-
-            {/* 개인 정보 수집 설정 */}
-            <div className="bg-white rounded-xl shadow-md p-4">
+                    
+                    {/* 개인 정보 수집 설정 */}
+                    <div className="bg-white rounded-xl shadow-md p-4">
                 <h3 className="text-lg font-bold text-text-main mb-4">개인 정보 수집</h3>
                 
                 {/* 개인 정보 수집 활성화 여부 */}
@@ -390,10 +558,11 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                         aria-label="개인 정보 수집 활성화"
                         aria-checked={safePersonalInfo.enabled || false}
                         role="switch"
-                        className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                            safePersonalInfo.enabled ? 'bg-primary' : 'bg-gray-300'
-                        }`}
-                        style={{ padding: '2px' }}
+                        className="relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                        style={{
+                            padding: '2px',
+                            backgroundColor: safePersonalInfo.enabled ? '#26C6DA' : '#D1D5DB'
+                        }}
                     >
                         <span className={`inline-block h-4 w-4 rounded-full bg-white transition-all shadow-sm ${
                             safePersonalInfo.enabled ? 'translate-x-6' : 'translate-x-0'
@@ -401,8 +570,16 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                     </button>
                 </div>
 
-                {safePersonalInfo.enabled && (
-                    <div className="space-y-4 pt-3 border-t border-border">
+                <AnimatePresence initial={false}>
+                    {safePersonalInfo.enabled && (
+                        <motion.div 
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2, ease: 'easeInOut' }}
+                            className="space-y-4 pt-3 border-t border-border overflow-hidden"
+                            style={{ overflow: 'hidden' }}
+                        >
                         <div>
                             <label className="text-sm font-medium text-text-sub block mb-3">수집할 기본 정보</label>
                             <div className="space-y-2">
@@ -428,8 +605,10 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                                     <div key={field.id} className="flex items-center space-x-2 p-3 bg-bg border border-border rounded-lg">
                                         <input
                                             type="text"
-                                            value={field.label}
-                                            onChange={(e) => handleUpdateCustomField(field.id, 'label', e.target.value)}
+                                            value={localCustomFieldLabels[field.id] !== undefined ? localCustomFieldLabels[field.id] : field.label}
+                                            onChange={(e) => handleCustomFieldLabelChange(field.id, e)}
+                                            onCompositionStart={handleCompositionStart}
+                                            onCompositionEnd={(e) => handleCustomFieldLabelCompositionEnd(field.id, e)}
                                             placeholder={`추가 질문 ${index + 1} 제목`}
                                             className="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary"
                                         />
@@ -466,8 +645,10 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                             </label>
                             <textarea
                                 id="consentText"
-                                value={safePersonalInfo.consentText || ''}
-                                onChange={(e) => onPersonalInfoChange('personalInfo', 'consentText', e.target.value)}
+                                value={localConsentText}
+                                onChange={handleConsentTextChange}
+                                onCompositionStart={handleCompositionStart}
+                                onCompositionEnd={handleConsentTextCompositionEnd}
                                 rows={4}
                                 className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary resize-none"
                                 placeholder="예: [개인정보 수집 및 이용 동의]\n1. 수집 목적: 설문 경품 제공 및 이벤트 참여 확인\n2. 수집 항목: 이름, 전화번호, 주소\n3. 보유 기간: 이벤트 종료 후 1개월"
@@ -493,9 +674,36 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                                     : '참여자는 동의하지 않아도 설문을 제출할 수 있습니다.'}
                             </p>
                         </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
                     </div>
-                )}
-            </div>
+                    
+                    {/* 문제 화면 배경 설정 */}
+                    <div className="bg-white rounded-xl shadow-md p-4">
+                        <h3 className="text-lg font-bold text-text-main mb-4">문제 화면 배경</h3>
+                        
+                        <div className="space-y-3">
+                            {/* 배경 이미지 업로드 */}
+                            <div>
+                                <ImageUpload
+                                    label="배경 이미지"
+                                    imageBase64={branding?.questionBgImageBase64 || ''}
+                                    onImageChange={(e) => {
+                                        if (e && e.target && e.target.value !== undefined) {
+                                            onBrandingChange('branding', 'questionBgImageBase64', e.target.value);
+                                        }
+                                    }}
+                                    maxSizeMB={8}
+                                    recommendedSize="1280×720"
+                                    compact={true}
+                                    hint="문제 화면에 표시될 배경 이미지 (선택)"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
 
             {/* 질문 유형 선택 모달 */}
             <AnimatePresence>
@@ -511,130 +719,119 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                         }}
                     >
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            transition={{ duration: 0.2 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                            transition={{ duration: 0.15 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-white rounded-2xl p-4 max-w-4xl w-full shadow-2xl max-h-[90vh] overflow-hidden flex flex-col"
+                            className="bg-white rounded-xl p-4 shadow-lg overflow-hidden flex flex-col"
+                            style={{ 
+                                width: '600px',
+                                height: '620px',
+                                maxWidth: '90vw',
+                                maxHeight: '90vh'
+                            }}
                         >
                             {/* 헤더 */}
-                            <div className="flex justify-between items-center mb-4 pb-3 border-b border-border">
-                                <div>
-                                    <h3 className="text-2xl font-bold text-text-main mb-1">질문 유형 선택</h3>
-                                    <p className="text-sm text-text-sub">추가할 질문 유형을 선택하세요</p>
-                                </div>
+                            <div className="flex justify-between items-center mb-4 flex-shrink-0">
+                                <h3 className="text-lg font-semibold text-text-main">질문 유형 선택</h3>
                                 <button
+                                    type="button"
                                     onClick={() => {
                                         setShowQuestionTypeModal(false);
                                         setSelectedCategory('all');
                                     }}
-                                    className="text-text-sub hover:text-text-main text-3xl leading-none w-10 h-10 flex items-center justify-center rounded-lg hover:bg-bg transition-colors"
+                                    className="text-text-sub hover:text-text-main w-8 h-8 flex items-center justify-center rounded-lg hover:bg-bg transition-colors"
                                     aria-label="닫기"
                                 >
-                                    ×
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
                                 </button>
                             </div>
                             
-                            {/* 카테고리 필터 */}
-                            <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-                                <button
-                                    onClick={() => setSelectedCategory('all')}
-                                    className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${
-                                        selectedCategory === 'all'
-                                            ? 'bg-primary text-white shadow-md'
-                                            : 'bg-bg text-text-sub hover:bg-primary/10'
-                                    }`}
+                            {/* 카테고리 필터 - 콤보박스 */}
+                            <div className="mb-4 flex-shrink-0">
+                                <select
+                                    value={selectedCategory}
+                                    onChange={(e) => setSelectedCategory(e.target.value)}
+                                    className="w-full px-4 py-2.5 border-2 border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white text-text-main font-medium"
+                                    style={{
+                                        borderColor: '#E5E7EB',
+                                        fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif'
+                                    }}
+                                    onFocus={(e) => {
+                                        e.target.style.borderColor = '#26C6DA';
+                                        e.target.style.boxShadow = '0 0 0 2px rgba(38, 198, 218, 0.25)';
+                                    }}
+                                    onBlur={(e) => {
+                                        e.target.style.borderColor = '#E5E7EB';
+                                        e.target.style.boxShadow = 'none';
+                                    }}
                                 >
-                                    전체
-                                </button>
-                                <button
-                                    onClick={() => setSelectedCategory('input')}
-                                    className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${
-                                        selectedCategory === 'input'
-                                            ? 'bg-primary text-white shadow-md'
-                                            : 'bg-bg text-text-sub hover:bg-primary/10'
-                                    }`}
-                                >
-                                    입력
-                                </button>
-                                <button
-                                    onClick={() => setSelectedCategory('choice')}
-                                    className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${
-                                        selectedCategory === 'choice'
-                                            ? 'bg-primary text-white shadow-md'
-                                            : 'bg-bg text-text-sub hover:bg-primary/10'
-                                    }`}
-                                >
-                                    선택
-                                </button>
-                                <button
-                                    onClick={() => setSelectedCategory('rating')}
-                                    className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${
-                                        selectedCategory === 'rating'
-                                            ? 'bg-primary text-white shadow-md'
-                                            : 'bg-bg text-text-sub hover:bg-primary/10'
-                                    }`}
-                                >
-                                    평가
-                                </button>
+                                    <option value="all">전체</option>
+                                    <option value="input">입력</option>
+                                    <option value="choice">선택</option>
+                                    <option value="rating">평가</option>
+                                </select>
                             </div>
                             
                             {/* 질문 유형 그리드 */}
                             <div className="flex-1 overflow-y-auto pr-2">
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-4 gap-1.5 p-4">
                                     {questionTypes
                                         .filter(qType => selectedCategory === 'all' || qType.category === selectedCategory)
                                         .map((qType) => {
                                             const config = getQuestionConfig(qType.value);
+                                            const IconComponent = qType.icon;
                                             return (
                                                 <motion.button
                                                     key={qType.value}
                                                     type="button"
-                                                    whileHover={{ scale: 1.05 }}
-                                                    whileTap={{ scale: 0.95 }}
+                                                    whileHover={{ scale: 1.01 }}
+                                                    whileTap={{ scale: 0.99 }}
                                                     onClick={() => {
                                                         console.log('질문 유형 선택:', qType.value);
                                                         handleAddQuestion(qType.value);
                                                     }}
-                                                    className="p-5 border-2 border-border rounded-xl hover:border-primary hover:bg-primary/5 transition-all text-center group cursor-pointer relative overflow-hidden"
+                                                    className="aspect-square border border-border rounded-lg transition-all text-center group cursor-pointer bg-white flex flex-col items-center justify-center"
+                                                    style={{
+                                                        fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                                                        padding: 'calc(0.5rem * 0.8)'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.borderColor = '#26C6DA';
+                                                        e.currentTarget.style.backgroundColor = 'rgba(38, 198, 218, 0.05)';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.borderColor = '#E5E7EB';
+                                                        e.currentTarget.style.backgroundColor = '#FFFFFF';
+                                                    }}
                                                 >
-                                                    <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors" />
-                                                    <div className="relative z-10">
-                                                        <div className="text-4xl mb-3 transform group-hover:scale-110 transition-transform">
-                                                            {qType.icon}
-                                                        </div>
-                                                        <div className="text-sm font-bold text-text-main group-hover:text-primary transition-colors mb-1">
-                                                            {qType.label}
-                                                        </div>
-                                                        {qType.description && (
-                                                            <div className="text-xs text-text-sub mt-1">
-                                                                {qType.description}
-                                                            </div>
-                                                        )}
-                                                        {config.needsOptions && (
-                                                            <div className="mt-2 inline-block px-2 py-0.5 text-xs bg-primary/10 text-primary rounded-full">
-                                                                옵션 필요
-                                                            </div>
+                                                    <div className="mb-1.5 text-text-sub transition-colors flex-shrink-0 group-hover:text-[#26C6DA]">
+                                                        {typeof IconComponent === 'function' ? (
+                                                            <IconComponent />
+                                                        ) : (
+                                                            IconComponent
                                                         )}
                                                     </div>
+                                                    <div className="text-sm font-semibold text-text-main transition-colors mb-1 leading-tight group-hover:text-[#26C6DA]">
+                                                        {qType.label}
+                                                    </div>
+                                                    {qType.description && (
+                                                        <div className="text-xs text-text-sub mt-0.5 leading-tight line-clamp-1">
+                                                            {qType.description}
+                                                        </div>
+                                                    )}
+                                                    {config.needsOptions && (
+                                                        <div className="mt-1 inline-block px-1.5 py-0.5 text-[10px] bg-primary/10 text-primary rounded leading-tight">
+                                                            옵션 필요
+                                                        </div>
+                                                    )}
                                                 </motion.button>
                                             );
                                         })}
                                 </div>
-                            </div>
-                            
-                            {/* 하단 버튼 */}
-                            <div className="mt-6 pt-4 border-t border-border">
-                                <button
-                                    onClick={() => {
-                                        setShowQuestionTypeModal(false);
-                                        setSelectedCategory('all');
-                                    }}
-                                    className="w-full px-4 py-3 bg-bg border border-border rounded-lg hover:bg-primary/10 hover:border-primary transition text-text-sub font-medium"
-                                >
-                                    취소
-                                </button>
                             </div>
                         </motion.div>
                     </motion.div>

@@ -1,23 +1,83 @@
-// 참가자용 진행률 바 컴포넌트
-// anders 스타일: 상단 고정, 보라색 진행, 현재/전체 표시
+// 참가자용 진행률 바 컴포넌트 (미니멀 버전)
+// 기능 유지, 디자인 최소화
 
-import { motion } from 'framer-motion';
-
-export default function ProgressBar({ current, total, color = 'var(--primary)' }) {
+export default function ProgressBar({ current, total, color = 'var(--primary)', secondaryColor = null, onBack }) {
   const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
+  // 브랜딩 색상 처리
+  const actualColor = typeof color === 'string' && color.startsWith('#') 
+    ? color 
+    : (typeof color === 'string' && color.includes('var') 
+        ? '#7C3AED'
+        : (color || '#7C3AED'));
+
+  // 보조 색상 처리 (미완료 부분에 사용)
+  const actualSecondaryColor = secondaryColor && typeof secondaryColor === 'string' && secondaryColor.startsWith('#')
+    ? secondaryColor
+    : (secondaryColor && typeof secondaryColor === 'string' && secondaryColor.includes('var')
+        ? '#F59E0B'
+        : (secondaryColor || '#E5E7EB')); // 기본값: 회색
+
+  // 보조 색상을 rgba로 변환 (투명도 25%)
+  const hexToRgb = (hex) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null;
+  };
+
+  const secondaryRgb = hexToRgb(actualSecondaryColor) || { r: 229, g: 231, b: 235 };
+  const incompleteBgColor = `rgba(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}, 0.25)`;
 
   return (
-    <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden relative">
-      <motion.div
-        className="h-full rounded-full"
-        style={{ backgroundColor: color }}
-        initial={{ width: 0 }}
-        animate={{ width: `${percentage}%` }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
-      />
-      <div className="absolute inset-0 flex items-center justify-center text-xs font-medium text-gray-600">
-        {current}/{total}
+    <div className="flex items-center gap-3" style={{ maxWidth: '85%', margin: '0 auto' }}>
+      {/* 뒤로가기 버튼 */}
+      <button
+        type="button"
+        onClick={onBack || (() => window.history.back())}
+        className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-gray-100 transition-all active:scale-95 flex-shrink-0"
+        aria-label="이전"
+        style={{ transition: 'all 0.2s ease' }}
+      >
+        <svg className="w-5 h-5" style={{ color: actualColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ strokeWidth: 2.5 }}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      
+      {/* 진행률 바 - 더 두껍고 입체감 있게 (x2 굵기, 가로로 짧게) */}
+      <div 
+        className="flex-1 rounded-full overflow-hidden relative"
+        style={{ 
+          height: '16px',
+          backgroundColor: incompleteBgColor,
+          boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
+        }}
+      >
+        <div
+          className="h-full rounded-full transition-all duration-500 ease-out relative"
+          style={{ 
+            width: `${percentage}%`,
+            background: `linear-gradient(to bottom, ${actualColor} 0%, ${actualColor}dd 100%)`,
+            boxShadow: `
+              0 2px 4px ${actualColor}60,
+              0 1px 2px rgba(0, 0, 0, 0.2),
+              inset 0 -1px 2px rgba(0, 0, 0, 0.1)
+            `
+          }}
+        />
       </div>
+      
+      {/* 진행률 텍스트 */}
+      <span 
+        className="text-xs font-semibold text-gray-600 min-w-[2.5rem] text-right flex-shrink-0"
+        style={{
+          fontSize: '12px',
+          letterSpacing: '0.02em'
+        }}
+      >
+        {current}/{total}
+      </span>
     </div>
   );
 }

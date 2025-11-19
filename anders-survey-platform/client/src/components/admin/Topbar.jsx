@@ -11,6 +11,12 @@ export default function Topbar() {
     if (path === '/admin' || path === '/admin/') {
       return [{ label: '설문 목록', path: '/admin' }];
     }
+    if (path.startsWith('/admin/dashboard')) {
+      return [
+        { label: '설문 목록', path: '/admin' },
+        { label: '대시보드', path: '/admin/dashboard' }
+      ];
+    }
     if (path.startsWith('/admin/builder')) {
       return [
         { label: '설문 목록', path: '/admin' },
@@ -23,16 +29,16 @@ export default function Topbar() {
         { label: '응답 결과', path: path }
       ];
     }
-    if (path.startsWith('/admin/analytics')) {
-      return [
-        { label: '설문 목록', path: '/admin' },
-        { label: '분석', path: '/admin/analytics' }
-      ];
-    }
     if (path.startsWith('/admin/settings')) {
       return [
         { label: '설문 목록', path: '/admin' },
         { label: '설정', path: '/admin/settings' }
+      ];
+    }
+    if (path.startsWith('/admin/account')) {
+      return [
+        { label: '설문 목록', path: '/admin' },
+        { label: '계정정보', path: '/admin/account' }
       ];
     }
     return [{ label: '설문 목록', path: '/admin' }];
@@ -63,27 +69,6 @@ export default function Topbar() {
 
       {/* 우측 액션 */}
       <div className="flex items-center gap-4">
-        {/* 검색 */}
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="검색..."
-            className="w-64 px-4 py-2 pl-10 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-          />
-          <svg
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
-
-        {/* 프로필 */}
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center cursor-pointer">
-          <span className="text-primary font-semibold">A</span>
-        </div>
       </div>
     </header>
   );

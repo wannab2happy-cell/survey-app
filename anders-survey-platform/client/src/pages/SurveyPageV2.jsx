@@ -46,6 +46,16 @@ export default function SurveyPageV2() {
     }
   }, [location.pathname, slug]);
 
+  // 커버 페이지 건너뛰기 설정 확인
+  useEffect(() => {
+    if (survey?.cover?.skipCover && currentStep === STEP_START && survey?.questions && survey.questions.length > 0) {
+      // 커버 페이지를 건너뛰고 바로 첫 질문으로 이동
+      navigate(`/s/${slug}/q/1`, { replace: true });
+      setCurrentStep(STEP_QUESTION);
+      setCurrentQuestionIndex(0);
+    }
+  }, [survey, currentStep, slug, navigate]);
+
   // 설문 데이터 로드
   useEffect(() => {
     if (!slug) {
@@ -142,12 +152,32 @@ export default function SurveyPageV2() {
     try {
       setIsSubmitting(true);
       
+      // answers 객체를 배열로 변환 (백엔드 형식에 맞춤)
+      const questions = survey?.questions || [];
+      const answersArray = questions.map((question) => {
+        const questionId = question._id || question.id;
+        const answerValue = answers[questionId];
+        
+        return {
+          questionId: questionId,
+          value: answerValue !== undefined && answerValue !== null 
+            ? (Array.isArray(answerValue) ? answerValue : String(answerValue))
+            : ''
+        };
+      });
+      
+      console.log('제출할 답변 데이터:', {
+        answersCount: answersArray.length,
+        questionsCount: questions.length,
+        answers: answersArray
+      });
+      
       const response = await axiosInstance.post(`/surveys/${slug}/response`, {
-        answers,
+        answers: answersArray,
         submittedAt: new Date().toISOString()
       });
 
-      if (response.data.success || response.status === 200) {
+      if (response.data.success || response.status === 200 || response.status === 201) {
         navigate(`/s/${slug}/done`);
         setCurrentStep(STEP_DONE);
       } else {
@@ -155,7 +185,13 @@ export default function SurveyPageV2() {
       }
     } catch (err) {
       console.error('제출 오류:', err);
-      alert('제출 중 오류가 발생했습니다: ' + (err.response?.data?.message || err.message));
+      const errorMessage = err.response?.data?.message || err.message || '알 수 없는 오류가 발생했습니다.';
+      console.error('에러 상세:', {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: errorMessage
+      });
+      alert('제출 중 오류가 발생했습니다: ' + errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -164,8 +200,8 @@ export default function SurveyPageV2() {
   // 로딩 상태
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50">
-        <div className="text-center">
+      <div className="min-h-screen w-full max-w-full flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50" style={{ width: '100%', maxWidth: '100vw' }}>
+        <div className="text-center px-4">
           <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">설문을 불러오는 중...</p>
         </div>
@@ -176,8 +212,8 @@ export default function SurveyPageV2() {
   // 에러 상태
   if (error || !survey) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50">
-        <div className="text-center max-w-md px-4">
+      <div className="min-h-screen w-full max-w-full flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50" style={{ width: '100%', maxWidth: '100vw' }}>
+        <div className="text-center max-w-md px-4 w-full">
           <div className="text-6xl mb-4">😕</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">오류가 발생했습니다</h1>
           <p className="text-gray-600">{error || '설문을 찾을 수 없습니다.'}</p>
@@ -188,18 +224,24 @@ export default function SurveyPageV2() {
 
   const primaryColor = survey.branding?.primaryColor || survey.cover?.primaryColor || '#6B46C1';
   const buttonShape = survey.branding?.buttonShape || 'rounded-lg';
+  const buttonOpacity = survey.branding?.buttonOpacity !== undefined ? survey.branding?.buttonOpacity : 0.9;
+  const backgroundColor = survey.branding?.backgroundColor || '#1a1f2e';
+  // 커버의 배경 이미지가 우선, 없으면 브랜딩의 배경 이미지 사용
+  const bgImageBase64 = survey.cover?.bgImageBase64 || survey.branding?.bgImageBase64 || '';
   const questions = survey.questions || [];
+  const koreanSpacingWrap = survey.advancedSettings?.koreanSpacingWrap || false;
 
   // 단계별 렌더링
   switch (currentStep) {
     case STEP_START:
-      return <StartPage survey={survey} onStart={handleStart} color={primaryColor} buttonShape={buttonShape} />;
+      return <StartPage survey={survey} onStart={handleStart} color={primaryColor} buttonShape={buttonShape} buttonOpacity={buttonOpacity} backgroundColor={backgroundColor} bgImageBase64={bgImageBase64} />;
 
     case STEP_QUESTION:
       if (currentQuestionIndex >= 0 && currentQuestionIndex < questions.length) {
         const question = questions[currentQuestionIndex];
         return (
           <QuestionPage
+            survey={survey}
             question={question}
             questionNumber={currentQuestionIndex + 1}
             totalQuestions={questions.length}
@@ -210,10 +252,14 @@ export default function SurveyPageV2() {
             showPrevious={true}
             color={primaryColor}
             buttonShape={buttonShape}
+            buttonOpacity={buttonOpacity}
+            backgroundColor={survey.branding?.questionBackgroundColor || backgroundColor}
+            bgImageBase64={survey.branding?.questionBgImageBase64 || survey.cover?.bgImageBase64 || bgImageBase64}
+            koreanSpacingWrap={koreanSpacingWrap}
           />
         );
       }
-      return <StartPage survey={survey} onStart={handleStart} color={primaryColor} buttonShape={buttonShape} />;
+      return <StartPage survey={survey} onStart={handleStart} color={primaryColor} buttonShape={buttonShape} buttonOpacity={buttonOpacity} backgroundColor={backgroundColor} bgImageBase64={bgImageBase64} />;
 
     case STEP_REVIEW:
       return (
@@ -225,14 +271,17 @@ export default function SurveyPageV2() {
           onSubmitLoading={isSubmitting}
           color={primaryColor}
           buttonShape={buttonShape}
+          buttonOpacity={buttonOpacity}
+          backgroundColor={backgroundColor}
+          bgImageBase64={bgImageBase64}
         />
       );
 
     case STEP_DONE:
-      return <DonePage survey={survey} color={primaryColor} buttonShape={buttonShape} />;
+      return <DonePage survey={survey} color={primaryColor} buttonShape={buttonShape} buttonOpacity={buttonOpacity} backgroundColor={backgroundColor} bgImageBase64={bgImageBase64} />;
 
     default:
-      return <StartPage survey={survey} onStart={handleStart} color={primaryColor} buttonShape={buttonShape} />;
+      return <StartPage survey={survey} onStart={handleStart} color={primaryColor} buttonShape={buttonShape} buttonOpacity={buttonOpacity} backgroundColor={backgroundColor} bgImageBase64={bgImageBase64} />;
   }
 }
 

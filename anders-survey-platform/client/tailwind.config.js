@@ -14,6 +14,9 @@ export default {
         // 새로운 색상 변수
         primary: 'var(--primary)',
         'primary-hover': 'var(--primary-hover)',
+        // Admin 전용 색상 (브랜딩 컬러와 독립적)
+        'admin-primary': '#26C6DA',
+        'admin-primary-hover': '#00ACC1',
         secondary: 'var(--secondary)',
         success: 'var(--success)',
         error: 'var(--error)',

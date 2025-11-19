@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-export default function TimePicker({ value, onChange, label, required = false }) {
+export default function TimePicker({ value, onChange, label, required = false, primaryColor }) {
     const [hour, setHour] = useState(12);
     const [minute, setMinute] = useState(0);
     const [ampm, setAmpm] = useState('AM');
@@ -73,7 +73,19 @@ export default function TimePicker({ value, onChange, label, required = false })
             <select
                 value={hour}
                 onChange={(e) => handleTimeChange(Number(e.target.value), minute, ampm)}
-                className="border-2 border-gray-200 rounded-md px-2 py-2 text-sm font-medium focus:ring-2 focus:ring-[#2dafb9] focus:border-[#2dafb9] bg-white shadow-sm min-w-[60px]"
+                className="border-2 border-gray-200 rounded-md px-2 py-2 text-sm font-medium bg-white shadow-sm min-w-[60px]"
+                style={{
+                    borderColor: primaryColor || '#D1D5DB',
+                    focusRingColor: primaryColor || '#26C6DA'
+                }}
+                onFocus={(e) => {
+                    e.target.style.borderColor = primaryColor || '#26C6DA';
+                    e.target.style.boxShadow = `0 0 0 2px ${primaryColor || '#26C6DA'}40`;
+                }}
+                onBlur={(e) => {
+                    e.target.style.borderColor = primaryColor || '#D1D5DB';
+                    e.target.style.boxShadow = 'none';
+                }}
             >
                 {hours.map(h => (
                     <option key={h} value={h}>{h}</option>
@@ -86,7 +98,19 @@ export default function TimePicker({ value, onChange, label, required = false })
             <select
                 value={minute}
                 onChange={(e) => handleTimeChange(hour, Number(e.target.value), ampm)}
-                className="border-2 border-gray-200 rounded-md px-2 py-2 text-sm font-medium focus:ring-2 focus:ring-[#2dafb9] focus:border-[#2dafb9] bg-white shadow-sm min-w-[60px]"
+                className="border-2 border-gray-200 rounded-md px-2 py-2 text-sm font-medium bg-white shadow-sm min-w-[60px]"
+                style={{
+                    borderColor: primaryColor || '#D1D5DB',
+                    focusRingColor: primaryColor || '#26C6DA'
+                }}
+                onFocus={(e) => {
+                    e.target.style.borderColor = primaryColor || '#26C6DA';
+                    e.target.style.boxShadow = `0 0 0 2px ${primaryColor || '#26C6DA'}40`;
+                }}
+                onBlur={(e) => {
+                    e.target.style.borderColor = primaryColor || '#D1D5DB';
+                    e.target.style.boxShadow = 'none';
+                }}
             >
                 {minutes.map(m => (
                     <option key={m} value={m}>{String(m).padStart(2, '0')}</option>
@@ -97,7 +121,19 @@ export default function TimePicker({ value, onChange, label, required = false })
             <select
                 value={ampm}
                 onChange={(e) => handleTimeChange(hour, minute, e.target.value)}
-                className="border-2 border-gray-200 rounded-md px-2 py-2 text-sm font-medium focus:ring-2 focus:ring-[#2dafb9] focus:border-[#2dafb9] bg-white shadow-sm min-w-[65px]"
+                className="border-2 border-gray-200 rounded-md px-2 py-2 text-sm font-medium bg-white shadow-sm min-w-[65px]"
+                style={{
+                    borderColor: primaryColor || '#D1D5DB',
+                    focusRingColor: primaryColor || '#26C6DA'
+                }}
+                onFocus={(e) => {
+                    e.target.style.borderColor = primaryColor || '#26C6DA';
+                    e.target.style.boxShadow = `0 0 0 2px ${primaryColor || '#26C6DA'}40`;
+                }}
+                onBlur={(e) => {
+                    e.target.style.borderColor = primaryColor || '#D1D5DB';
+                    e.target.style.boxShadow = 'none';
+                }}
             >
                 <option value="AM">AM</option>
                 <option value="PM">PM</option>

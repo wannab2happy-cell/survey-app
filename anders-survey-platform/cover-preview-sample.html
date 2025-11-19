@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>커버 프리뷰 샘플</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', sans-serif;
+            background: #f5f5f5;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* 모바일 프레임 */
+        .mobile-frame {
+            width: 100%;
+            max-width: 375px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        /* 커버 컨테이너 */
+        .cover-container {
+            min-height: 600px;
+            background-color: #1a1f2e; /* 기본 배경색 */
+            background-image: url(''); /* 배경 이미지 URL (있을 경우) */
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px;
+        }
+
+        /* 로고 (조건부) */
+        .logo {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            margin-bottom: 24px;
+            display: none; /* 로고가 있을 때만 표시 */
+        }
+
+        .logo.show {
+            display: block;
+        }
+
+        /* 제목 영역 */
+        .title-section {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.5;
+        }
+
+        /* 커버 이미지 (조건부) */
+        .cover-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 32px;
+            display: none; /* 커버 이미지가 있을 때만 표시 */
+        }
+
+        .cover-image.show {
+            display: block;
+        }
+
+        /* 정보 카드 (조건부) */
+        .info-card {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 32px;
+            display: none; /* 질문이 있을 때만 표시 */
+        }
+
+        .info-card.show {
+            display: block;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .info-value {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        /* 시작 버튼 */
+        .start-button {
+            width: 75%;
+            max-width: 280px;
+            padding: 14px 24px;
+            background-color: #7C3AED; /* 브랜딩 색상 */
+            color: #ffffff;
+            border: none;
+            border-radius: 8px; /* rounded-lg */
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: auto;
+            transition: opacity 0.2s;
+        }
+
+        .start-button:hover {
+            opacity: 0.9;
+        }
+
+        .start-button:active {
+            opacity: 0.8;
+        }
+
+        /* 버튼 모양 변형 */
+        .start-button.pill {
+            border-radius: 9999px; /* rounded-full */
+        }
+
+        .start-button.square {
+            border-radius: 0; /* rounded-none */
+        }
+
+        /* 버튼 아이콘 */
+        .button-icon {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+        }
+
+        /* 참여자 수 (조건부) */
+        .participant-count {
+            margin-top: 16px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            text-align: center;
+            display: none; /* showParticipantCount가 true일 때만 표시 */
+        }
+
+        .participant-count.show {
+            display: block;
+        }
+
+        .participant-count .highlight {
+            color: #7C3AED; /* 브랜딩 색상 */
+            font-weight: 600;
+        }
+
+        /* 스타일 변형 예시 */
+        .style-example {
+            margin-top: 40px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .style-example h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1f2937;
+        }
+
+        .style-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .style-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .style-control label {
+            font-size: 14px;
+            color: #4b5563;
+            min-width: 120px;
+        }
+
+        .style-control input,
+        .style-control select {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .style-control input[type="color"] {
+            width: 60px;
+            height: 40px;
+            padding: 2px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- 모바일 프레임 -->
+    <div class="mobile-frame">
+        <div class="cover-container" id="coverContainer">
+            <!-- 로고 (조건부) -->
+            <img src="" alt="Logo" class="logo" id="logo">
+
+            <!-- 제목 영역 -->
+            <div class="title-section">
+                <h1 class="title" id="title">설문에 참여해주세요</h1>
+                <p class="subtitle" id="subtitle">소중한 의견을 들려주세요</p>
+            </div>
+
+            <!-- 커버 이미지 (조건부) -->
+            <img src="" alt="Cover" class="cover-image" id="coverImage">
+
+            <!-- 정보 카드 (조건부) -->
+            <div class="info-card" id="infoCard">
+                <div class="info-row">
+                    <span class="info-label">총 질문</span>
+                    <span class="info-value" id="questionCount">0개</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">예상 소요 시간</span>
+                    <span class="info-value" id="estimatedTime">약 0분</span>
+                </div>
+            </div>
+
+            <!-- 시작 버튼 -->
+            <button class="start-button" id="startButton">
+                <span id="buttonText">시작하기</span>
+                <svg class="button-icon" viewBox="0 0 24 24" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M6 12h12" />
+                </svg>
+            </button>
+
+            <!-- 참여자 수 (조건부) -->
+            <p class="participant-count" id="participantCount">
+                현재 <span class="highlight">0명</span>이 참여했습니다
+            </p>
+        </div>
+    </div>
+
+    <!-- 스타일 조정 패널 (개발용) -->
+    <div class="style-example">
+        <h3>디자인 커스터마이징</h3>
+        <div class="style-controls">
+            <div class="style-control">
+                <label>배경색:</label>
+                <input type="color" id="bgColor" value="#1a1f2e">
+            </div>
+            <div class="style-control">
+                <label>버튼 색상:</label>
+                <input type="color" id="buttonColor" value="#7C3AED">
+            </div>
+            <div class="style-control">
+                <label>버튼 모양:</label>
+                <select id="buttonShape">
+                    <option value="rounded-lg">둥근 모서리</option>
+                    <option value="pill">알약형</option>
+                    <option value="square">사각형</option>
+                </select>
+            </div>
+            <div class="style-control">
+                <label>제목:</label>
+                <input type="text" id="titleInput" value="설문에 참여해주세요">
+            </div>
+            <div class="style-control">
+                <label>부제목:</label>
+                <input type="text" id="subtitleInput" value="소중한 의견을 들려주세요">
+            </div>
+            <div class="style-control">
+                <label>버튼 텍스트:</label>
+                <input type="text" id="buttonTextInput" value="시작하기">
+            </div>
+            <div class="style-control">
+                <label>질문 수:</label>
+                <input type="number" id="questionCountInput" value="0" min="0">
+            </div>
+            <div class="style-control">
+                <label>
+                    <input type="checkbox" id="showInfoCard"> 정보 카드 표시
+                </label>
+            </div>
+            <div class="style-control">
+                <label>
+                    <input type="checkbox" id="showParticipantCount"> 참여자 수 표시
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 요소 참조
+        const coverContainer = document.getElementById('coverContainer');
+        const logo = document.getElementById('logo');
+        const title = document.getElementById('title');
+        const subtitle = document.getElementById('subtitle');
+        const coverImage = document.getElementById('coverImage');
+        const infoCard = document.getElementById('infoCard');
+        const questionCount = document.getElementById('questionCount');
+        const estimatedTime = document.getElementById('estimatedTime');
+        const startButton = document.getElementById('startButton');
+        const buttonText = document.getElementById('buttonText');
+        const participantCount = document.getElementById('participantCount');
+
+        // 스타일 조정 요소
+        const bgColorInput = document.getElementById('bgColor');
+        const buttonColorInput = document.getElementById('buttonColor');
+        const buttonShapeSelect = document.getElementById('buttonShape');
+        const titleInput = document.getElementById('titleInput');
+        const subtitleInput = document.getElementById('subtitleInput');
+        const buttonTextInput = document.getElementById('buttonTextInput');
+        const questionCountInput = document.getElementById('questionCountInput');
+        const showInfoCardCheckbox = document.getElementById('showInfoCard');
+        const showParticipantCountCheckbox = document.getElementById('showParticipantCount');
+
+        // 텍스트 색상 계산 함수
+        function getTextColor(backgroundColor) {
+            const hex = backgroundColor.replace('#', '');
+            const r = parseInt(hex.substring(0, 2), 16);
+            const g = parseInt(hex.substring(2, 4), 16);
+            const b = parseInt(hex.substring(4, 6), 16);
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            return brightness > 128 ? '#000000' : '#ffffff';
+        }
+
+        // 배경색 변경
+        bgColorInput.addEventListener('input', (e) => {
+            const color = e.target.value;
+            coverContainer.style.backgroundColor = color;
+            
+            // 텍스트 색상 자동 조정
+            const textColor = getTextColor(color);
+            title.style.color = textColor;
+            subtitle.style.color = textColor === '#ffffff' 
+                ? 'rgba(255, 255, 255, 0.7)' 
+                : 'rgba(0, 0, 0, 0.6)';
+            
+            // 정보 카드 텍스트 색상 조정
+            const infoLabels = infoCard.querySelectorAll('.info-label');
+            const infoValues = infoCard.querySelectorAll('.info-value');
+            infoLabels.forEach(el => {
+                el.style.color = textColor === '#ffffff' 
+                    ? 'rgba(255, 255, 255, 0.7)' 
+                    : 'rgba(0, 0, 0, 0.6)';
+            });
+            infoValues.forEach(el => {
+                el.style.color = textColor;
+            });
+        });
+
+        // 버튼 색상 변경
+        buttonColorInput.addEventListener('input', (e) => {
+            startButton.style.backgroundColor = e.target.value;
+            participantCount.querySelector('.highlight').style.color = e.target.value;
+        });
+
+        // 버튼 모양 변경
+        buttonShapeSelect.addEventListener('change', (e) => {
+            startButton.className = 'start-button ' + e.target.value;
+        });
+
+        // 제목 변경
+        titleInput.addEventListener('input', (e) => {
+            title.textContent = e.target.value || '설문 제목을 입력하세요';
+        });
+
+        // 부제목 변경
+        subtitleInput.addEventListener('input', (e) => {
+            subtitle.textContent = e.target.value;
+            subtitle.style.display = e.target.value ? 'block' : 'none';
+        });
+
+        // 버튼 텍스트 변경
+        buttonTextInput.addEventListener('input', (e) => {
+            buttonText.textContent = e.target.value || '시작하기';
+        });
+
+        // 질문 수 변경
+        questionCountInput.addEventListener('input', (e) => {
+            const count = parseInt(e.target.value) || 0;
+            questionCount.textContent = count + '개';
+            estimatedTime.textContent = '약 ' + Math.ceil(count * 0.6) + '분';
+        });
+
+        // 정보 카드 표시/숨김
+        showInfoCardCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked && parseInt(questionCountInput.value) > 0) {
+                infoCard.classList.add('show');
+            } else {
+                infoCard.classList.remove('show');
+            }
+        });
+
+        // 참여자 수 표시/숨김
+        showParticipantCountCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                participantCount.classList.add('show');
+            } else {
+                participantCount.classList.remove('show');
+            }
+        });
+
+        // 질문 수 변경 시 정보 카드 자동 표시
+        questionCountInput.addEventListener('input', (e) => {
+            const count = parseInt(e.target.value) || 0;
+            if (count > 0 && showInfoCardCheckbox.checked) {
+                infoCard.classList.add('show');
+            } else if (count === 0) {
+                infoCard.classList.remove('show');
+            }
+        });
+
+        // 초기 텍스트 색상 설정
+        const initialTextColor = getTextColor(bgColorInput.value);
+        title.style.color = initialTextColor;
+        subtitle.style.color = initialTextColor === '#ffffff' 
+            ? 'rgba(255, 255, 255, 0.7)' 
+            : 'rgba(0, 0, 0, 0.6)';
+    </script>
+</body>
+</html>
+
+

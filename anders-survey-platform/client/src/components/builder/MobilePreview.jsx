@@ -1,59 +1,148 @@
-// 모바일 프리뷰 컴포넌트
-// anders 스타일: 실시간 모바일 화면 프리뷰
+// 모바일 최적화된 미리보기 컴포넌트 - 근본적인 해결책 적용
 
-import { motion } from 'framer-motion';
 import StartPage from '../../pages/participant/StartPage';
 import QuestionPage from '../../pages/participant/QuestionPage';
-import ReviewPage from '../../pages/participant/ReviewPage';
 import DonePage from '../../pages/participant/DonePage';
 
-export default function MobilePreview({ 
-  surveyData, 
+export default function MobilePreview({
+  surveyData,
   currentTab,
   currentQuestionIndex = 0,
   previewAnswers = {}
 }) {
-  const color = surveyData?.branding?.primaryColor || 'var(--primary)';
   const questions = surveyData?.questions || [];
 
-  // 프리뷰 콘텐츠 렌더링
-  const renderPreviewContent = () => {
-    switch (currentTab) {
-      case 'cover':
-      case 'style':
-        return (
+  // Common branding props
+  const primaryColor = surveyData?.branding?.primaryColor || 'var(--primary)';
+  const secondaryColor = surveyData?.branding?.secondaryColor || 'var(--secondary)';
+  const buttonShape = surveyData?.branding?.buttonShape || 'rounded-lg';
+  const buttonOpacity = surveyData?.branding?.buttonOpacity !== undefined ? surveyData?.branding?.buttonOpacity : 0.9;
+  const backgroundColor = surveyData?.branding?.backgroundColor || '#1a1f2e';
+  // 커버의 배경 이미지가 우선, 없으면 브랜딩의 배경 이미지 사용
+  const bgImageBase64 = surveyData?.cover?.bgImageBase64 || surveyData?.branding?.bgImageBase64 || '';
+
+  // 통일된 모바일 프레임 스타일
+  const mobileFrameStyle = {
+    width: '100%',
+    maxWidth: '375px',
+    margin: '0 auto',
+    backgroundColor: '#000',
+    borderRadius: '32px',
+    padding: '8px',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+    position: 'relative'
+  };
+
+  const screenStyle = {
+    width: '100%',
+    height: '667px',
+    maxHeight: '667px',
+    backgroundColor: '#fff',
+    borderRadius: '24px',
+    overflow: 'hidden',
+    position: 'relative'
+  };
+
+  // 렌더링할 콘텐츠 결정
+  let content = null;
+
+  // 미리보기 컨테이너 스타일
+  const containerStyle = {
+    width: '100%',
+    height: '100%',
+    overflow: 'auto',
+    position: 'relative'
+  };
+
+  if (currentTab === 'cover' || currentTab === 'style') {
+    content = (
+      <>
+        <style dangerouslySetInnerHTML={{ __html: `
+          .mobile-preview-container > div {
+            min-height: auto !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            min-width: auto !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            justify-content: flex-start !important;
+            overflow: visible !important;
+          }
+          .mobile-preview-container > div > div[class*="max-w"] {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-height: auto !important;
+            height: auto !important;
+            flex: 1 !important;
+            overflow: auto !important;
+            padding: 36px 24px !important;
+            margin: 0 !important;
+            background-color: transparent !important;
+            background: transparent !important;
+          }
+          .mobile-preview-container > div[style*="backgroundImage"] {
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+          }
+        `}} />
+        <div className="mobile-preview-container" style={containerStyle}>
           <StartPage
             survey={{
-              title: surveyData?.cover?.title || surveyData?.title || '설문지',
+              title: surveyData?.cover?.title || surveyData?.title || '제목',
               description: surveyData?.cover?.description || surveyData?.description || '부제목',
               cover: {
                 image: surveyData?.cover?.imageBase64 || surveyData?.cover?.image,
                 title: surveyData?.cover?.title || surveyData?.title,
-                subtitle: surveyData?.cover?.description || surveyData?.description
+                subtitle: surveyData?.cover?.description || surveyData?.description,
+                description: surveyData?.cover?.description || surveyData?.description,
+                logoBase64: surveyData?.cover?.logoBase64,
+                buttonText: surveyData?.cover?.buttonText || '설문 시작하기',
+                showParticipantCount: surveyData?.cover?.showParticipantCount
               },
-              branding: surveyData?.branding
+              branding: surveyData?.branding,
+              questions: surveyData?.questions || []
             }}
             onStart={() => {}}
-            color={color}
+            color={primaryColor}
+            secondaryColor={secondaryColor}
+            buttonShape={buttonShape}
+            buttonOpacity={buttonOpacity}
+            backgroundColor={backgroundColor}
+            bgImageBase64={bgImageBase64}
           />
-        );
-
-      case 'questions':
-        if (questions.length === 0) {
-          return (
-            <div className="min-h-screen bg-bg flex items-center justify-center px-4">
-              <div className="text-center">
-                <p className="text-gray-500">질문을 추가해주세요</p>
-              </div>
-            </div>
-          );
-        }
-
-        const question = questions[Math.min(currentQuestionIndex, questions.length - 1)];
-        if (!question) return null;
-
-        return (
+        </div>
+      </>
+    );
+  } else if (currentTab === 'questions' && questions.length > 0) {
+    const question = questions[Math.min(currentQuestionIndex, questions.length - 1)];
+    content = (
+      <>
+        <style dangerouslySetInnerHTML={{ __html: `
+          .mobile-preview-container > div {
+            min-height: auto !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            min-width: auto !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            justify-content: flex-start !important;
+            overflow: visible !important;
+          }
+        `}} />
+        <div className="mobile-preview-container" style={containerStyle}>
           <QuestionPage
+            survey={surveyData}
             question={question}
             questionNumber={currentQuestionIndex + 1}
             totalQuestions={questions.length}
@@ -62,75 +151,93 @@ export default function MobilePreview({
             onNext={() => {}}
             onPrevious={() => {}}
             showPrevious={currentQuestionIndex > 0}
-            color={color}
+            color={primaryColor}
+            secondaryColor={secondaryColor}
+            buttonShape={buttonShape}
+            buttonOpacity={buttonOpacity}
+            backgroundColor={surveyData?.branding?.questionBackgroundColor || backgroundColor}
+            bgImageBase64={surveyData?.branding?.questionBgImageBase64 || bgImageBase64}
           />
-        );
-
-      case 'ending':
-        return (
+        </div>
+      </>
+    );
+  } else if (currentTab === 'ending') {
+    content = (
+      <>
+        <style dangerouslySetInnerHTML={{ __html: `
+          .mobile-preview-container > div {
+            min-height: auto !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            min-width: auto !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow: auto !important;
+          }
+          .mobile-preview-container h1,
+          .mobile-preview-container [class*="text-3xl"],
+          .mobile-preview-container [class*="text-4xl"],
+          .mobile-preview-container div[style*="fontSize"] {
+            font-size: 18px !important;
+            line-height: 1.4 !important;
+          }
+        `}} />
+        <div className="mobile-preview-container" style={containerStyle}>
           <DonePage
             survey={{
-              ending: {
-                title: surveyData?.ending?.title || '설문이 완료되었습니다!',
-                message: surveyData?.ending?.description || '귀하의 소중한 의견에 감사드립니다.',
-                image: surveyData?.ending?.imageBase64 || surveyData?.ending?.image
-              },
+              ending: surveyData?.ending,
               branding: surveyData?.branding
             }}
-            color={color}
+            color={primaryColor}
+            secondaryColor={secondaryColor}
+            buttonShape={buttonShape}
+            buttonOpacity={buttonOpacity}
+            backgroundColor={backgroundColor}
+            bgImageBase64={bgImageBase64}
           />
-        );
+        </div>
+      </>
+    );
+  }
 
-      default:
-        return (
-          <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center px-4">
-            <div className="text-center">
-              <p className="text-gray-500">프리뷰를 선택해주세요</p>
-            </div>
-          </div>
-        );
-    }
-  };
+  if (!content) {
+    return (
+      <div style={mobileFrameStyle}>
+        <div style={screenStyle} className="flex items-center justify-center bg-gray-50">
+          <p className="text-gray-400 text-sm">미리보기를 선택하세요</p>
+        </div>
+      </div>
+    );
+  }
 
-  // 모바일 프레임 크기 (한 페이지에 맞게 축소)
-  const frameWidth = 300;
-  const frameHeight = 600;
-  const screenWidth = frameWidth - 24; // padding 제외
-  const screenHeight = frameHeight - 24; // padding 제외
-
+  // 모든 탭에 동일한 프레임과 스타일 적용
   return (
-    <div className="sticky top-6">
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3 }}
-        className="relative"
-      >
-        {/* 모바일 프레임 */}
-        <div 
-          className="relative bg-gray-900 rounded-[2rem] p-2 shadow-2xl mx-auto" 
-          style={{ width: `${frameWidth}px` }}
-        >
-          {/* 모바일 화면 */}
-          <div 
-            className="bg-white rounded-[1.75rem] overflow-hidden shadow-inner" 
-            style={{ width: `${screenWidth}px`, height: `${screenHeight}px` }}
-          >
-            <div className="w-full h-full overflow-y-auto scrollbar-hide" style={{ maxHeight: `${screenHeight}px` }}>
-              <div style={{ transform: 'scale(0.85)', transformOrigin: 'top center' }}>
-                {renderPreviewContent()}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* "made with anders" 텍스트 */}
-        <div className="mt-3 text-center">
-          <p className="text-xs text-gray-400">made with anders</p>
-        </div>
-      </motion.div>
+    <div style={mobileFrameStyle}>
+      {/* 모바일 노치 */}
+      <div 
+        style={{
+          position: 'absolute',
+          top: '16px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '120px',
+          height: '24px',
+          backgroundColor: '#000',
+          borderRadius: '0 0 16px 16px',
+          zIndex: 10
+        }}
+      />
+      
+      {/* 스크린 영역 - 상단 정렬, 스크롤 가능 */}
+      <div style={screenStyle}>
+        {content}
+      </div>
     </div>
   );
 }
-
-

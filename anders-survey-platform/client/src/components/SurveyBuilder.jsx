@@ -12,6 +12,28 @@ import MobilePreview from './builder/MobilePreview';
 import SurveyPreviewButton from './SurveyPreviewButton';
 import { PERSONAL_INFO_FIELDS } from '../constants.js';
 import { XCircleIcon, PlayIcon, CalendarIcon, PauseIcon } from './icons.jsx';
+import TimePicker from './TimePicker';
+
+// ISO 8601 문자열을 datetime-local 형식(YYYY-MM-DDTHH:MM)으로 변환하는 헬퍼 함수
+const formatDateTimeLocal = (isoString) => {
+    if (!isoString) return '';
+    
+    try {
+        const date = new Date(isoString);
+        if (isNaN(date.getTime())) return ''; 
+        
+        // 브라우저의 로컬 시간대 기준으로 문자열 포맷
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    } catch (e) {
+        return '';
+    }
+};
 
 // 초기 설문 데이터 구조
 const getInitialSurveyData = () => ({
@@ -34,16 +56,27 @@ const getInitialSurveyData = () => ({
         secondaryColor: 'var(--secondary)',
         tertiaryColor: 'var(--success)',
         font: 'Pretendard',
-        buttonShape: 'rounded-lg',
+        buttonShape: 'rounded', // 'rounded', 'square', 'pill'로 통일
+        buttonOpacity: 0.9, // 버튼 투명도 (0.1 ~ 1.0)
         logoBase64: '',
-        bgImageBase64: ''
+        bgImageBase64: '',
+        backgroundColor: '#1a1f2e',
+        questionBackgroundColor: '#ffffff',
+        questionBgImageBase64: '',
+        footerLogoBase64: ''
+    },
+    advancedSettings: {
+        koreanSpacingWrap: false // 한글 띄어쓰기 유지 및 줄바꿈
     },
     cover: {
         title: '',
         description: '',
         imageBase64: '',
         logoBase64: '',
-        showParticipantCount: false
+        bgImageBase64: '', // 배경 이미지 추가
+        skipCover: false, // 커버 페이지 건너뛰기 설정
+        showParticipantCount: false,
+        buttonText: '시작하기'
     },
     ending: {
         title: '설문이 완료되었습니다!',
@@ -85,6 +118,22 @@ const SurveyBuilder = () => {
         step3: false,
         step4: false
     });
+
+    // 브랜딩 색상을 CSS 변수에 적용 (Admin 스타일은 제외)
+    useEffect(() => {
+        const primaryColor = surveyData?.branding?.primaryColor;
+        if (primaryColor) {
+            const root = document.documentElement;
+            const actualColor = typeof primaryColor === 'string' && primaryColor.startsWith('#') 
+                ? primaryColor 
+                : (typeof primaryColor === 'string' && primaryColor.includes('var') 
+                    ? '#26C6DA'
+                    : (primaryColor || '#26C6DA'));
+            // --brand-primary만 변경 (--primary는 Admin 영역에서 고정값으로 오버라이드됨)
+            root.style.setProperty('--brand-primary', actualColor);
+            root.style.setProperty('--dynamic-primary-color', actualColor);
+        }
+    }, [surveyData?.branding?.primaryColor]);
 
     // 설문 데이터 로드 (수정 모드)
     useEffect(() => {
@@ -132,18 +181,31 @@ const SurveyBuilder = () => {
                             return { id: Date.now() + optIndex, text: opt, imageBase64: '' };
                         });
                         
+                        // 질문 텍스트 추출 (content, text, title 순서로 확인)
+                        const questionText = q.content || q.text || q.title || '';
+                        
+                        // 질문 ID 유지 (기존 ID가 있으면 사용, 없으면 새로 생성)
+                        const questionId = q.id || q._id || (Date.now() + index);
+                        
                         return {
-                            id: Date.now() + index,
+                            id: questionId,
                             type: questionType,
-                            title: q.content || '',
-                            text: q.content || '',
-                            content: q.content || '',
+                            title: questionText,
+                            text: questionText,
+                            content: questionText,
                             options: convertedOptions,
                             required: q.required || false,
-                            image: '',
+                            image: q.image || q.imageBase64 || '',
+                            imageBase64: q.image || q.imageBase64 || '',
                             show_image_upload: false
                         };
                     });
+                    
+                    // 질문 ID의 최대값을 찾아서 lastQuestionId 설정
+                    if (convertedQuestions.length > 0) {
+                        const maxId = Math.max(...convertedQuestions.map(q => q.id || 0));
+                        setLastQuestionId(maxId);
+                    }
                     
                     setSurveyData({
                         id: loadedSurvey._id || loadedSurvey.id,
@@ -167,14 +229,18 @@ const SurveyBuilder = () => {
                             font: 'Noto Sans KR',
                             buttonShape: 'rounded-lg',
                             logoBase64: '',
-                            bgImageBase64: ''
+                            bgImageBase64: '',
+                            backgroundColor: '#1a1f2e'
                         },
                         cover: {
                             title: loadedSurvey.cover?.title || '',
                             description: loadedSurvey.cover?.description || '',
                             imageBase64: loadedSurvey.cover?.imageBase64 || '',
                             logoBase64: loadedSurvey.cover?.logoBase64 || '',
-                            showParticipantCount: loadedSurvey.cover?.showParticipantCount || false
+                            bgImageBase64: loadedSurvey.cover?.bgImageBase64 || '', // 배경 이미지 로드 추가
+                            skipCover: loadedSurvey.cover?.skipCover || false,
+                            showParticipantCount: loadedSurvey.cover?.showParticipantCount || false,
+                            buttonText: loadedSurvey.cover?.buttonText || '시작하기'
                         },
                         ending: loadedSurvey.ending || {
                             title: '설문이 완료되었습니다!',
@@ -229,6 +295,45 @@ const SurveyBuilder = () => {
                 return false;
         }
     }, [surveyData]);
+    
+    // Step별 누락된 항목 목록 반환 함수
+    const getMissingFields = useCallback(() => {
+        const missingFields = [];
+        
+        // Step 1: Basic Info
+        if (!surveyData.title || surveyData.title.trim() === '') {
+            missingFields.push('설문지 제목');
+        }
+        
+        // Step 2: Start Page (Cover)
+        if ((!surveyData.cover.title || surveyData.cover.title.trim() === '') && 
+            (!surveyData.cover.description || surveyData.cover.description.trim() === '')) {
+            missingFields.push('커버 페이지 제목 또는 설명');
+        }
+        
+        // Step 3: Survey Builder
+        if (surveyData.questions.length === 0) {
+            missingFields.push('질문 (최소 1개 필요)');
+        } else {
+            const emptyQuestions = surveyData.questions
+                .map((q, idx) => {
+                    const questionText = (q.title || q.text || q.content || '').trim();
+                    return questionText === '' ? idx + 1 : null;
+                })
+                .filter(idx => idx !== null);
+            if (emptyQuestions.length > 0) {
+                missingFields.push(`질문 ${emptyQuestions.join(', ')}번의 제목`);
+            }
+        }
+        
+        // Step 4: Completion Page
+        if ((!surveyData.ending.title || surveyData.ending.title.trim() === '') && 
+            (!surveyData.ending.description || surveyData.ending.description.trim() === '')) {
+            missingFields.push('완료 페이지 제목 또는 설명');
+        }
+        
+        return missingFields;
+    }, [surveyData]);
 
     // Step 검증 상태 업데이트
     useEffect(() => {
@@ -243,14 +348,55 @@ const SurveyBuilder = () => {
     // 다음 Step으로 이동 (검증 포함)
     const handleNextStep = useCallback(() => {
         if (!validateStep(currentStep)) {
-            setError(`Step ${currentStep}의 필수 항목을 모두 입력해주세요.`);
+            const missingFields = [];
+            
+            switch(currentStep) {
+                case 1:
+                    if (!surveyData.title || surveyData.title.trim() === '') {
+                        missingFields.push('설문지 제목');
+                    }
+                    break;
+                case 2:
+                    if ((!surveyData.cover.title || surveyData.cover.title.trim() === '') && 
+                        (!surveyData.cover.description || surveyData.cover.description.trim() === '')) {
+                        missingFields.push('커버 페이지 제목 또는 설명');
+                    }
+                    break;
+                case 3:
+                    if (surveyData.questions.length === 0) {
+                        missingFields.push('질문 (최소 1개 필요)');
+                    } else {
+                        const emptyQuestions = surveyData.questions
+                            .map((q, idx) => {
+                                const questionText = (q.title || q.text || q.content || '').trim();
+                                return questionText === '' ? idx + 1 : null;
+                            })
+                            .filter(idx => idx !== null);
+                        if (emptyQuestions.length > 0) {
+                            missingFields.push(`질문 ${emptyQuestions.join(', ')}번의 제목`);
+                        }
+                    }
+                    break;
+                case 4:
+                    if ((!surveyData.ending.title || surveyData.ending.title.trim() === '') && 
+                        (!surveyData.ending.description || surveyData.ending.description.trim() === '')) {
+                        missingFields.push('완료 페이지 제목 또는 설명');
+                    }
+                    break;
+            }
+            
+            if (missingFields.length > 0) {
+                setError(`다음 필수 항목을 입력해주세요:\n\n${missingFields.map(field => `• ${field}`).join('\n')}`);
+            } else {
+                setError(`Step ${currentStep}의 필수 항목을 모두 입력해주세요.`);
+            }
             return;
         }
         if (currentStep < 4) {
             setCurrentStep(currentStep + 1);
             setError(null);
         }
-    }, [currentStep, validateStep]);
+    }, [currentStep, validateStep, surveyData]);
 
     // 이전 Step으로 이동
     const handlePrevStep = useCallback(() => {
@@ -262,33 +408,76 @@ const SurveyBuilder = () => {
 
     // 폼 데이터 변경 핸들러
     const handleFormChange = useCallback((key, value) => {
-        setSurveyData(prev => ({
-            ...prev,
-            [key]: value
-        }));
+        setSurveyData(prev => {
+            const updated = {
+                ...prev,
+                [key]: value
+            };
+            
+            // 설문지 제목이 변경되면 커버 제목이 비어있을 때만 자동으로 동일하게 설정
+            if (key === 'title') {
+                const currentCoverTitle = prev.cover?.title || '';
+                // 커버 제목이 비어있을 때만 자동 복사
+                if (!currentCoverTitle || currentCoverTitle.trim() === '') {
+                    updated.cover = {
+                        ...prev.cover,
+                        title: value
+                    };
+                }
+            }
+            
+            return updated;
+        });
     }, []);
 
     // 브랜딩, 커버, 엔딩 등 중첩 객체 변경 핸들러
     const handleBrandingChange = useCallback((parentKey, childKey, value) => {
-        setSurveyData(prev => ({
-            ...prev,
-            [parentKey]: {
-                ...prev[parentKey],
-                [childKey]: value
-            }
-        }));
+        setSurveyData(prev => {
+            // 기존 객체를 안전하게 가져오기
+            const currentParentData = prev[parentKey] || {};
+            
+            // 해당 부모 키만 업데이트하고 나머지 데이터는 그대로 유지
+            return {
+                ...prev,
+                questions: prev.questions || [], // 질문 데이터 보호
+                [parentKey]: {
+                    ...currentParentData,
+                    [childKey]: value
+                }
+            };
+        });
+        
+        // 브랜딩 색상이 변경되면 CSS 변수 업데이트 (Admin 스타일은 제외)
+        if (parentKey === 'branding' && childKey === 'primaryColor') {
+            const root = document.documentElement;
+            const actualColor = typeof value === 'string' && value.startsWith('#') 
+                ? value 
+                : (typeof value === 'string' && value.includes('var') 
+                    ? '#26C6DA'
+                    : (value || '#26C6DA'));
+            // --brand-primary만 변경 (--primary는 Admin 영역에서 고정값으로 오버라이드됨)
+            root.style.setProperty('--brand-primary', actualColor);
+            root.style.setProperty('--dynamic-primary-color', actualColor);
+        }
     }, []);
 
     // 이미지 변경 핸들러
     const handleImageChange = useCallback((parentKey, childKey, event) => {
         const base64Value = event.target.value;
-        setSurveyData(prev => ({
-            ...prev,
-            [parentKey]: {
-                ...prev[parentKey],
-                [childKey]: base64Value
-            }
-        }));
+        setSurveyData(prev => {
+            // 기존 객체를 안전하게 가져오기
+            const currentParentData = prev[parentKey] || {};
+            
+            // 해당 부모 키만 업데이트하고 나머지 데이터는 그대로 유지
+            return {
+                ...prev,
+                questions: prev.questions || [], // 질문 데이터 보호
+                [parentKey]: {
+                    ...currentParentData,
+                    [childKey]: base64Value
+                }
+            };
+        });
     }, []);
 
     // 질문 관리 핸들러
@@ -385,12 +574,31 @@ const SurveyBuilder = () => {
                 console.log('[SurveyBuilder] 질문 추가 완료');
             } else if (action === 'update') {
                 const { questionId, updatedQuestion } = payload;
-                setSurveyData(prev => ({
-                    ...prev,
-                    questions: prev.questions.map(q => 
-                        q.id === questionId ? { ...q, ...updatedQuestion } : q
-                    )
-                }));
+                if (!questionId) {
+                    console.error('[SurveyBuilder] questionId가 없습니다:', payload);
+                    return;
+                }
+                setSurveyData(prev => {
+                    const questionExists = prev.questions.some(q => (q.id === questionId) || (q._id === questionId));
+                    if (!questionExists) {
+                        console.error('[SurveyBuilder] 질문을 찾을 수 없습니다:', questionId, prev.questions);
+                        return prev;
+                    }
+                    return {
+                        ...prev,
+                        questions: prev.questions.map(q => {
+                            if (q.id === questionId || q._id === questionId) {
+                                // required 값을 명시적으로 boolean으로 변환하여 저장
+                                const merged = { ...q, ...updatedQuestion };
+                                if ('required' in updatedQuestion) {
+                                    merged.required = Boolean(updatedQuestion.required);
+                                }
+                                return merged;
+                            }
+                            return q;
+                        })
+                    };
+                });
             } else if (action === 'delete') {
                 setSurveyData(prev => ({
                     ...prev,
@@ -440,13 +648,26 @@ const SurveyBuilder = () => {
 
     // 개인정보 변경 핸들러
     const handlePersonalInfoChange = useCallback((parentKey, childKey, value) => {
-        setSurveyData(prev => ({
-            ...prev,
-            [parentKey]: {
-                ...(prev[parentKey] || {}),
-                [childKey]: value
-            }
-        }));
+        setSurveyData(prev => {
+            // 기존 personalInfo 객체를 안전하게 가져오기
+            const currentPersonalInfo = prev[parentKey] || {
+                enabled: false,
+                fields: [],
+                consentText: '',
+                consentRequired: false,
+                customFields: []
+            };
+            
+            // personalInfo만 업데이트하고 나머지 데이터는 그대로 유지
+            return {
+                ...prev,
+                questions: prev.questions || [], // 질문 데이터 보호
+                [parentKey]: {
+                    ...currentPersonalInfo,
+                    [childKey]: value
+                }
+            };
+        });
     }, []);
 
     // 설문 최종 저장 (중복 저장 방지)
@@ -458,7 +679,12 @@ const SurveyBuilder = () => {
 
         // 모든 Step 검증
         if (!validateStep(1) || !validateStep(2) || !validateStep(3) || !validateStep(4)) {
-            setError('모든 필수 항목을 입력해주세요.');
+            const missingFields = getMissingFields();
+            if (missingFields.length > 0) {
+                setError(`다음 필수 항목을 입력해주세요:\n\n${missingFields.map(field => `• ${field}`).join('\n')}`);
+            } else {
+                setError('모든 필수 항목을 입력해주세요.');
+            }
             return;
         }
 
@@ -699,9 +925,69 @@ const SurveyBuilder = () => {
         }
     };
 
-    // QR 코드 생성 (간단한 mock)
+    // QR 코드 PNG 다운로드
+    const downloadQRCodePNG = (url) => {
+        if (!url) {
+            alert('설문 링크가 없습니다. 먼저 설문을 저장해주세요.');
+            return;
+        }
+
+        // QR코드 생성 API 사용 (무료 서비스)
+        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
+        
+        // 이미지를 다운로드하기 위해 임시 링크 생성
+        fetch(qrCodeUrl)
+            .then(response => response.blob())
+            .then(blob => {
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = `survey-qrcode-${surveyData.id || 'new'}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(downloadUrl);
+            })
+            .catch(error => {
+                console.error('QR코드 다운로드 실패:', error);
+                alert('QR코드 다운로드에 실패했습니다.');
+            });
+    };
+
+    // QR 코드 SVG 다운로드
+    const downloadQRCodeSVG = (url) => {
+        if (!url) {
+            alert('설문 링크가 없습니다. 먼저 설문을 저장해주세요.');
+            return;
+        }
+
+        // QR코드 SVG 생성 API 사용
+        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&format=svg&data=${encodeURIComponent(url)}`;
+        
+        // SVG를 다운로드하기 위해 임시 링크 생성
+        fetch(qrCodeUrl)
+            .then(response => response.text())
+            .then(svgText => {
+                const blob = new Blob([svgText], { type: 'image/svg+xml' });
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = `survey-qrcode-${surveyData.id || 'new'}.svg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(downloadUrl);
+            })
+            .catch(error => {
+                console.error('QR코드 SVG 다운로드 실패:', error);
+                alert('QR코드 SVG 다운로드에 실패했습니다.');
+            });
+    };
+
+    // QR 코드 생성 (간단한 mock - 미리보기용)
     const generateQRCode = (url) => {
-        return `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="white"/><text x="50" y="50" text-anchor="middle" font-size="10">QR</text></svg>`)}`;
+        if (!url) return '';
+        return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
     };
 
     const surveyUrl = surveyData.id 
@@ -709,191 +995,261 @@ const SurveyBuilder = () => {
         : '';
 
     return (
-        <div className="h-screen bg-gray-50 flex overflow-hidden">
-                {/* 왼쪽 사이드바 */}
-            <div className="w-16 bg-gray-100 flex flex-col items-center py-4 flex-shrink-0">
-                {/* 로고 */}
-                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center mb-8">
-                    <span className="text-white font-bold text-xl">S</span>
-                </div>
-                {/* 하단 아이콘 */}
-                <div className="mt-auto space-y-4">
-                    <button className="w-10 h-10 rounded-lg hover:bg-gray-200 flex items-center justify-center transition-colors">
-                        <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                    </button>
-                    <button className="w-10 h-10 rounded-lg hover:bg-gray-200 flex items-center justify-center transition-colors">
-                        <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-
+        <div className="h-full bg-gray-50 flex overflow-hidden" style={{ height: '100%', maxHeight: '100%', overflow: 'hidden' }}>
             {/* 메인 콘텐츠 영역 */}
-            <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <div className="flex-1 flex flex-col h-full overflow-hidden w-full">
                 {/* 상단 헤더 */}
                 <header className="flex-shrink-0" style={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none' }}>
-                    {/* 상단 바 */}
-                    <div className="px-4 py-3 flex items-center justify-between">
-                        {/* 타이틀 */}
-                        <h1 className="text-2xl font-bold text-gray-900">설문지</h1>
+                    {/* 상단 바 - 탭과 저장 버튼 같은 라인 */}
+                    <div className="px-6 py-4 bg-white border-b border-gray-200">
+                        <div className="flex items-center justify-between">
+                            {/* 탭 네비게이션 */}
+                            <div className="flex items-center gap-6">
+                            {[
+                                { id: 'style', label: '스타일' },
+                                { id: 'cover', label: '커버' },
+                                { id: 'questions', label: '문제' },
+                                { id: 'ending', label: '엔딩' },
+                                { id: 'publishing', label: '퍼블리싱' }
+                            ].map(tab => {
+                                const isActive = currentTab === tab.id;
+                                // Admin 메뉴는 고정 색상 사용 (브랜드 컬러와 독립적으로 운영)
+                                const adminMenuColor = '#26C6DA'; // 고정 admin 색상
+                                
+                                return (
+                                <button
+                                    key={tab.id}
+                                    type="button"
+                                    onClick={() => handleTabChange(tab.id)}
+                                    className={`pb-3 px-2 font-medium text-sm transition-colors relative border-0 outline-none ${
+                                        isActive
+                                            ? 'font-semibold'
+                                            : 'text-text-sub hover:text-text-main'
+                                    }`}
+                                    style={isActive ? {
+                                        color: adminMenuColor,
+                                        border: 'none',
+                                        outline: 'none',
+                                        boxShadow: 'none',
+                                    } : {
+                                        border: 'none',
+                                        outline: 'none',
+                                        boxShadow: 'none',
+                                    }}
+                                    aria-current={isActive ? 'page' : undefined}
+                                    onFocus={(e) => {
+                                        e.currentTarget.style.outline = 'none';
+                                        e.currentTarget.style.boxShadow = 'none';
+                                    }}
+                                >
+                                    {tab.label}
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="activeTab"
+                                            className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
+                                            style={{
+                                                backgroundColor: adminMenuColor,
+                                            }}
+                                        />
+                                    )}
+                                </button>
+                                );
+                            })}
+                            </div>
 
-                        {/* 유틸리티 아이콘 및 링크 */}
-                        <div className="flex items-center gap-4">
-                            {/* 유틸리티 아이콘 */}
-                            <div className="flex items-center gap-2">
-                                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="도움말">
-                                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </button>
-                                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="분석">
-                                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                    </svg>
-                                </button>
-                                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="되돌리기">
-                                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                    </svg>
-                                </button>
-                                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="모바일/데스크톱">
-                                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                    </svg>
-                                </button>
+                            {/* 우측 액션 영역 */}
+                            <div className="flex items-center gap-3">
+                                {/* 저장 버튼 */}
                                 <button 
                                     type="button"
                                     onClick={handleSave}
                                     disabled={loading}
-                                    style={{
-                                        backgroundColor: loading ? '#9CA3AF' : 'var(--primary, #26C6DA)',
-                                        color: '#FFFFFF'
-                                    }}
-                                    className="px-4 py-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium shadow-sm"
+                                    className="px-4 py-2.5 bg-[#26C6DA] text-white rounded-lg font-medium text-sm hover:bg-[#20B5C8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
                                 >
                                     {loading ? (
                                         <span className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
                                     ) : (
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                         </svg>
                                     )}
                                     저장
                                 </button>
-                            </div>
 
-                            {/* 링크 및 공유 */}
-                            {surveyData.id && (
-                                <div className="flex items-center gap-2 pl-4 border-l border-gray-200">
-                                    <span className="text-sm text-text-sub">링크:</span>
-                                    <span className="text-sm text-primary font-mono max-w-xs truncate">{surveyUrl || '저장 후 표시됩니다'}</span>
-                                    <button 
-                                        onClick={() => {
-                                            if (surveyUrl) {
-                                                navigator.clipboard.writeText(surveyUrl);
-                                                alert('링크가 복사되었습니다');
-                                            }
-                                        }}
-                                        className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                                    >
-                                        복사
-                                    </button>
-                                    <button className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                                        QR코드
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* 탭 네비게이션 */}
-                    <div className="px-4 flex items-center gap-4" style={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none' }}>
-                        {[
-                            { id: 'style', label: '스타일' },
-                            { id: 'cover', label: '커버' },
-                            { id: 'questions', label: '문제' },
-                            { id: 'ending', label: '엔딩' },
-                            { id: 'publishing', label: '퍼블리싱' }
-                        ].map(tab => {
-                            const isActive = currentTab === tab.id;
-                            // 브랜드 컬러 가져오기 (설문 데이터 또는 기본값)
-                            const primaryColor = surveyData?.branding?.primaryColor || surveyData?.cover?.primaryColor || 'var(--primary, #6B46C1)';
-                            
-                            return (
-                            <button
-                                key={tab.id}
-                                type="button"
-                                onClick={() => handleTabChange(tab.id)}
-                                className={`pb-3 px-1 font-medium text-sm transition-colors relative border-0 outline-none ${
-                                    isActive
-                                        ? 'font-semibold'
-                                        : 'text-text-sub hover:text-text-main'
-                                }`}
-                                style={isActive ? {
-                                    color: primaryColor,
-                                    border: 'none',
-                                    outline: 'none',
-                                    boxShadow: 'none',
-                                } : {
-                                    border: 'none',
-                                    outline: 'none',
-                                    boxShadow: 'none',
-                                }}
-                                aria-current={isActive ? 'page' : undefined}
-                                onFocus={(e) => {
-                                    e.currentTarget.style.outline = 'none';
-                                    e.currentTarget.style.boxShadow = 'none';
-                                }}
-                            >
-                                {tab.label}
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="activeTab"
-                                        className="absolute bottom-0 left-0 right-0 h-1 rounded-full"
-                                        style={{
-                                            backgroundColor: primaryColor,
-                                        }}
-                                    />
+                                {/* 링크 및 공유 영역 */}
+                                {surveyData.id && (
+                                    <div className="flex items-center gap-2 pl-3 border-l border-gray-200">
+                                        <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+                                            <span className="text-xs text-text-main font-mono max-w-[200px] truncate">{surveyUrl || '저장 후 표시됩니다'}</span>
+                                        </div>
+                                        <button 
+                                            type="button"
+                                            onClick={() => {
+                                                if (surveyUrl) {
+                                                    navigator.clipboard.writeText(surveyUrl);
+                                                    alert('링크가 복사되었습니다');
+                                                }
+                                            }}
+                                            className="px-3 py-2 bg-white border border-gray-300 text-text-main rounded-lg hover:bg-gray-50 transition-colors text-xs font-medium"
+                                        >
+                                            복사
+                                        </button>
+                                        <div className="relative group">
+                                            <button 
+                                                type="button"
+                                                onClick={() => downloadQRCodePNG(surveyUrl)}
+                                                className="px-3 py-2 bg-white border border-gray-300 text-text-main rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1.5 text-xs font-medium"
+                                            >
+                                                QR코드
+                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+                                            {/* 드롭다운 메뉴 */}
+                                            <div className="absolute right-0 top-full mt-1 w-32 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => downloadQRCodePNG(surveyUrl)}
+                                                    className="w-full px-3 py-2 text-left text-xs text-text-main hover:bg-gray-50 flex items-center gap-2 rounded-t-lg"
+                                                >
+                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                    PNG 다운로드
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => downloadQRCodeSVG(surveyUrl)}
+                                                    className="w-full px-3 py-2 text-left text-xs text-text-main hover:bg-gray-50 flex items-center gap-2 rounded-b-lg"
+                                                >
+                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                                                    </svg>
+                                                    SVG 다운로드
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 )}
-                            </button>
-                            );
-                        })}
+                            </div>
+                        </div>
                     </div>
                 </header>
 
                 {/* 상태 메시지 영역 (고정) */}
                 <div className="flex-shrink-0">
                     {error && (
-                        <div className="mx-4 mt-3 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg">
-                            <div className="flex items-center gap-2">
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                                </svg>
-                                <span className="font-medium">오류</span>
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="mx-4 mt-3 mb-2"
+                        >
+                            <div className="bg-white border-2 border-red-200 rounded-lg shadow-md overflow-hidden">
+                                {/* 헤더 */}
+                                <div className="bg-gradient-to-r from-red-50 to-red-100 px-4 py-3 border-b border-red-200">
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-500 flex items-center justify-center">
+                                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-base font-semibold text-red-900">필수 항목을 확인해주세요</h3>
+                                            <p className="text-xs text-red-700 mt-0.5">다음 항목을 입력하시면 계속 진행할 수 있습니다</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {/* 항목 리스트 */}
+                                <div className="px-4 py-3">
+                                    <div className="space-y-2">
+                                        {error.split('\n').filter(line => line.trim() && line.includes('•')).map((line, idx) => {
+                                            const item = line.replace('•', '').trim();
+                                            return (
+                                                <div key={idx} className="flex items-start gap-2.5 group">
+                                                    <div className="flex-shrink-0 mt-0.5">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5"></div>
+                                                    </div>
+                                                    <span className="text-sm text-gray-800 leading-relaxed group-hover:text-red-700 transition-colors">
+                                                        {item}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                        {!error.includes('•') && (
+                                            <div className="flex items-start gap-2.5">
+                                                <div className="flex-shrink-0 mt-0.5">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5"></div>
+                                                </div>
+                                                <span className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
+                                                    {error}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                
+                                {/* 닫기 버튼 */}
+                                <div className="px-4 py-2 bg-gray-50 border-t border-gray-200 flex justify-end">
+                                    <button
+                                        onClick={() => setError(null)}
+                                        className="text-xs text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                                    >
+                                        닫기
+                                    </button>
+                                </div>
                             </div>
-                            <p className="mt-1 text-sm whitespace-pre-line">{error}</p>
-                        </div>
+                        </motion.div>
                     )}
                     {successMessage && (
-                        <div className="mx-6 mt-4 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 rounded-lg">
-                            <div className="flex items-center gap-2">
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                </svg>
-                                <span className="font-medium">성공</span>
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="mx-4 mt-3 mb-2"
+                        >
+                            <div className="bg-white border-2 border-green-200 rounded-lg shadow-md overflow-hidden">
+                                {/* 헤더 */}
+                                <div className="bg-gradient-to-r from-green-50 to-green-100 px-4 py-3 border-b border-green-200">
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-base font-semibold text-green-900">성공</h3>
+                                            <p className="text-xs text-green-700 mt-0.5">작업이 완료되었습니다</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {/* 메시지 */}
+                                <div className="px-4 py-3">
+                                    <p className="text-sm text-gray-800 leading-relaxed">
+                                        {successMessage}
+                                    </p>
+                                </div>
+                                
+                                {/* 닫기 버튼 */}
+                                <div className="px-4 py-2 bg-gray-50 border-t border-gray-200 flex justify-end">
+                                    <button
+                                        onClick={() => setSuccessMessage(null)}
+                                        className="text-xs text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                                    >
+                                        닫기
+                                    </button>
+                                </div>
                             </div>
-                            <p className="mt-1 text-sm">{successMessage}</p>
-                        </div>
+                        </motion.div>
                     )}
                 </div>
 
                 {/* 메인 콘텐츠 영역 - 좌우 분할 */}
-                <div className="flex-1 flex gap-4 p-4 overflow-hidden" style={{ minHeight: 0 }}>
+                <div className="flex-1 flex gap-4 p-4 overflow-hidden" style={{ minHeight: 0, maxHeight: '100%', height: '100%' }}>
                     {/* 왼쪽: 편집 영역 (스크롤 가능) */}
-                    <div className="flex-1 overflow-y-auto overflow-x-hidden pr-2" style={{ height: '100%' }}>
+                    <div className="flex-1 overflow-x-hidden pr-2 overflow-y-auto" style={{ height: '100%', minHeight: 0 }}>
                         <div className="max-w-3xl">
                             {currentTab === 'style' && (
                                 <Step1_Settings
@@ -909,6 +1265,9 @@ const SurveyBuilder = () => {
                                     cover={surveyData.cover}
                                     onCoverChange={handleBrandingChange}
                                     onImageChange={handleImageChange}
+                                    branding={surveyData.branding}
+                                    survey={surveyData}
+                                    onBrandingChange={handleBrandingChange}
                                 />
                             )}
 
@@ -920,6 +1279,8 @@ const SurveyBuilder = () => {
                                     onQuestionsChange={handleQuestionsChange}
                                     onPersonalInfoChange={handlePersonalInfoChange}
                                     onImageChange={handleImageChange}
+                                    branding={surveyData.branding}
+                                    onBrandingChange={handleBrandingChange}
                                 />
                             )}
 
@@ -1002,6 +1363,154 @@ const SurveyBuilder = () => {
                                                 );
                                             })}
                                         </div>
+
+                                        {/* 시간 설정 섹션 */}
+                                        {(surveyData.status === 'active' || surveyData.status === 'scheduled') && (
+                                            <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                                                {surveyData.status === 'scheduled' && (
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-text-sub mb-2">
+                                                            시작 일시
+                                                        </label>
+                                                        <div className="flex gap-3 items-end">
+                                                            <input
+                                                                type="date"
+                                                                value={surveyData.startAt ? new Date(surveyData.startAt).toISOString().split('T')[0] : ''}
+                                                                onChange={(e) => {
+                                                                    const dateValue = e.target.value;
+                                                                    if (dateValue) {
+                                                                        const existingTime = surveyData.startAt ? new Date(surveyData.startAt) : new Date();
+                                                                        const [year, month, day] = dateValue.split('-');
+                                                                        const newDate = new Date(year, month - 1, day, existingTime.getHours(), existingTime.getMinutes());
+                                                                        setSurveyData(prev => ({
+                                                                            ...prev,
+                                                                            startAt: newDate.toISOString()
+                                                                        }));
+                                                                    } else {
+                                                                        setSurveyData(prev => ({
+                                                                            ...prev,
+                                                                            startAt: null
+                                                                        }));
+                                                                    }
+                                                                }}
+                                                                className="flex-1 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-offset-0 date-input-branded"
+                                                                style={{
+                                                                    border: `2px solid ${surveyData.branding?.primaryColor || '#D1D5DB'}`,
+                                                                    outline: 'none',
+                                                                    accentColor: surveyData.branding?.primaryColor || '#26C6DA',
+                                                                    '--brand-color': surveyData.branding?.primaryColor || '#26C6DA'
+                                                                }}
+                                                                onFocus={(e) => {
+                                                                    e.target.style.borderColor = surveyData.branding?.primaryColor || '#26C6DA';
+                                                                    e.target.style.boxShadow = `0 0 0 2px ${surveyData.branding?.primaryColor || '#26C6DA'}40`;
+                                                                }}
+                                                                onBlur={(e) => {
+                                                                    e.target.style.borderColor = surveyData.branding?.primaryColor || '#D1D5DB';
+                                                                    e.target.style.boxShadow = 'none';
+                                                                }}
+                                                            />
+                                                            <TimePicker
+                                                                value={surveyData.startAt || new Date().toISOString()}
+                                                                onChange={(e) => {
+                                                                    const timeValue = e.target.value;
+                                                                    if (timeValue && surveyData.startAt) {
+                                                                        const existingDate = new Date(surveyData.startAt);
+                                                                        const [datePart, timePart] = timeValue.split('T');
+                                                                        const [hours, minutes] = timePart.split(':');
+                                                                        existingDate.setHours(parseInt(hours), parseInt(minutes));
+                                                                        setSurveyData(prev => ({
+                                                                            ...prev,
+                                                                            startAt: existingDate.toISOString()
+                                                                        }));
+                                                                    } else if (timeValue && !surveyData.startAt) {
+                                                                        // 날짜가 없으면 오늘 날짜 사용
+                                                                        const today = new Date();
+                                                                        const [datePart, timePart] = timeValue.split('T');
+                                                                        const [hours, minutes] = timePart.split(':');
+                                                                        today.setHours(parseInt(hours), parseInt(minutes));
+                                                                        setSurveyData(prev => ({
+                                                                            ...prev,
+                                                                            startAt: today.toISOString()
+                                                                        }));
+                                                                    }
+                                                                }}
+                                                                primaryColor={surveyData.branding?.primaryColor || '#26C6DA'}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                
+                                                <div>
+                                                    <label className="block text-sm font-medium text-text-sub mb-2">
+                                                        종료 일시
+                                                    </label>
+                                                    <div className="flex gap-3 items-end">
+                                                        <input
+                                                            type="date"
+                                                            value={surveyData.endAt ? new Date(surveyData.endAt).toISOString().split('T')[0] : ''}
+                                                            onChange={(e) => {
+                                                                const dateValue = e.target.value;
+                                                                if (dateValue) {
+                                                                    const existingTime = surveyData.endAt ? new Date(surveyData.endAt) : new Date();
+                                                                    const [year, month, day] = dateValue.split('-');
+                                                                    const newDate = new Date(year, month - 1, day, existingTime.getHours(), existingTime.getMinutes());
+                                                                    setSurveyData(prev => ({
+                                                                        ...prev,
+                                                                        endAt: newDate.toISOString()
+                                                                    }));
+                                                                } else {
+                                                                    setSurveyData(prev => ({
+                                                                        ...prev,
+                                                                        endAt: null
+                                                                    }));
+                                                                }
+                                                            }}
+                                                            className="flex-1 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-offset-0"
+                                                            style={{
+                                                                border: `2px solid ${surveyData.branding?.primaryColor || '#D1D5DB'}`,
+                                                                outline: 'none',
+                                                                accentColor: surveyData.branding?.primaryColor || '#26C6DA'
+                                                            }}
+                                                            onFocus={(e) => {
+                                                                e.target.style.borderColor = surveyData.branding?.primaryColor || '#26C6DA';
+                                                                e.target.style.boxShadow = `0 0 0 2px ${surveyData.branding?.primaryColor || '#26C6DA'}40`;
+                                                            }}
+                                                            onBlur={(e) => {
+                                                                e.target.style.borderColor = surveyData.branding?.primaryColor || '#D1D5DB';
+                                                                e.target.style.boxShadow = 'none';
+                                                            }}
+                                                        />
+                                                        <TimePicker
+                                                            value={surveyData.endAt || new Date().toISOString()}
+                                                            onChange={(e) => {
+                                                                const timeValue = e.target.value;
+                                                                if (timeValue && surveyData.endAt) {
+                                                                    const existingDate = new Date(surveyData.endAt);
+                                                                    const [datePart, timePart] = timeValue.split('T');
+                                                                    const [hours, minutes] = timePart.split(':');
+                                                                    existingDate.setHours(parseInt(hours), parseInt(minutes));
+                                                                    setSurveyData(prev => ({
+                                                                        ...prev,
+                                                                        endAt: existingDate.toISOString()
+                                                                    }));
+                                                                } else if (timeValue && !surveyData.endAt) {
+                                                                    // 날짜가 없으면 오늘 날짜 사용
+                                                                    const today = new Date();
+                                                                    const [datePart, timePart] = timeValue.split('T');
+                                                                    const [hours, minutes] = timePart.split(':');
+                                                                    today.setHours(parseInt(hours), parseInt(minutes));
+                                                                    setSurveyData(prev => ({
+                                                                        ...prev,
+                                                                        endAt: today.toISOString()
+                                                                    }));
+                                                                }
+                                                            }}
+                                                            primaryColor={surveyData.branding?.primaryColor || '#26C6DA'}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* 링크 공유 및 QR 코드 */}
@@ -1047,7 +1556,7 @@ const SurveyBuilder = () => {
                                                             }
                                                         }}
                                                         style={{
-                                                            backgroundColor: surveyData.id ? 'var(--primary, #26C6DA)' : '#9CA3AF',
+                                                            backgroundColor: surveyData.id ? '#26C6DA' : '#9CA3AF', // 고정 admin 색상
                                                             color: '#FFFFFF'
                                                         }}
                                                         className="px-6 py-3 font-medium rounded-r-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
@@ -1107,10 +1616,11 @@ const SurveyBuilder = () => {
                                                     aria-label="공개 설문"
                                                     aria-checked={surveyData.isPublic || false}
                                                     role="switch"
-                                                    className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                                                        surveyData.isPublic ? 'bg-primary' : 'bg-gray-300'
-                                                    }`}
-                                                    style={{ padding: '2px' }}
+                                                    className="relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                                                    style={{
+                                                        padding: '2px',
+                                                        backgroundColor: surveyData.isPublic ? '#26C6DA' : '#D1D5DB'
+                                                    }}
                                                 >
                                                     <span className={`inline-block h-4 w-4 rounded-full bg-white transition-all shadow-sm ${
                                                         surveyData.isPublic ? 'translate-x-6' : 'translate-x-0'
@@ -1139,10 +1649,11 @@ const SurveyBuilder = () => {
                                                     aria-label="비밀번호 보호"
                                                     aria-checked={!!surveyData.password}
                                                     role="switch"
-                                                    className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                                                        surveyData.password ? 'bg-primary' : 'bg-gray-300'
-                                                    }`}
-                                                    style={{ padding: '2px' }}
+                                                    className="relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                                                    style={{
+                                                        padding: '2px',
+                                                        backgroundColor: surveyData.password ? '#26C6DA' : '#D1D5DB'
+                                                    }}
                                                 >
                                                     <span className={`inline-block h-4 w-4 rounded-full bg-white transition-all shadow-sm ${
                                                         surveyData.password ? 'translate-x-6' : 'translate-x-0'
@@ -1190,7 +1701,7 @@ const SurveyBuilder = () => {
                                                 onClick={handleSave}
                                                 disabled={loading}
                                                 style={{
-                                                    backgroundColor: loading ? '#9CA3AF' : 'var(--primary, #26C6DA)',
+                                                    backgroundColor: loading ? '#9CA3AF' : '#26C6DA', // 고정 admin 색상
                                                     color: '#FFFFFF'
                                                 }}
                                                 className="w-full px-6 py-3 rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
@@ -1234,8 +1745,8 @@ const SurveyBuilder = () => {
                     </div>
 
                     {/* 오른쪽: 모바일 프리뷰 (고정) */}
-                    <div className="w-[320px] flex-shrink-0">
-                        <div className="sticky top-6">
+                    <div className="w-[391px] flex-shrink-0">
+                        <div className="sticky top-0">
                             <MobilePreview
                                 surveyData={surveyData}
                                 currentTab={currentTab}

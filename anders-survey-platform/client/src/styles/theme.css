@@ -3,7 +3,7 @@
 
 :root {
   /* ===== 색상 (Colors) ===== */
-  --primary: #26C6DA;
+  /* --primary는 index.css에서 --brand-primary로 정의됨 */
   --primary-hover: #00ACC1;
   --secondary: #F59E0B;
   --success: #10B981;
@@ -15,11 +15,10 @@
   --white: #FFFFFF;
   
   /* 호환성을 위한 기존 변수 이름 매핑 */
-  --color-primary: var(--primary);
+  /* --color-primary와 --color-accent는 index.css에서 --primary가 정의된 후 참조됨 */
   --color-primary-hover: var(--primary-hover);
   --color-surface: var(--white);
   --color-on-surface: var(--text-main);
-  --color-accent: var(--primary);
   --color-error: var(--error);
   --color-success: var(--success);
   --color-warning: var(--secondary);

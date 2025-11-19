@@ -20,7 +20,8 @@ export default function QuestionPage({
   onPrevious,
   showPrevious = true,
   color = 'var(--primary)',
-  buttonShape = 'rounded-lg'
+  buttonShape = 'rounded-lg',
+  koreanSpacingWrap = false
 }) {
   const [localAnswer, setLocalAnswer] = useState(answer || '');
   const [error, setError] = useState(null);
@@ -104,8 +105,19 @@ export default function QuestionPage({
           <select
             value={localAnswer || ''}
             onChange={(e) => handleAnswerChange(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
-            style={{ '--tw-ring-color': `${color}40` }}
+            className="w-full px-5 py-3.5 rounded-xl border-2 border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 bg-white transition-all"
+            style={{ 
+              '--tw-ring-color': `${color}40`,
+              fontSize: '15px',
+              fontWeight: 400,
+              letterSpacing: '-0.01em'
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = color;
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#e5e7eb';
+            }}
           >
             <option value="">선택해주세요</option>
             {normalizedOptions.map((option, idx) => (
@@ -118,30 +130,47 @@ export default function QuestionPage({
         const starCount = question.starCount || 5;
         const rating = parseInt(localAnswer) || 0;
         return (
-          <div className="flex items-center gap-2">
-            {Array.from({ length: starCount }).map((_, idx) => {
-              const starValue = idx + 1;
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleAnswerChange(starValue.toString())}
-                  className="focus:outline-none"
-                >
-                  <svg
-                    className={`w-10 h-10 transition-colors ${
-                      starValue <= rating ? 'text-yellow-400' : 'text-gray-300'
-                    }`}
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              {Array.from({ length: starCount }).map((_, idx) => {
+                const starValue = idx + 1;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleAnswerChange(starValue.toString())}
+                    className="focus:outline-none transition-transform active:scale-95"
+                    style={{ transition: 'all 0.2s ease' }}
                   >
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                </button>
-              );
-            })}
+                    <svg
+                      className={`w-11 h-11 transition-all ${
+                        starValue <= rating ? 'text-yellow-400' : 'text-gray-300'
+                      }`}
+                      fill={starValue <= rating ? 'currentColor' : 'none'}
+                      stroke={starValue <= rating ? 'none' : 'currentColor'}
+                      viewBox="0 0 20 20"
+                      style={{ 
+                        strokeWidth: starValue <= rating ? 0 : 1.5,
+                        filter: starValue <= rating ? 'drop-shadow(0 2px 4px rgba(251, 191, 36, 0.3))' : 'none'
+                      }}
+                    >
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  </button>
+                );
+              })}
+            </div>
             {rating > 0 && (
-              <span className="ml-2 text-gray-600 font-medium">{rating}점</span>
+              <span 
+                className="text-gray-700 font-semibold"
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  letterSpacing: '0.01em'
+                }}
+              >
+                {rating}점
+              </span>
             )}
           </div>
         );
@@ -151,11 +180,31 @@ export default function QuestionPage({
         const max = question.scaleMax || 10;
         const scaleValue = parseInt(localAnswer) || min;
         return (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">{question.scaleLeftLabel || min}</span>
-              <span className="text-lg font-bold" style={{ color }}>{scaleValue}</span>
-              <span className="text-sm text-gray-600">{question.scaleRightLabel || max}</span>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between mb-4">
+              <span 
+                className="text-sm text-gray-600 font-medium"
+                style={{ fontSize: '14px', fontWeight: 500 }}
+              >
+                {question.scaleLeftLabel || min}
+              </span>
+              <span 
+                className="text-2xl font-bold"
+                style={{ 
+                  color,
+                  fontSize: '24px',
+                  fontWeight: 700,
+                  letterSpacing: '-0.02em'
+                }}
+              >
+                {scaleValue}
+              </span>
+              <span 
+                className="text-sm text-gray-600 font-medium"
+                style={{ fontSize: '14px', fontWeight: 500 }}
+              >
+                {question.scaleRightLabel || max}
+              </span>
             </div>
             <input
               type="range"
@@ -163,12 +212,13 @@ export default function QuestionPage({
               max={max}
               value={scaleValue}
               onChange={(e) => handleAnswerChange(e.target.value)}
-              className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+              className="w-full h-3 rounded-lg appearance-none cursor-pointer"
               style={{
-                background: `linear-gradient(to right, ${color} 0%, ${color} ${((scaleValue - min) / (max - min)) * 100}%, #E5E7EB ${((scaleValue - min) / (max - min)) * 100}%, #E5E7EB 100%)`
+                background: `linear-gradient(to right, ${color} 0%, ${color} ${((scaleValue - min) / (max - min)) * 100}%, #E5E7EB ${((scaleValue - min) / (max - min)) * 100}%, #E5E7EB 100%)`,
+                outline: 'none'
               }}
             />
-            <div className="flex justify-between text-xs text-gray-500">
+            <div className="flex justify-between text-xs text-gray-500 font-medium" style={{ fontSize: '12px' }}>
               <span>{min}</span>
               <span>{max}</span>
             </div>
@@ -230,9 +280,25 @@ export default function QuestionPage({
             value={localAnswer || ''}
             onChange={(e) => handleAnswerChange(e.target.value)}
             placeholder="답변을 입력해주세요"
-            rows={4}
-            className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 resize-none text-sm"
-            style={{ '--tw-ring-color': `${color}40` }}
+            rows={5}
+            className="w-full px-5 py-3.5 rounded-xl border-2 border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 resize-none bg-white transition-all"
+            style={{ 
+              '--tw-ring-color': `${color}40`,
+              fontSize: '15px',
+              fontWeight: 400,
+              letterSpacing: '-0.01em',
+              lineHeight: '1.6',
+              ...(koreanSpacingWrap ? {
+                wordBreak: 'keep-all',
+                whiteSpace: 'pre-wrap'
+              } : {})
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = color;
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#e5e7eb';
+            }}
           />
         );
 
@@ -247,6 +313,7 @@ export default function QuestionPage({
             error={error}
             required={question.required}
             color={color}
+            koreanSpacingWrap={koreanSpacingWrap}
           />
         );
     }
@@ -269,14 +336,15 @@ export default function QuestionPage({
       </div>
 
       {/* 메인 콘텐츠 - 상단 정렬 */}
-      <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-start overflow-y-auto px-4" style={{ paddingTop: '60px', paddingBottom: '100px', maxHeight: 'calc(100vh - 160px)' }}>
+      <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-start overflow-y-auto px-4" style={{ paddingTop: '72px', paddingBottom: '120px', maxHeight: 'calc(100vh - 160px)' }}>
         {/* 질문 카드 */}
-        <div className="w-full max-w-md mt-2">
+        <div className="w-full max-w-md mt-4">
           <QuestionCard
             questionNumber={questionNumber}
             title={question.title || question.text || question.content || '질문'}
             required={question.required}
             error={error}
+            color={color}
           >
             {renderQuestionContent()}
           </QuestionCard>

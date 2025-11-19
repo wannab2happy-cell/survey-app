@@ -18,10 +18,27 @@
   --card-bg-color: var(--white, #FFFFFF);
   --text-color: var(--text-main, #111827);
   
-  /* Admin 버튼 색상 (요구사항) */
-  --admin-btn-bg: var(--primary, #26C6DA);
-  --admin-btn-text: var(--white, #ffffff);
-  --admin-btn-hover: var(--primary-hover, #00ACC1);
+  /* Admin 버튼 색상 (고정값 - 템플릿 선택과 독립적으로 운영) */
+  --admin-btn-bg: #26C6DA;
+  --admin-btn-text: #ffffff;
+  --admin-btn-hover: #00ACC1;
+  
+  /* 브랜딩 컬러와 Admin 컬러 분리 (theme.css import 후 재정의) */
+  --brand-primary: #26C6DA;  /* 브랜딩 컬러 (JS에서 변경) */
+  --primary: var(--brand-primary);  /* Tailwind가 참조하는 변수 */
+  
+  /* theme.css의 호환성 변수들 재정의 */
+  --color-primary: var(--primary);
+  --color-accent: var(--primary);
+}
+
+/* Admin 영역: --primary를 고정값으로 오버라이드 (모든 하위 요소 포함) */
+.admin-theme,
+.admin-theme * {
+  --primary: #26C6DA !important;
+  --primary-hover: #00ACC1 !important;
+  --color-primary: #26C6DA !important;
+  --color-accent: #26C6DA !important;
 }
 
 /* 2. 전역 폰트 및 기본 스타일 설정 */
@@ -29,6 +46,59 @@
   /* ⭐ Pretendard 폰트를 사용합니다. */
   font-family: var(--font-body, 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif);
   box-sizing: border-box;
+}
+
+/* 날짜 선택 필드의 달력 팝업 스타일링 */
+input[type="date"] {
+  accent-color: var(--brand-primary, #26C6DA);
+  color-scheme: light;
+}
+
+/* 브랜드 컬러가 적용된 날짜 입력 필드 */
+input[type="date"].date-input-branded {
+  accent-color: var(--brand-color, var(--brand-primary, #26C6DA));
+}
+
+/* 라디오 버튼 및 체크박스 색상 */
+input[type="radio"],
+input[type="checkbox"] {
+  accent-color: var(--brand-primary, #26C6DA);
+}
+
+/* 브랜드 컬러가 적용된 라디오 버튼 및 체크박스 */
+input[type="radio"].branded,
+input[type="checkbox"].branded {
+  accent-color: var(--brand-color, var(--brand-primary, #26C6DA));
+}
+
+/* 웹킷 브라우저용 달력 스타일 */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 1;
+}
+
+/* 달력 팝업 내부 스타일 (제한적) */
+input[type="date"]::-webkit-datetime-edit {
+  color: var(--text-main, #111827);
+}
+
+input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+  color: var(--text-main, #111827);
+}
+
+input[type="date"]::-webkit-datetime-edit-text {
+  color: var(--text-main, #111827);
+}
+
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  color: var(--text-main, #111827);
+}
+
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-clear-button {
+  display: none;
 }
 
 body {
@@ -46,7 +116,115 @@ a {
   text-decoration: none;
 }
 
-/* 4. 주요 버튼 스타일 (예시) */
+/* 4. 통일된 버튼 스타일 시스템 */
+
+/* Admin 영역 버튼 (고정 컬러) */
+.admin-theme .btn-primary,
+.admin-theme button[type="button"].btn-primary,
+.admin-theme button.btn-primary {
+  background-color: #26C6DA;
+  color: #ffffff;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.admin-theme .btn-primary:hover,
+.admin-theme button[type="button"].btn-primary:hover,
+.admin-theme button.btn-primary:hover {
+  background-color: #00ACC1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.admin-theme .btn-primary:disabled,
+.admin-theme button[type="button"].btn-primary:disabled,
+.admin-theme button.btn-primary:disabled {
+  background-color: #9CA3AF;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Admin 영역 보조 버튼 */
+.admin-theme .btn-secondary,
+.admin-theme button[type="button"].btn-secondary {
+  background-color: #F3F4F6;
+  color: #374151;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-theme .btn-secondary:hover {
+  background-color: #E5E7EB;
+  border-color: #D1D5DB;
+}
+
+/* 참가자 영역 버튼 (브랜드 컬러) */
+.btn-brand-primary {
+  background-color: var(--brand-primary, #26C6DA);
+  color: #ffffff;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-brand-primary:hover {
+  opacity: 0.9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.btn-brand-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 아이콘 통일 스타일 */
+.btn-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.btn-icon-sm {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-icon-lg {
+  width: 24px;
+  height: 24px;
+}
+
+/* 기존 호환성 유지 */
 .primary-button {
     background-color: var(--dynamic-primary-color);
     color: var(--card-bg-color);

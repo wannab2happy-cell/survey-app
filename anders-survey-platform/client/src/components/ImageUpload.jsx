@@ -200,16 +200,18 @@ const ImageUpload = (props) => {
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           className={`
-            block border-2 border-dashed rounded-lg text-center transition-all duration-200 cursor-pointer
+            block border-2 border-solid rounded-lg transition-all duration-200 cursor-pointer
             ${compact 
-              ? 'p-3' 
-              : 'p-8'
+              ? 'p-2' 
+              : 'p-4'
             }
             ${isDragging 
               ? 'border-primary bg-primary/5' 
-              : 'border-border bg-bg hover:border-primary/50 hover:bg-primary/5'
+              : 'border-gray-200 bg-bg hover:border-primary/50 hover:bg-primary/5'
             }
             focus-within:outline-none focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2
+            ${compact ? 'flex items-center gap-2' : 'text-center'}
+            ${compact ? 'min-h-[72px]' : ''}
           `}
           role="button"
           tabIndex={0}
@@ -229,43 +231,67 @@ const ImageUpload = (props) => {
             onChange={handleFileChange} 
           />
           
-          {/* 업로드 아이콘 */}
-          <div className={`flex justify-center ${compact ? 'mb-2' : 'mb-4'}`}>
-            <UploadIcon className={`${compact ? 'w-6 h-6' : 'w-12 h-12'} ${isDragging ? 'text-primary' : 'text-text-sub'}`} />
-          </div>
-          
-          {/* 드래그 앤 드롭 안내 */}
-          {!compact && (
-            <p className="text-sm text-text-sub mb-4">
-              이미지 파일을 끌어오세요.
-            </p>
-          )}
-          
-          {/* 이미지 선택 버튼 - 클릭 시 이벤트 전파 방지 */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleButtonClick();
-            }}
-            className={`${compact ? 'px-3 py-1.5 text-xs' : 'px-6 py-2.5 text-sm'} rounded-lg font-medium bg-primary text-white hover:bg-primary-hover transition-colors`}
-          >
-            {compact ? '이미지 선택' : '이미지 선택하기'}
-          </button>
-          
-          {/* 가이드 안내 */}
-          {!compact && (
-            <p className="text-xs text-text-sub mt-4">
-              최대 크기: {maxSizeMB}MB{recommendedSize && `, 추천 사이즈: ${recommendedSize}`}
-            </p>
+          {compact ? (
+            // Compact 모드: 가로 레이아웃
+            <>
+              <div className="flex-shrink-0 flex items-center justify-center w-16 h-16 bg-gray-50 rounded-lg border border-gray-200">
+                <UploadIcon className={`w-5 h-5 ${isDragging ? 'text-primary' : 'text-text-sub'}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleButtonClick();
+                  }}
+                  className="px-3 py-1.5 text-xs rounded-lg font-medium bg-primary text-white hover:bg-primary-hover transition-colors mb-1"
+                >
+                  이미지 선택
+                </button>
+                <p className="text-xs text-text-sub">
+                  최대 {maxSizeMB}MB{recommendedSize && ` · ${recommendedSize}`}
+                </p>
+              </div>
+            </>
+          ) : (
+            // 일반 모드: 세로 레이아웃
+            <>
+              {/* 업로드 아이콘 */}
+              <div className="flex justify-center mb-4">
+                <UploadIcon className={`w-12 h-12 ${isDragging ? 'text-primary' : 'text-text-sub'}`} />
+              </div>
+              
+              {/* 드래그 앤 드롭 안내 */}
+              <p className="text-sm text-text-sub mb-4">
+                이미지 파일을 끌어오세요.
+              </p>
+              
+              {/* 이미지 선택 버튼 - 클릭 시 이벤트 전파 방지 */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleButtonClick();
+                }}
+                className="px-6 py-2.5 text-sm rounded-lg font-medium bg-primary text-white hover:bg-primary-hover transition-colors"
+              >
+                이미지 선택하기
+              </button>
+              
+              {/* 가이드 안내 */}
+              <p className="text-sm text-text-sub mt-4">
+                최대 크기: {maxSizeMB}MB{recommendedSize && ` · 추천 사이즈: ${recommendedSize}`}
+              </p>
+            </>
           )}
         </label>
       ) : (
         // 이미지 미리보기 영역 - 전체 클릭 가능
         <label
           htmlFor={inputId}
-          className={`relative block border-2 border-gray-200 rounded-lg bg-white cursor-pointer hover:border-primary/50 transition-colors ${compact ? 'p-2' : 'p-4'}`}
+          className={`relative block border-2 border-gray-200 rounded-lg bg-white cursor-pointer hover:border-primary/50 transition-colors ${compact ? 'p-2 min-h-[72px]' : 'p-4'}`}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
@@ -309,6 +335,27 @@ const ImageUpload = (props) => {
             {!compact && (
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-700 mb-1">이미지가 업로드되었습니다</p>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleButtonClick();
+                    }}
+                    className="text-sm text-[#2dafb9] hover:text-[#27a69f] font-medium"
+                  >
+                    이미지 변경하기
+                  </button>
+                </div>
+                {/* 가이드 안내 */}
+                <p className="text-sm text-text-sub mt-2">
+                  최대 크기: {maxSizeMB}MB{recommendedSize && ` · 추천 사이즈: ${recommendedSize}`}
+                </p>
+              </div>
+            )}
+            {compact && (
+              <div className="flex-1">
                 <button
                   type="button"
                   onClick={(e) => {
@@ -316,24 +363,15 @@ const ImageUpload = (props) => {
                     e.stopPropagation();
                     handleButtonClick();
                   }}
-                  className="text-sm text-[#2dafb9] hover:text-[#27a69f] font-medium"
+                  className="text-xs text-[#2dafb9] hover:text-[#27a69f] font-medium"
                 >
-                  이미지 변경하기
+                  변경
                 </button>
+                {/* 가이드 안내 */}
+                <p className="text-xs text-text-sub mt-1">
+                  최대 크기: {maxSizeMB}MB{recommendedSize && ` · 추천 사이즈: ${recommendedSize}`}
+                </p>
               </div>
-            )}
-            {compact && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleButtonClick();
-                }}
-                className="text-xs text-[#2dafb9] hover:text-[#27a69f] font-medium"
-              >
-                변경
-              </button>
             )}
           </div>
         </label>
