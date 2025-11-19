@@ -1,16 +1,9 @@
 // 설정 페이지
 // Theme V2 스타일: 시스템 설정 및 계정 관리
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import axiosInstance from '../../api/axiosInstance';
-import { 
-  simulateSurveyCreation, 
-  simulateResponseSubmission, 
-  runFullSimulation, 
-  testApiEndpoints 
-} from '../../utils/simulation';
 
 export default function Settings() {
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
@@ -32,21 +25,6 @@ export default function Settings() {
     email: true,
     push: false,
   });
-  // 추가: 시스템 로그 상태
-  const [systemLogs, setSystemLogs] = useState([]);
-  // 추가: 접속자 모니터링 상태
-  const [activeUsers, setActiveUsers] = useState(0);
-  const [dailyActiveUsers, setDailyActiveUsers] = useState(0);
-  // 추가: 시뮬레이션 도구 상태
-  const [simulationConfig, setSimulationConfig] = useState({
-    surveyCount: 1,
-    questionCount: 5,
-    responseCountPerSurvey: 10,
-    delay: 100
-  });
-  const [simulationRunning, setSimulationRunning] = useState(false);
-  const [simulationResults, setSimulationResults] = useState(null);
-  const [apiTestResults, setApiTestResults] = useState(null);
 
 
   // API 키 생성 핸들러
@@ -105,309 +83,16 @@ export default function Settings() {
     setTimeout(() => setMessage({ type: '', text: '' }), 3000);
   };
 
-  // 추가: 접속자 모니터링 데이터 로드
-  useEffect(() => {
-    const fetchActiveUsers = async () => {
-      try {
-        // 백엔드 API가 없을 경우를 대비한 폴백
-        const stored = localStorage.getItem('activeUsers');
-        if (stored) {
-          const data = JSON.parse(stored);
-          setActiveUsers(data.current || 0);
-          setDailyActiveUsers(data.daily || 0);
-        } else {
-          // 모의 데이터 (실제 API 연동 시 제거)
-          setActiveUsers(Math.floor(Math.random() * 50) + 10);
-          setDailyActiveUsers(Math.floor(Math.random() * 200) + 100);
-        }
-      } catch (err) {
-        console.log('접속자 수 조회 실패:', err);
-      }
-    };
-
-    fetchActiveUsers();
-    const interval = setInterval(fetchActiveUsers, 30000); // 30초마다 업데이트
-    
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-text-main mb-2">시스템 설정</h1>
-        <p className="text-text-sub">시스템 전반의 설정을 관리하세요</p>
-      </div>
-
-      {/* 프로젝트 설정 안내 */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="bg-white rounded-xl shadow-md p-6"
-      >
-        <h3 className="text-xl font-bold text-text-main mb-3">시스템 설정</h3>
         <p className="text-text-sub">
-          이곳에서 API 키 설정, 권한 관리, 알림 설정, 시스템 모니터링 등의 관리자 기능을 설정할 수 있습니다.
+          API 키 설정, 권한 관리, 알림 설정 등의 관리자 기능을 설정할 수 있습니다.
           개인 계정 정보는 <Link to="/admin/account" className="text-primary hover:underline">계정 정보</Link> 페이지에서 관리하세요.
         </p>
-      </motion.div>
-
-      {/* 시뮬레이션 도구 - 상단으로 이동 */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.05 }}
-        className="bg-white rounded-xl shadow-md p-6 border-2 border-primary/20"
-      >
-        <h3 className="text-lg font-bold text-text-main mb-4">🔧 시뮬레이션 도구</h3>
-        <p className="text-sm text-text-sub mb-4">
-          설문 생성, 응답 제출, API 테스트를 자동으로 시뮬레이션하여 시스템을 검증합니다.
-        </p>
-        
-        <div className="space-y-4">
-          {/* 시뮬레이션 설정 */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-text-sub mb-2">
-                설문 개수
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="10"
-                value={simulationConfig.surveyCount}
-                onChange={(e) => setSimulationConfig({
-                  ...simulationConfig,
-                  surveyCount: parseInt(e.target.value) || 1
-                })}
-                className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary"
-                disabled={simulationRunning}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-sub mb-2">
-                질문 개수
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="20"
-                value={simulationConfig.questionCount}
-                onChange={(e) => setSimulationConfig({
-                  ...simulationConfig,
-                  questionCount: parseInt(e.target.value) || 5
-                })}
-                className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary"
-                disabled={simulationRunning}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-sub mb-2">
-                설문당 응답 수
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="100"
-                value={simulationConfig.responseCountPerSurvey}
-                onChange={(e) => setSimulationConfig({
-                  ...simulationConfig,
-                  responseCountPerSurvey: parseInt(e.target.value) || 10
-                })}
-                className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary"
-                disabled={simulationRunning}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-sub mb-2">
-                응답 간 지연 (ms)
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="1000"
-                value={simulationConfig.delay}
-                onChange={(e) => setSimulationConfig({
-                  ...simulationConfig,
-                  delay: parseInt(e.target.value) || 100
-                })}
-                className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary"
-                disabled={simulationRunning}
-              />
-            </div>
-          </div>
-
-          {/* 시뮬레이션 버튼 */}
-          <div className="flex gap-2 flex-wrap">
-            <button
-              type="button"
-              onClick={async () => {
-                setSimulationRunning(true);
-                setSimulationResults(null);
-                try {
-                  const result = await runFullSimulation(simulationConfig);
-                  setSimulationResults(result);
-                  setMessage({
-                    type: result.successCount > 0 ? 'success' : 'error',
-                    text: `시뮬레이션 완료: 설문 ${result.totalSurveys}개, 응답 ${result.totalResponses}개 (성공: ${result.successCount}, 실패: ${result.failedCount})`
-                  });
-                } catch (error) {
-                  setMessage({
-                    type: 'error',
-                    text: `시뮬레이션 오류: ${error.message}`
-                  });
-                } finally {
-                  setSimulationRunning(false);
-                }
-              }}
-              disabled={simulationRunning}
-              className="btn-primary"
-            >
-              {simulationRunning ? '실행 중...' : '전체 시뮬레이션 실행'}
-            </button>
-            
-            <button
-              type="button"
-              onClick={async () => {
-                setSimulationRunning(true);
-                try {
-                  const result = await simulateSurveyCreation({
-                    questionCount: simulationConfig.questionCount
-                  });
-                  setMessage({
-                    type: result.success ? 'success' : 'error',
-                    text: result.success 
-                      ? `설문 생성 성공: ${result.surveyId}` 
-                      : `설문 생성 실패: ${result.error}`
-                  });
-                } catch (error) {
-                  setMessage({
-                    type: 'error',
-                    text: `설문 생성 오류: ${error.message}`
-                  });
-                } finally {
-                  setSimulationRunning(false);
-                }
-              }}
-              disabled={simulationRunning}
-              className="btn-secondary"
-              style={{ backgroundColor: '#F59E0B', color: '#ffffff', borderColor: '#F59E0B' }}
-            >
-              설문 생성만
-            </button>
-
-            <button
-              type="button"
-              onClick={async () => {
-                setSimulationRunning(true);
-                setApiTestResults(null);
-                try {
-                  const result = await testApiEndpoints();
-                  setApiTestResults(result);
-                  setMessage({
-                    type: result.failedCount === 0 ? 'success' : 'error',
-                    text: `API 테스트 완료: 성공 ${result.successCount}개, 실패 ${result.failedCount}개`
-                  });
-                } catch (error) {
-                  setMessage({
-                    type: 'error',
-                    text: `API 테스트 오류: ${error.message}`
-                  });
-                } finally {
-                  setSimulationRunning(false);
-                }
-              }}
-              disabled={simulationRunning}
-              className="btn-secondary"
-              style={{ backgroundColor: '#10B981', color: '#ffffff', borderColor: '#10B981' }}
-            >
-              API 엔드포인트 테스트
-            </button>
-          </div>
-
-          {/* 시뮬레이션 결과 */}
-          {simulationResults && (
-            <div className="mt-4 p-4 bg-bg rounded-lg border border-border">
-              <h4 className="text-sm font-bold text-text-main mb-2">시뮬레이션 결과</h4>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-text-sub">실행 시간:</span>
-                  <span className="text-text-main">{(simulationResults.duration / 1000).toFixed(2)}초</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-text-sub">생성된 설문:</span>
-                  <span className="text-text-main">{simulationResults.totalSurveys}개</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-text-sub">총 응답 수:</span>
-                  <span className="text-text-main">{simulationResults.totalResponses}개</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-success">성공:</span>
-                  <span className="text-success font-medium">{simulationResults.successCount}개</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-error">실패:</span>
-                  <span className="text-error font-medium">{simulationResults.failedCount}개</span>
-                </div>
-                {simulationResults.errors && simulationResults.errors.length > 0 && (
-                  <div className="mt-2 pt-2 border-t border-border max-h-40 overflow-y-auto">
-                    <p className="text-error text-xs font-medium mb-1">오류 상세:</p>
-                    {simulationResults.errors.map((err, idx) => (
-                      <div key={idx} className="text-error text-xs mb-1 p-2 bg-error/10 rounded">
-                        <p className="font-medium">{err.type === 'survey_creation' ? '설문 생성 오류' : '응답 제출 오류'}</p>
-                        <p>{err.error}</p>
-                        {err.errorDetails && <p className="text-xs opacity-75 mt-1">{err.errorDetails}</p>}
-                        {err.status && <p className="text-xs opacity-75">HTTP {err.status}</p>}
-                        {err.surveyId && <p className="text-xs opacity-75">설문 ID: {err.surveyId}</p>}
-                        {err.responseNumber && <p className="text-xs opacity-75">응답 번호: {err.responseNumber}</p>}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* API 테스트 결과 */}
-          {apiTestResults && (
-            <div className="mt-4 p-4 bg-bg rounded-lg border border-border">
-              <h4 className="text-sm font-bold text-text-main mb-2">API 테스트 결과</h4>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-text-sub">실행 시간:</span>
-                  <span className="text-text-main">{(apiTestResults.duration / 1000).toFixed(2)}초</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-success">성공:</span>
-                  <span className="text-success font-medium">{apiTestResults.successCount}개</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-error">실패:</span>
-                  <span className="text-error font-medium">{apiTestResults.failedCount}개</span>
-                </div>
-                <div className="mt-2 pt-2 border-t border-border max-h-32 overflow-y-auto">
-                  {apiTestResults.tests && apiTestResults.tests.map((test, idx) => (
-                    <div key={idx} className={`p-2 rounded mb-1 ${test.success ? 'bg-success/10' : 'bg-error/10'}`}>
-                      <div className="flex items-center justify-between">
-                        <span className={`font-medium ${test.success ? 'text-success' : 'text-error'}`}>
-                          {test.endpoint}
-                        </span>
-                        <span className={test.success ? 'text-success' : 'text-error'}>
-                          {test.success ? '✓' : '✗'}
-                        </span>
-                      </div>
-                      {test.error && (
-                        <p className="text-error text-xs mt-1">{test.error}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </motion.div>
+      </div>
 
       {/* 메시지 표시 */}
       {message.text && (
@@ -684,57 +369,11 @@ export default function Settings() {
         </div>
       </motion.div>
 
-      {/* 추가: 접속자 모니터링 */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.5 }}
-        className="bg-white rounded-xl shadow-md p-6"
-      >
-        <h3 className="text-lg font-bold text-text-main mb-4">접속자 모니터링</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
-            <p className="text-sm text-text-sub mb-1">실시간 접속자</p>
-            <p className="text-2xl font-bold text-primary">{activeUsers}</p>
-          </div>
-          <div className="p-4 bg-success/10 rounded-lg border border-success/20">
-            <p className="text-sm text-text-sub mb-1">1일 누적 접속자</p>
-            <p className="text-2xl font-bold text-success">{dailyActiveUsers}</p>
-          </div>
-          <div className="p-4 bg-secondary/10 rounded-lg border border-secondary/20">
-            <p className="text-sm text-text-sub mb-1">7일 추이</p>
-            <p className="text-2xl font-bold text-secondary">준비 중</p>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* 추가: 시스템 로그 */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.6 }}
-        className="bg-white rounded-xl shadow-md p-6"
-      >
-        <h3 className="text-lg font-bold text-text-main mb-4">시스템 로그</h3>
-        <div className="space-y-2 max-h-64 overflow-y-auto">
-          {systemLogs.length === 0 ? (
-            <p className="text-sm text-text-sub text-center py-4">로그가 없습니다.</p>
-          ) : (
-            systemLogs.map((log, idx) => (
-              <div key={idx} className="p-2 bg-bg rounded text-xs text-text-sub">
-                <span className="text-text-main font-medium">{log.type}</span>: {log.message} - {log.timestamp}
-              </div>
-            ))
-          )}
-        </div>
-      </motion.div>
-
-
       {/* 시스템 정보 */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.8 }}
+        transition={{ duration: 0.3, delay: 0.3 }}
         className="bg-white rounded-xl shadow-md p-6"
       >
         <h3 className="text-lg font-bold text-text-main mb-4">시스템 정보</h3>
@@ -745,7 +384,7 @@ export default function Settings() {
           </div>
           <div className="flex justify-between">
             <span className="text-text-sub">환경:</span>
-            <span className="text-text-main font-medium">Development</span>
+            <span className="text-text-main font-medium">{process.env.NODE_ENV === 'production' ? 'Production' : 'Development'}</span>
           </div>
         </div>
       </motion.div>

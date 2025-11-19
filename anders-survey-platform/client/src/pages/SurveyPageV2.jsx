@@ -267,7 +267,7 @@ export default function SurveyPageV2() {
             backgroundColor={tertiaryColor}
             buttonShape={buttonShape}
             buttonOpacity={buttonOpacity}
-            bgImageBase64={survey.branding?.questionBgImageBase64 || survey.cover?.bgImageBase64 || bgImageBase64}
+            bgImageBase64={bgImageBase64}
             koreanSpacingWrap={koreanSpacingWrap}
           />
         );

@@ -192,6 +192,7 @@ export default function Dashboard() {
       let completedResponseCount = 0;
       const responseCounts = [];
       const errors = [];
+      const responseCountMap = {}; // 응답 수 맵 초기화
       
       // 병렬 API 호출로 성능 개선
       const responsePromises = surveysData.map(async (survey) => {

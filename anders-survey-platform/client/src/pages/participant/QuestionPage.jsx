@@ -165,13 +165,18 @@ export default function QuestionPage({
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        backgroundColor: actualBackgroundColor
+        backgroundColor: actualBackgroundColor // 이미지 로딩 전 배경색
       };
     }
     // 배경 이미지가 없으면 그라데이션 배경 사용
+    // background와 backgroundColor를 함께 사용하면 backgroundColor가 우선되므로 background만 사용
+    const gradientStyle = `linear-gradient(135deg, ${actualBackgroundColor} 0%, ${actualSecondaryColor}08 50%, ${actualBackgroundColor} 100%)`;
+    console.log('그라데이션 스타일:', gradientStyle);
+    console.log('actualBackgroundColor:', actualBackgroundColor);
+    console.log('actualSecondaryColor:', actualSecondaryColor);
     return {
-      background: `linear-gradient(135deg, ${actualBackgroundColor} 0%, ${actualSecondaryColor}08 50%, ${actualBackgroundColor} 100%)`,
-      backgroundColor: actualBackgroundColor // 명시적으로 배경색 설정
+      background: gradientStyle,
+      backgroundImage: 'none' // 명시적으로 이미지 없음 설정
     };
   };
 
@@ -471,19 +476,28 @@ export default function QuestionPage({
   };
 
   const bgStyle = getBackgroundStyle();
+  
+  // 디버깅용 로그
+  if (!bgImageBase64 || bgImageBase64.trim() === '') {
+    console.log('배경 이미지 없음 - 그라데이션 적용 시도');
+    console.log('bgStyle:', bgStyle);
+    console.log('actualBackgroundColor:', actualBackgroundColor);
+    console.log('actualSecondaryColor:', actualSecondaryColor);
+  }
 
   return (
     <motion.div 
       className="h-screen flex flex-col items-center justify-center overflow-hidden"
       style={{
-        ...bgStyle,
         width: '100%',
         maxWidth: '100vw',
         minHeight: '100vh',
-        position: 'relative' // 배경이 확실히 보이도록
+        position: 'relative', // 배경이 확실히 보이도록
+        // 배경 스타일을 명시적으로 적용 (다른 스타일보다 우선)
+        ...bgStyle
       }}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      initial={{ opacity: 0, ...bgStyle }}
+      animate={{ opacity: 1, ...bgStyle }}
       transition={{ duration: 0.3 }}
     >
       {/* 진행률 바 - 상단 고정 */}
