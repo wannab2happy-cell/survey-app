@@ -12,7 +12,9 @@ export default function StartPage({
   backgroundColor = '#F3F4F6', // Tertiary 색상 (배경 색상): 전체 배경
   buttonShape = 'rounded-lg', 
   buttonOpacity = 0.9,
-  bgImageBase64 = ''
+  bgImageBase64 = '',
+  showButton = true, // 버튼 표시 여부
+  qrCodeUrl = '' // QR 코드 URL (퍼블리싱 미리보기용)
 }) {
   const coverImage = survey?.cover?.image || survey?.coverImage;
   const title = survey?.title || survey?.cover?.title || '제목';
@@ -170,14 +172,15 @@ export default function StartPage({
         )}
 
         {/* 5. 커버 이미지 영역 - 항상 동일한 높이 유지 (버튼 위치 고정) */}
-        <div 
-          className="w-full"
-          style={{
-            height: '200px',
-            marginTop: '0px',
-            marginBottom: '32px'
-          }}
-        >
+        {showButton && (
+          <div 
+            className="w-full"
+            style={{
+              height: '200px',
+              marginTop: '0px',
+              marginBottom: '32px'
+            }}
+          >
           {coverImage ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -208,65 +211,101 @@ export default function StartPage({
               }}
             />
           )}
-        </div>
+          </div>
+        )}
 
         {/* 6. 설문 참여수 표시 공간 (on/off) - 항상 공간 확보 */}
-        <div
-          style={{ 
-            minHeight: '24px',
-            marginTop: '0px',
-            marginBottom: '24px'
-          }}
-        >
-          {survey?.cover?.showParticipantCount && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3, delay: 0.3 }}
-              className="text-center"
-              style={{ 
-                fontSize: '13px',
-                color: '#666',
-                fontWeight: 500,
-                letterSpacing: '0.01em'
+        {showButton && (
+          <div
+            style={{ 
+              minHeight: '24px',
+              marginTop: '0px',
+              marginBottom: '24px'
+            }}
+          >
+            {survey?.cover?.showParticipantCount && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3, delay: 0.3 }}
+                className="text-center"
+                style={{ 
+                  fontSize: '13px',
+                  color: '#666',
+                  fontWeight: 500,
+                  letterSpacing: '0.01em'
+                }}
+              >
+                현재 <span style={{ color: actualColor, fontWeight: 600 }}>0명</span>이 참여했습니다
+              </motion.div>
+            )}
+          </div>
+        )}
+
+        {/* 7. 시작 버튼 또는 QR 코드 */}
+        {showButton ? (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.4 }}
+            whileHover={{ 
+              scale: 1.02, 
+              boxShadow: `0 8px 24px ${actualColor}40`,
+              background: `linear-gradient(135deg, ${actualColor} 0%, ${actualSecondaryColor} 100%)`
+            }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onStart}
+            className={`w-[80%] ${shapeClass} border-none text-white cursor-pointer mx-auto block flex items-center justify-center gap-2`}
+            style={{
+              padding: '13px 18px',
+              background: `linear-gradient(135deg, ${actualColor} 0%, ${actualSecondaryColor} 100%)`,
+              opacity: buttonOpacity !== undefined ? buttonOpacity : 1,
+              fontSize: '15px',
+              fontWeight: 600,
+              letterSpacing: '0.01em',
+              marginTop: '0px',
+              marginBottom: '10px',
+              boxShadow: `0 4px 12px ${actualColor}30`,
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <span>{buttonText}</span>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ strokeWidth: 2.5 }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </motion.button>
+        ) : qrCodeUrl ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: 0.4 }}
+            className="w-full flex flex-col items-center justify-center"
+            style={{
+              marginTop: '64px',
+              marginBottom: '0px'
+            }}
+          >
+            <div
+              className="bg-white rounded-xl p-4 shadow-lg"
+              style={{
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
               }}
             >
-              현재 <span style={{ color: actualColor, fontWeight: 600 }}>0명</span>이 참여했습니다
-            </motion.div>
-          )}
-        </div>
-
-        {/* 7. 시작 버튼 */}
-        <motion.button
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.4 }}
-          whileHover={{ 
-            scale: 1.02, 
-            boxShadow: `0 8px 24px ${actualColor}40`,
-            background: `linear-gradient(135deg, ${actualColor} 0%, ${actualSecondaryColor} 100%)`
-          }}
-          whileTap={{ scale: 0.98 }}
-          onClick={onStart}
-          className={`w-[80%] ${shapeClass} border-none text-white cursor-pointer mx-auto block flex items-center justify-center gap-2`}
-          style={{
-            padding: '13px 18px',
-            background: `linear-gradient(135deg, ${actualColor} 0%, ${actualSecondaryColor} 100%)`,
-            opacity: buttonOpacity !== undefined ? buttonOpacity : 1,
-            fontSize: '15px',
-            fontWeight: 600,
-            letterSpacing: '0.01em',
-            marginTop: '0px',
-            marginBottom: '10px',
-            boxShadow: `0 4px 12px ${actualColor}30`,
-            transition: 'all 0.2s ease'
-          }}
-        >
-          <span>{buttonText}</span>
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ strokeWidth: 2.5 }}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
-        </motion.button>
+              <img
+                src={qrCodeUrl}
+                alt="QR Code"
+                className="w-[140px] h-[140px]"
+                style={{
+                  display: 'block',
+                  margin: '0 auto'
+                }}
+              />
+            </div>
+            <p className="mt-3 text-sm text-gray-600" style={{ fontSize: '13px', color: actualSecondaryColor }}>
+              QR 코드를 스캔하여 설문에 참여하세요
+            </p>
+          </motion.div>
+        ) : null}
       </div>
     </div>
   );

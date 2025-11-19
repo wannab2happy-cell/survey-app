@@ -64,6 +64,7 @@ const SurveySchema = new mongoose.Schema({
   status: { type: String, enum: ['active', 'inactive', 'scheduled', 'paused'], default: 'inactive' }, // 설문 상태
   startAt: { type: Date }, // 시작 일시
   endAt: { type: Date }, // 종료 일시
+  shareToken: { type: String, default: null }, // 결과 공유 토큰
   createdAt: { type: Date, default: Date.now },
 });
 

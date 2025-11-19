@@ -1,6 +1,7 @@
 // controllers/surveyController.js
 import Survey from "../models/Survey.js";
 import Response from "../models/Response.js";
+import crypto from "crypto";
 
 // ============================================================
 // 1️⃣ 설문 생성 (POST /api/surveys)
@@ -506,6 +507,113 @@ export async function deleteSurvey(req, res) {
     res.status(500).json({ 
       success: false,
       message: "서버 오류로 설문을 삭제할 수 없습니다.",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+}
+
+// ============================================================
+// 7️⃣ 설문 결과 공유 토큰 생성 (POST /api/surveys/:surveyId/share-token)
+// ============================================================
+export async function generateShareToken(req, res) {
+  try {
+    const { surveyId } = req.params;
+
+    // 설문 ID 검증
+    if (!surveyId || !/^[0-9a-fA-F]{24}$/.test(surveyId)) {
+      return res.status(400).json({ 
+        success: false,
+        message: "유효하지 않은 설문 ID입니다." 
+      });
+    }
+
+    // 설문 존재 확인
+    const survey = await Survey.findById(surveyId);
+    if (!survey) {
+      return res.status(404).json({ 
+        success: false,
+        message: "설문을 찾을 수 없습니다." 
+      });
+    }
+
+    // 공유 토큰 생성 (랜덤 문자열)
+    const shareToken = crypto.randomBytes(32).toString('hex');
+
+    // 설문에 토큰 저장
+    survey.shareToken = shareToken;
+    await survey.save();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        shareToken,
+        shareUrl: `${req.protocol}://${req.get('host')}/results/${surveyId}/shared/${shareToken}`
+      }
+    });
+  } catch (error) {
+    console.error("❌ 공유 토큰 생성 오류:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "서버 오류가 발생했습니다.",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+}
+
+// ============================================================
+// 8️⃣ 공유 토큰으로 설문 결과 조회 (GET /api/surveys/:surveyId/results/shared/:token)
+// ============================================================
+export async function getSurveyResultsShared(req, res) {
+  try {
+    const { surveyId, token } = req.params;
+
+    // 설문 ID 검증
+    if (!surveyId || !/^[0-9a-fA-F]{24}$/.test(surveyId)) {
+      return res.status(400).json({ 
+        success: false,
+        message: "유효하지 않은 설문 ID입니다." 
+      });
+    }
+
+    // 설문 존재 확인 및 토큰 검증
+    const survey = await Survey.findById(surveyId);
+    if (!survey) {
+      return res.status(404).json({ 
+        success: false,
+        message: "설문을 찾을 수 없습니다." 
+      });
+    }
+
+    if (!survey.shareToken || survey.shareToken !== token) {
+      return res.status(403).json({ 
+        success: false,
+        message: "유효하지 않은 공유 토큰입니다." 
+      });
+    }
+
+    // 응답 데이터 조회
+    const responses = await Response.find({ surveyId })
+      .sort({ submittedAt: -1 })
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        surveyId,
+        surveyTitle: survey.title,
+        totalResponses: responses.length,
+        results: responses.map((r) => ({
+          id: r._id,
+          answers: r.answers,
+          submittedAt: r.submittedAt,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error("❌ 공유 설문 결과 조회 오류:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "서버 오류가 발생했습니다.",
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }

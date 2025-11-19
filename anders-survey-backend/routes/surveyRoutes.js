@@ -7,6 +7,8 @@ import {
   deleteSurvey,
   submitSurveyResponse,
   getSurveyResults,
+  generateShareToken,
+  getSurveyResultsShared,
 } from "../controllers/SurveyController.js";
 
 const router = express.Router();
@@ -31,5 +33,11 @@ router.post("/:surveyId/response", submitSurveyResponse);
 
 // 설문 결과 조회
 router.get("/:surveyId/results", getSurveyResults);
+
+// 공유 토큰 생성
+router.post("/:surveyId/share-token", generateShareToken);
+
+// 공유 토큰으로 설문 결과 조회 (인증 불필요)
+router.get("/:surveyId/results/shared/:token", getSurveyResultsShared);
 
 export default router;

@@ -118,6 +118,8 @@ const SurveyBuilder = () => {
         step3: false,
         step4: false
     });
+    const [resultsShareUrl, setResultsShareUrl] = useState('');
+    const [generatingShareToken, setGeneratingShareToken] = useState(false);
 
     // 브랜딩 색상을 CSS 변수에 적용 (Admin 스타일은 제외)
     useEffect(() => {
@@ -1014,8 +1016,37 @@ const SurveyBuilder = () => {
         return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
     };
 
+    // 결과 공유 토큰 생성
+    const handleGenerateShareToken = async () => {
+        if (!surveyData.id) {
+            alert('⚠️ 설문을 먼저 저장(생성)해야 공유 링크를 생성할 수 있습니다.');
+            return;
+        }
+
+        try {
+            setGeneratingShareToken(true);
+            const response = await axiosInstance.post(`/surveys/${surveyData.id}/share-token`);
+            
+            if (response.data.success && response.data.data) {
+                const shareUrl = `${window.location.origin}/results/${surveyData.id}/shared/${response.data.data.shareToken}`;
+                setResultsShareUrl(shareUrl);
+                alert('✅ 결과 공유 링크가 생성되었습니다.');
+            } else {
+                throw new Error(response.data.message || '공유 토큰 생성에 실패했습니다.');
+            }
+        } catch (err) {
+            console.error('공유 토큰 생성 오류:', err);
+            alert('⚠️ 공유 토큰 생성에 실패했습니다: ' + (err.response?.data?.message || err.message));
+        } finally {
+            setGeneratingShareToken(false);
+        }
+    };
+
     const surveyUrl = surveyData.id 
         ? `${window.location.origin}/s/${surveyData.id}` 
+        : '';
+    const qrPageUrl = surveyData.id 
+        ? `${window.location.origin}/qr/${surveyData.id}` 
         : '';
 
     return (
@@ -1541,11 +1572,11 @@ const SurveyBuilder = () => {
                                     <div className="bg-white rounded-xl shadow-md p-4">
                                         <h3 className="text-lg font-bold text-text-main mb-4">링크 공유 및 QR 코드</h3>
                                         
-                                        <div className="flex flex-col md:flex-row gap-6 items-start">
-                                            {/* URL 공유 섹션 */}
-                                            <div className="flex-1 space-y-3 w-full">
+                                        <div className="space-y-4">
+                                            {/* 설문 URL 섹션 */}
+                                            <div className="space-y-3">
                                                 <label htmlFor="surveyUrl" className="block text-sm font-medium text-text-sub mb-2">
-                                                    설문 URL
+                                                    설문 참여 URL
                                                 </label>
                                                 <div className="flex gap-2">
                                                     <input
@@ -1593,26 +1624,116 @@ const SurveyBuilder = () => {
                                                     {surveyData.id ? '이 링크를 복사하여 응답자에게 공유하세요.' : '설문을 저장(생성)해야 URL이 확정됩니다.'}
                                                 </p>
                                             </div>
-                                            
-                                            {/* QR 코드 섹션 */}
-                                            <div className="w-32 flex-shrink-0 text-center">
-                                                <h4 className="text-sm font-medium text-text-sub mb-2">QR 코드</h4>
-                                                {surveyData.id && surveyUrl ? (
-                                                    <>
-                                                        <div className="w-32 h-32 border-2 border-border rounded-lg bg-white p-2 flex items-center justify-center mx-auto">
-                                                            <img 
-                                                                src={generateQRCode(surveyUrl)} 
-                                                                alt="QR Code" 
-                                                                className="w-full h-full"
-                                                            />
-                                                        </div>
-                                                        <p className="text-xs text-primary mt-2">저장된 설문의 QR 코드</p>
-                                                    </>
-                                                ) : (
-                                                    <div className="w-32 h-32 border-2 border-dashed border-border rounded-lg bg-bg flex items-center justify-center text-xs text-text-sub mx-auto">
-                                                        설문 저장 후<br />생성
+
+                                            {/* QR 코드 페이지 URL 섹션 */}
+                                            <div className="space-y-3">
+                                                <label htmlFor="qrPageUrl" className="block text-sm font-medium text-text-sub mb-2">
+                                                    QR 코드 페이지 URL (행사용)
+                                                </label>
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        id="qrPageUrl"
+                                                        value={qrPageUrl || `http://localhost:5173/qr/${surveyData.id || 'new'}`}
+                                                        readOnly
+                                                        className="flex-1 border border-border rounded-l-lg px-4 py-3 bg-bg text-text-sub truncate"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={async () => {
+                                                            if (surveyData.id && qrPageUrl) {
+                                                                try {
+                                                                    await navigator.clipboard.writeText(qrPageUrl);
+                                                                    alert('✅ QR 코드 페이지 링크가 클립보드에 복사되었습니다.');
+                                                                } catch (err) {
+                                                                    console.error('클립보드 복사 실패:', err);
+                                                                    const input = document.getElementById('qrPageUrl');
+                                                                    if (input) {
+                                                                        input.select();
+                                                                        document.execCommand('copy');
+                                                                        alert('✅ QR 코드 페이지 링크가 클립보드에 복사되었습니다.');
+                                                                    } else {
+                                                                        alert('⚠️ 클립보드 복사에 실패했습니다.');
+                                                                    }
+                                                                }
+                                                            } else {
+                                                                alert('⚠️ 설문을 먼저 저장(생성)해야 QR 코드 페이지 링크를 복사할 수 있습니다.');
+                                                            }
+                                                        }}
+                                                        style={{
+                                                            backgroundColor: surveyData.id ? '#26C6DA' : '#9CA3AF', // 고정 admin 색상
+                                                            color: '#FFFFFF'
+                                                        }}
+                                                        className="px-6 py-3 font-medium rounded-r-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                                                        disabled={!surveyData.id}
+                                                    >
+                                                        복사
+                                                    </button>
+                                                </div>
+                                                <p className="text-sm text-text-sub mt-2">
+                                                    {surveyData.id ? '행사에서 QR 코드만 표시하는 페이지입니다. 프로젝터나 디스플레이에 표시하여 사용하세요.' : '설문을 저장(생성)해야 URL이 확정됩니다.'}
+                                                </p>
+                                            </div>
+
+                                            {/* 결과 공유 링크 섹션 */}
+                                            <div className="space-y-3">
+                                                <label htmlFor="resultsShareUrl" className="block text-sm font-medium text-text-sub mb-2">
+                                                    결과 공유 링크 (인증 불필요)
+                                                </label>
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        id="resultsShareUrl"
+                                                        value={resultsShareUrl || ''}
+                                                        readOnly
+                                                        placeholder={surveyData.id ? '공유 링크 생성 버튼을 클릭하세요' : '설문을 저장(생성)해야 공유 링크를 생성할 수 있습니다.'}
+                                                        className="flex-1 border border-border rounded-l-lg px-4 py-3 bg-bg text-text-sub truncate"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleGenerateShareToken}
+                                                        disabled={!surveyData.id || generatingShareToken}
+                                                        style={{
+                                                            backgroundColor: (surveyData.id && !generatingShareToken) ? '#26C6DA' : '#9CA3AF', // 고정 admin 색상
+                                                            color: '#FFFFFF'
+                                                        }}
+                                                        className="px-6 py-3 font-medium rounded-r-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                                                    >
+                                                        {generatingShareToken ? '생성 중...' : '링크 생성'}
+                                                    </button>
+                                                </div>
+                                                {resultsShareUrl && (
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={async () => {
+                                                                try {
+                                                                    await navigator.clipboard.writeText(resultsShareUrl);
+                                                                    alert('✅ 결과 공유 링크가 클립보드에 복사되었습니다.');
+                                                                } catch (err) {
+                                                                    const input = document.getElementById('resultsShareUrl');
+                                                                    if (input) {
+                                                                        input.select();
+                                                                        document.execCommand('copy');
+                                                                        alert('✅ 결과 공유 링크가 클립보드에 복사되었습니다.');
+                                                                    }
+                                                                }
+                                                            }}
+                                                            style={{
+                                                                backgroundColor: '#26C6DA',
+                                                                color: '#FFFFFF'
+                                                            }}
+                                                            className="px-4 py-2 font-medium rounded-lg hover:opacity-90 transition shadow-sm hover:shadow-md text-sm"
+                                                        >
+                                                            복사
+                                                        </button>
                                                     </div>
                                                 )}
+                                                <p className="text-sm text-text-sub mt-2">
+                                                    {surveyData.id 
+                                                        ? '이 링크를 통해 다른 사람이 인증 없이 설문 결과를 확인하고 데이터를 다운로드할 수 있습니다.' 
+                                                        : '설문을 저장(생성)해야 공유 링크를 생성할 수 있습니다.'}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
@@ -1775,6 +1896,7 @@ const SurveyBuilder = () => {
                                 surveyData={surveyData}
                                 currentTab={currentTab}
                                 currentQuestionIndex={previewQuestionIndex}
+                                surveyUrl={surveyUrl}
                             />
                         </div>
                     </div>

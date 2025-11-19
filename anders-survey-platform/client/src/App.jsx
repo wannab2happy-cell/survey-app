@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import SurveyBuilder from './components/SurveyBuilder';
 import SurveyPage from './pages/SurveyPage';
 import SurveyPageV2 from './pages/SurveyPageV2';
+import QRCodePage from './pages/QRCodePage';
+import SharedSurveyResults from './pages/SharedSurveyResults';
 import Login from './pages/Login';
 import Admin from './pages/Admin';
 import AdminV2 from './pages/AdminV2';
@@ -41,6 +43,8 @@ function AppContent() {
               <Route path="/s/:slug/q/:step" element={<SurveyPageV2 />} />
               <Route path="/s/:slug/review" element={<SurveyPageV2 />} />
               <Route path="/s/:slug/done" element={<SurveyPageV2 />} />
+              <Route path="/qr/:slug" element={<QRCodePage />} />
+              <Route path="/results/:id/shared/:token" element={<SharedSurveyResults />} />
             </>
           ) : null}
           <Route path="/builder" element={<PrivateRoute element={<SurveyBuilder />} />} />

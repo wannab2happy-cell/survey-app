@@ -31,11 +31,11 @@ ChartJS.register(
   LineElement
 );
 
-export default function SurveyResults() {
+export default function SurveyResults({ survey: propSurvey, results: propResults, isShared = false }) {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [survey, setSurvey] = useState(null);
-  const [results, setResults] = useState(null);
+  const [survey, setSurvey] = useState(propSurvey || null);
+  const [results, setResults] = useState(propResults || null);
   const [filteredResults, setFilteredResults] = useState(null);
   const [selectedResponse, setSelectedResponse] = useState(null);
   const [startDate, setStartDate] = useState('');
@@ -192,8 +192,17 @@ export default function SurveyResults() {
     }
   };
 
-  // 데이터 불러오기
+  // 데이터 불러오기 (props로 전달된 경우 스킵)
   useEffect(() => {
+    // props로 데이터가 전달된 경우 스킵
+    if (propSurvey && propResults) {
+      setSurvey(propSurvey);
+      setResults(propResults);
+      setFilteredResults(propResults.results || []);
+      setLoading(false);
+      return;
+    }
+
     const fetchSurveyResults = async () => {
       try {
         setLoading(true);
@@ -236,7 +245,7 @@ export default function SurveyResults() {
     if (id) {
       fetchSurveyResults();
     }
-  }, [id]);
+  }, [id, propSurvey, propResults]);
 
   // 일자별 추이 데이터 생성
   useEffect(() => {

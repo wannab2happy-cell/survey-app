@@ -8,7 +8,8 @@ export default function MobilePreview({
   surveyData,
   currentTab,
   currentQuestionIndex = 0,
-  previewAnswers = {}
+  previewAnswers = {},
+  surveyUrl = '' // 설문 URL (QR 코드 생성용)
 }) {
   const questions = surveyData?.questions || [];
 
@@ -20,6 +21,9 @@ export default function MobilePreview({
   const backgroundColor = surveyData?.branding?.backgroundColor || '#1a1f2e';
   // 커버의 배경 이미지가 우선, 없으면 브랜딩의 배경 이미지 사용
   const bgImageBase64 = surveyData?.cover?.bgImageBase64 || surveyData?.branding?.bgImageBase64 || '';
+  
+  // QR 코드 URL 생성 (퍼블리싱 탭용)
+  const qrCodeUrl = surveyUrl ? `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(surveyUrl)}` : '';
 
   // 통일된 모바일 프레임 스타일
   const mobileFrameStyle = {
@@ -54,7 +58,7 @@ export default function MobilePreview({
     position: 'relative'
   };
 
-  if (currentTab === 'cover' || currentTab === 'style') {
+  if (currentTab === 'cover' || currentTab === 'style' || currentTab === 'publishing') {
     content = (
       <>
         <style dangerouslySetInnerHTML={{ __html: `
@@ -115,6 +119,8 @@ export default function MobilePreview({
             buttonOpacity={buttonOpacity}
             backgroundColor={backgroundColor}
             bgImageBase64={bgImageBase64}
+            showButton={currentTab !== 'publishing'}
+            qrCodeUrl={currentTab === 'publishing' ? qrCodeUrl : ''}
           />
         </div>
       </>
