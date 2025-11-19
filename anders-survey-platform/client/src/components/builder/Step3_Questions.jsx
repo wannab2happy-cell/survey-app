@@ -357,9 +357,9 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
     return (
         <div className="h-full flex flex-col overflow-hidden" style={{ height: '100%', maxHeight: '100%' }}>
             {/* 문제 섹션 - 고정 헤더 */}
-            <div className="flex-shrink-0 bg-white rounded-xl shadow-md p-4 mb-4">
+            <div className="flex-shrink-0 bg-white rounded-xl shadow-md p-2 mb-2">
                     <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-bold text-text-main">문제</h3>
+                    <h3 className="text-base font-bold text-text-main">문제</h3>
                     {/* 질문 추가 버튼 - 상단에 고정 */}
                     <button
                         type="button"
@@ -380,7 +380,7 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                 
                 {/* 질문 목록 및 개인 정보 수집 설정 - 스크롤 가능 영역 */}
                 <div className="flex-1 overflow-y-auto min-h-0" style={{ overflowY: 'auto', minHeight: 0 }}>
-                    <div className="space-y-4">
+                        <div className="space-y-2">
                     <QuestionList
                         questions={questions}
                         questionTypes={questionTypes}
@@ -586,11 +586,11 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                     </div>
                     
                     {/* 개인 정보 수집 설정 */}
-                    <div className="bg-white rounded-xl shadow-md p-4">
-                <h3 className="text-lg font-bold text-text-main mb-4">개인 정보 수집</h3>
+                    <div className="bg-white rounded-xl shadow-md p-3">
+                <h3 className="text-base font-bold text-text-main mb-2">개인 정보 수집</h3>
                 
                 {/* 개인 정보 수집 활성화 여부 */}
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-2">
                     <label htmlFor="personalInfoEnabled" className="text-sm font-medium text-text-sub">
                         개인 정보 수집
                     </label>

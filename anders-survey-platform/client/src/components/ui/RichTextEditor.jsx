@@ -212,6 +212,7 @@ export default function RichTextEditor({
             <option value={16}>16px</option>
             <option value={18}>18px</option>
             <option value={20}>20px</option>
+            <option value={25}>25px</option>
             <option value={24}>24px</option>
             <option value={28}>28px</option>
             <option value={32}>32px</option>

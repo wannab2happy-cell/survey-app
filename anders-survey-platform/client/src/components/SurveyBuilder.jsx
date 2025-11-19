@@ -135,6 +135,20 @@ const SurveyBuilder = () => {
         }
     }, [surveyData?.branding?.primaryColor]);
 
+    // 브라우저 스크롤 방지
+    useEffect(() => {
+        const originalBodyOverflow = document.body.style.overflow;
+        const originalHtmlOverflow = document.documentElement.style.overflow;
+        
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
+        
+        return () => {
+            document.body.style.overflow = originalBodyOverflow;
+            document.documentElement.style.overflow = originalHtmlOverflow;
+        };
+    }, []);
+
     // 설문 데이터 로드 (수정 모드)
     useEffect(() => {
         const loadSurveyData = async () => {
@@ -414,11 +428,21 @@ const SurveyBuilder = () => {
                 [key]: value
             };
             
-            // 설문지 제목이 변경되면 커버 제목이 비어있을 때만 자동으로 동일하게 설정
+            // 설문지 제목이 변경되면 커버 제목이 비어있거나 설문지 제목과 같을 때 자동으로 동일하게 설정
             if (key === 'title') {
                 const currentCoverTitle = prev.cover?.title || '';
-                // 커버 제목이 비어있을 때만 자동 복사
-                if (!currentCoverTitle || currentCoverTitle.trim() === '') {
+                // HTML 태그 제거하여 순수 텍스트만 비교
+                const getPlainText = (html) => {
+                    if (!html) return '';
+                    const div = document.createElement('div');
+                    div.innerHTML = html;
+                    return div.textContent || div.innerText || '';
+                };
+                const coverTitleText = getPlainText(currentCoverTitle).trim();
+                const newTitleText = (value || '').trim();
+                
+                // 커버 제목이 비어있거나, 커버 제목이 이전 설문지 제목과 같을 때 자동 복사
+                if (!coverTitleText || coverTitleText === getPlainText(prev.title || '').trim()) {
                     updated.cover = {
                         ...prev.cover,
                         title: value
@@ -997,9 +1021,9 @@ const SurveyBuilder = () => {
     return (
         <div className="h-full bg-gray-50 flex overflow-hidden" style={{ height: '100%', maxHeight: '100%', overflow: 'hidden' }}>
             {/* 메인 콘텐츠 영역 */}
-            <div className="flex-1 flex flex-col h-full overflow-hidden w-full">
+            <div className="flex-1 flex flex-col h-full overflow-hidden w-full" style={{ height: '100%', maxHeight: '100%' }}>
                 {/* 상단 헤더 */}
-                <header className="flex-shrink-0" style={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none' }}>
+                <header className="flex-shrink-0 sticky top-0 z-20 bg-white" style={{ backgroundColor: 'white', border: 'none', boxShadow: 'none' }}>
                     {/* 상단 바 - 탭과 저장 버튼 같은 라인 */}
                     <div className="px-6 py-4 bg-white border-b border-gray-200">
                         <div className="flex items-center justify-between">
@@ -1247,9 +1271,9 @@ const SurveyBuilder = () => {
                 </div>
 
                 {/* 메인 콘텐츠 영역 - 좌우 분할 */}
-                <div className="flex-1 flex gap-4 p-4 overflow-hidden" style={{ minHeight: 0, maxHeight: '100%', height: '100%' }}>
+                <div className="flex-1 flex gap-3 p-2 overflow-hidden" style={{ minHeight: 0, maxHeight: '100%', height: '100%' }}>
                     {/* 왼쪽: 편집 영역 (스크롤 가능) */}
-                    <div className="flex-1 overflow-x-hidden pr-2 overflow-y-auto" style={{ height: '100%', minHeight: 0 }}>
+                    <div className="flex-1 overflow-x-hidden pr-1 overflow-y-auto" style={{ height: '100%', minHeight: 0 }}>
                         <div className="max-w-3xl">
                             {currentTab === 'style' && (
                                 <Step1_Settings

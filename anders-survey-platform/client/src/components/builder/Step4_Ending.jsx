@@ -24,12 +24,12 @@ export default function Step4_Ending({ ending, onEndingChange, onImageChange }) 
     }, [onImageChange]);
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-2">
             {/* 엔딩 페이지 섹션 */}
-                <div className="bg-white rounded-xl shadow-md p-4">
-                <h3 className="text-lg font-bold text-text-main mb-4">엔딩 페이지</h3>
+                <div className="bg-white rounded-xl shadow-md p-3">
+                <h3 className="text-base font-bold text-text-main mb-2">엔딩 페이지</h3>
                 
-                <div className="space-y-4">
+                <div className="space-y-2">
                     {/* 완료 제목 */}
                     <div>
                         <label htmlFor="endingTitle" className="block text-sm font-medium text-text-sub mb-2">

@@ -28,12 +28,12 @@ export default function BottomNav({
         ? '#A78BFA'
         : (secondaryColor || '#A78BFA'));
   return (
-    <div className="w-full bg-white border-t border-gray-200 p-5 safe-area-bottom" style={{ boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.04)' }}>
-      <div className="max-w-md mx-auto flex gap-3">
+    <div className="w-full bg-transparent border-t border-gray-200 py-4 px-5 safe-area-bottom" style={{ borderColor: 'rgba(0, 0, 0, 0.1)', boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.04)' }}>
+      <div className="max-w-md mx-auto flex gap-3 justify-center">
         {showPrevious && (
           <button
             onClick={onPrevious}
-            className={`flex-1 px-6 py-3.5 ${buttonShape} border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-all active:scale-95`}
+            className={`px-6 py-3.5 ${buttonShape} border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-all active:scale-95`}
             style={{
               fontSize: '15px',
               fontWeight: 600,
@@ -47,7 +47,7 @@ export default function BottomNav({
         <motion.button
           onClick={onNext}
           disabled={disabled}
-          className={`flex-1 px-6 py-3.5 ${buttonShape} font-semibold text-white transition-all ${
+          className={`w-[50%] px-6 py-3.5 ${buttonShape} font-semibold text-white transition-all ${
             disabled ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90 active:scale-95'
           }`}
           whileHover={disabled ? {} : { 
@@ -60,7 +60,7 @@ export default function BottomNav({
             fontSize: '15px',
             fontWeight: 600,
             letterSpacing: '0.01em',
-            boxShadow: disabled ? 'none' : `0 4px 12px ${actualColor}30`,
+            boxShadow: disabled ? 'none' : `0 4px 12px ${actualColor}30, 0 0 0 1px rgba(0, 0, 0, 0.1)`,
             transition: 'all 0.2s ease'
           }}
         >

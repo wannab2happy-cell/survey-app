@@ -35,14 +35,15 @@ export default function QuestionCard({
       {/* 질문 번호 및 제목 - 중앙 정렬 */}
       <div className="text-center mb-8">
         <div 
-          className="text-5xl font-bold mb-4"
+          className="text-5xl font-bold mb-6"
           style={{ 
             color: actualColor,
+            opacity: 0.8,
             letterSpacing: '-0.03em',
             lineHeight: '1'
           }}
         >
-          Q{questionNumber}
+          Q{questionNumber}.
         </div>
         <h2 
           className="leading-relaxed font-medium"

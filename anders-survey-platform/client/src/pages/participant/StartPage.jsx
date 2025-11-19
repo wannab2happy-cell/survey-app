@@ -100,46 +100,37 @@ export default function StartPage({
           boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)'
         }}
       >
-        {/* 1. 로고 (제일 상단) */}
-        {logoBase64 ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-            className="w-[56px] h-[56px] mx-auto"
-            style={{ 
-              borderRadius: '16px',
-              marginTop: '0px', 
-              marginBottom: '32px',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
-            }}
-          >
-            <img
-              src={logoBase64}
-              alt="Logo"
-              className="w-full h-full object-cover"
-              style={{ borderRadius: '16px' }}
-              onError={(e) => {
-                e.target.style.display = 'none';
+        {/* 1. 로고 (제일 상단) - 위치 고정 */}
+        <div 
+          className="w-[56px] h-[56px] mx-auto"
+          style={{ 
+            marginTop: '0px', 
+            marginBottom: '32px'
+          }}
+        >
+          {logoBase64 ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="w-full h-full"
+              style={{ 
+                borderRadius: '16px',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
               }}
-            />
-          </motion.div>
-        ) : (
-          <div 
-            className="w-[56px] h-[56px] mx-auto border-2 border-dashed flex items-center justify-center"
-            style={{ 
-              borderRadius: '16px',
-              borderColor: '#e0e0e0',
-              marginTop: '0px', 
-              marginBottom: '32px',
-              backgroundColor: '#fafafa'
-            }}
-          >
-            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </div>
-        )}
+            >
+              <img
+                src={logoBase64}
+                alt="Logo"
+                className="w-full h-full object-cover"
+                style={{ borderRadius: '16px' }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            </motion.div>
+          ) : null}
+        </div>
 
         {/* 3. 설문지 제목 - Primary 색상 적용 */}
         <motion.h1
@@ -148,7 +139,7 @@ export default function StartPage({
           transition={{ duration: 0.3, delay: 0.1 }}
           className="m-0 text-center mx-auto"
           style={{ 
-            fontSize: '27px',
+            fontSize: '25px',
             fontWeight: 700,
             color: actualColor, // Primary 색상으로 강조
             letterSpacing: '-0.02em',
@@ -167,7 +158,7 @@ export default function StartPage({
             transition={{ duration: 0.3, delay: 0.15 }}
             className="m-0 text-center mx-auto"
             style={{ 
-              fontSize: '14px',
+              fontSize: '16px',
               color: actualSecondaryColor, // Secondary 색상으로 보조 강조
               fontWeight: 400,
               lineHeight: '1.6',

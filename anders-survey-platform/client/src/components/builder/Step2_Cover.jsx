@@ -27,12 +27,12 @@ export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-2">
             {/* 커버 섹션 */}
-                <div className="bg-white rounded-xl shadow-md p-4">
-                <h3 className="text-lg font-bold text-text-main mb-4">커버</h3>
+                <div className="bg-white rounded-xl shadow-md p-3">
+                <h3 className="text-base font-bold text-text-main mb-2">커버</h3>
                 
-                <div className="space-y-3">
+                <div className="space-y-2">
                     {/* 커버 제목 */}
                     <div>
                         <label htmlFor="coverTitle" className="block text-sm font-medium text-text-sub mb-2">
@@ -44,7 +44,7 @@ export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
                             placeholder="설문 참가자에게 표시될 메인 제목입니다"
                             rows={2}
                             className="border-gray-300"
-                            defaultFontSize={20}
+                            defaultFontSize={25}
                         />
                         <p className="mt-1 text-xs text-text-sub">
                             설문 제목을 입력하면 자동으로 복사됩니다. 필요시 별도로 수정할 수 있습니다.
@@ -213,10 +213,10 @@ export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
             </div>
 
             {/* 설정 섹션 */}
-                <div className="bg-white rounded-xl shadow-md p-4">
-                <h3 className="text-lg font-bold text-text-main mb-4">설정</h3>
+                <div className="bg-white rounded-xl shadow-md p-3">
+                <h3 className="text-base font-bold text-text-main mb-2">설정</h3>
                 
-                <div className="space-y-4">
+                <div className="space-y-2">
                     {/* 커버 페이지 건너뛰기 */}
                     <div className="flex items-center justify-between">
                         <label className="text-sm font-medium text-text-sub">

@@ -44,20 +44,20 @@ export default function AdminV2({ onLogout }) {
         <Topbar />
 
         {/* 콘텐츠 */}
-        <main className="flex-1 pt-16 pb-6 px-6 overflow-y-auto">
+        <main className="flex-1 px-6 overflow-hidden" style={{ height: '100vh', maxHeight: '100vh', overflow: 'hidden', paddingTop: '64px' }}>
           <Suspense fallback={
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary/20 border-t-primary"></div>
             </div>
           }>
             <Routes>
-              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="dashboard" element={<div className="h-full overflow-y-auto pb-6 pt-4"><Dashboard /></div>} />
               <Route path="builder/:id" element={<SurveyBuilder />} />
-              <Route path="results/:id" element={<SurveyResults />} />
+              <Route path="results/:id" element={<div className="h-full overflow-y-auto pb-6 pt-4"><SurveyResults /></div>} />
               <Route path="builder" element={<SurveyBuilder />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="account" element={<Account />} />
-              <Route index element={<SurveyList />} />
+              <Route path="settings" element={<div className="h-full overflow-y-auto pb-6 pt-4"><Settings /></div>} />
+              <Route path="account" element={<div className="h-full overflow-y-auto pb-6 pt-4"><Account /></div>} />
+              <Route index element={<div className="h-full overflow-y-auto pb-6 pt-4"><SurveyList /></div>} />
               <Route path="*" element={<Navigate to="/admin" replace />} />
             </Routes>
           </Suspense>

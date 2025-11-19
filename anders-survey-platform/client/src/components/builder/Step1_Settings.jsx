@@ -79,12 +79,12 @@ export default function Step1_Settings({ form, handleFormChange, onBrandingChang
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-3">
             {/* 설문지 제목 섹션 */}
-            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-bold text-text-main mb-4">설문지 정보</h2>
+            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+                <h2 className="text-lg font-bold text-text-main mb-2">설문지 정보</h2>
                 
-                <div className="space-y-4">
+                <div className="space-y-3">
                     <div>
                         <label htmlFor="surveyTitle" className="block text-sm font-semibold text-text-main mb-2">
                             설문지 제목 <span className="text-red-500">*</span>
@@ -121,13 +121,13 @@ export default function Step1_Settings({ form, handleFormChange, onBrandingChang
             </section>
 
             {/* 스타일 섹션 */}
-            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-bold text-text-main mb-6">스타일</h2>
+            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+                <h2 className="text-lg font-bold text-text-main mb-3">스타일</h2>
                 
                 {/* 참가자 화면 스타일 (템플릿) */}
-                <div className="mb-6">
-                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border-2 border-blue-200 p-5">
-                        <div className="flex items-center justify-between mb-4">
+                <div className="mb-3">
+                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border-2 border-blue-200 p-3">
+                        <div className="flex items-center justify-between mb-2">
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
                                     <div className="w-1 h-5 bg-blue-500 rounded-full"></div>
@@ -159,7 +159,7 @@ export default function Step1_Settings({ form, handleFormChange, onBrandingChang
                         
                         {/* 템플릿 선택 영역 */}
                         {showTemplates && (
-                            <div className="mt-4 pt-4 border-t border-blue-200">
+                            <div className="mt-2 pt-2 border-t border-blue-200">
                                 <CoverTemplates
                                     onTemplateSelect={handleTemplateSelect}
                                     currentBranding={form.branding || {}}
@@ -171,12 +171,12 @@ export default function Step1_Settings({ form, handleFormChange, onBrandingChang
             </section>
 
             {/* 고급 설정 섹션 */}
-            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-bold text-text-main mb-4">고급 설정</h2>
+            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+                <h2 className="text-lg font-bold text-text-main mb-3">고급 설정</h2>
                 
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {/* 한글 띄어쓰기 유지 및 줄바꿈 설정 */}
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                         <div className="flex-1">
                             <label htmlFor="koreanSpacingWrap" className="text-sm font-medium text-text-main cursor-pointer">
                                 한글 띄어쓰기 유지하고 줄바꿈하기

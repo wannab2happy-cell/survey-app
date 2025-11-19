@@ -706,7 +706,21 @@ export default function CoverTemplates({ onTemplateSelect, currentBranding = {} 
                   onClick={showAddModal ? handleAddNew : handleSaveEdit}
                   disabled={!editForm.name || !editForm.description}
                   className="btn-primary flex-1"
-                  style={{ backgroundColor: editForm.colors.primaryColor || '#26C6DA' }}
+                  style={{ 
+                    backgroundColor: editForm.colors.primaryColor || '#26C6DA',
+                    color: (() => {
+                      // 색상 밝기 계산 함수
+                      const getBrightness = (hex) => {
+                        const r = parseInt(hex.slice(1, 3), 16);
+                        const g = parseInt(hex.slice(3, 5), 16);
+                        const b = parseInt(hex.slice(5, 7), 16);
+                        return (r * 299 + g * 587 + b * 114) / 1000;
+                      };
+                      const bgColor = editForm.colors.primaryColor || '#26C6DA';
+                      // 배경색이 밝으면(밝기 > 200) 검은색 텍스트, 어두우면 흰색 텍스트
+                      return getBrightness(bgColor) > 200 ? '#000000' : '#FFFFFF';
+                    })()
+                  }}
                 >
                   {showAddModal ? (
                     <>
