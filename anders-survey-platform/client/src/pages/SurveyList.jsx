@@ -612,8 +612,7 @@ export default function SurveyList({ onLogout }) {
             <p className="text-gray-500 mb-6">새로운 설문을 만들어 시작하세요</p>
             <Link
               to="/admin/builder"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-white font-semibold shadow-lg hover:shadow-xl hover:opacity-90 transition-all"
-              style={{ backgroundColor: '#6B46C1' }}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-white font-semibold shadow-lg hover:shadow-xl hover:opacity-90 transition-all bg-primary hover:bg-primary-hover"
             >
               <PlusIcon className="w-5 h-5" />
               첫 설문 만들기

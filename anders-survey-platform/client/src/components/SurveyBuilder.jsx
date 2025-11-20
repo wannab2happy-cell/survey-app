@@ -73,13 +73,13 @@ const getInitialSurveyData = () => ({
         buttonOpacity: 0.9, // 버튼 투명도 (0.1 ~ 1.0)
         logoBase64: '',
         bgImageBase64: '',
-        backgroundColor: '#1a1f2e',
+        backgroundColor: '#ffffff',
         questionBackgroundColor: '#ffffff',
         questionBgImageBase64: '',
         footerLogoBase64: ''
     },
     advancedSettings: {
-        koreanSpacingWrap: false // 한글 띄어쓰기 유지 및 줄바꿈
+        koreanSpacingWrap: true // 한글 띄어쓰기 유지 및 줄바꿈
     },
     cover: {
         title: '',
@@ -122,7 +122,7 @@ const SurveyBuilder = () => {
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
     const [currentStep, setCurrentStep] = useState(1);
-    const [currentTab, setCurrentTab] = useState('cover'); // 'style', 'cover', 'questions', 'ending', 'publishing'
+    const [currentTab, setCurrentTab] = useState('style'); // 'style', 'cover', 'questions', 'ending', 'publishing'
     const [lastQuestionId, setLastQuestionId] = useState(0);
     const [loadingSurvey, setLoadingSurvey] = useState(false);
     const [previewQuestionIndex, setPreviewQuestionIndex] = useState(0);
@@ -297,6 +297,9 @@ const SurveyBuilder = () => {
                         const maxId = Math.max(...convertedQuestions.map(q => q.id || 0));
                         setLastQuestionId(maxId);
                     }
+                    
+                    // 기존 설문을 불러올 때는 'cover' 탭으로 설정
+                    setCurrentTab('cover');
                 }
             } catch (err) {
                 console.error('설문 데이터 로드 실패:', err);
@@ -306,7 +309,12 @@ const SurveyBuilder = () => {
             }
         };
         
-        loadSurveyData();
+        if (id) {
+            loadSurveyData();
+        } else {
+            // 새 설문을 만들 때는 'style' 탭으로 설정 (이미 초기값으로 설정됨)
+            setCurrentTab('style');
+        }
     }, [id]);
 
     // Step별 검증 함수 (요구사항 1)
