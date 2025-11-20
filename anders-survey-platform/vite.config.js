@@ -14,13 +14,11 @@ export default defineConfig({
     // 프록시 설정: /api로 시작하는 모든 요청을 백엔드 서버(localhost:3000)로 전달
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: process.env.VITE_API_URL,
         changeOrigin: true,
-        // CORS 및 기타 헤더 문제 방지를 위해 rewrite 기능을 사용합니다.
         rewrite: (path) => path.replace(/^\/api/, '/api'),
       },
     },
-  },
 
   // 모듈 해상도 설정 (ESM 사용을 확인)
   resolve: {

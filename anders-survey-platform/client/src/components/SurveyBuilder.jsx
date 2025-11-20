@@ -1659,7 +1659,7 @@ const SurveyBuilder = () => {
                                                     <input
                                                         type="text"
                                                         id="surveyUrl"
-                                                        value={surveyUrl || `http://localhost:5173/surveys/${surveyData.id || 'new'}`}
+                                                        value={surveyUrl || `${window.location.origin}/surveys/${surveyData.id || 'new'}`}
                                                         readOnly
                                                         className="flex-1 border border-border rounded-l-lg px-4 py-2.5 bg-bg text-sm text-text-sub truncate"
                                                     />
@@ -1712,7 +1712,7 @@ const SurveyBuilder = () => {
                                                     <input
                                                         type="text"
                                                         id="qrPageUrl"
-                                                        value={qrPageUrl || `http://localhost:5173/qr/${surveyData.id || 'new'}`}
+                                                        value={qrPageUrl || `${window.location.origin}/qr/${surveyData.id || 'new'}`}
                                                         readOnly
                                                         className="flex-1 border border-border rounded-l-lg px-4 py-2.5 bg-bg text-sm text-text-sub truncate"
                                                     />

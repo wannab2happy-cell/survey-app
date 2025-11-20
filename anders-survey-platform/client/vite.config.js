@@ -14,13 +14,12 @@ export default defineConfig({
     host: '0.0.0.0', // 모든 네트워크 인터페이스에서 접근 가능
     port: 5173,
     proxy: {
-      // 클라이언트 앱에서 /api로 시작하는 모든 요청을 백엔드 서버로 전달
       '/api': {
-        target: 'http://localhost:3001',
+        target: process.env.VITE_API_URL,
         changeOrigin: true,
-        secure: false, // 로컬 환경에서는 false로 설정
-      }
-    }
+        rewrite: (path) => path.replace(/^\/api/, '/api'),
+      },
+    },
   }
   // ⭐⭐⭐ [추가된 설정 끝] ⭐⭐⭐
 });

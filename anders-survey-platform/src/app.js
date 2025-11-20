@@ -19,9 +19,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // CORS 설정
-const allowedOrigins = process.env.CLIENT_URL 
+const allowedOrigins = process.env.CLIENT_URL
   ? process.env.CLIENT_URL.split(',').map(url => url.trim())
-  : ['http://localhost:5173'];
+  : [];
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -131,8 +131,9 @@ const startServer = async () => {
         
         app.listen(PORT, () => {
             console.log('\n==============================================');
-            console.log(`🚀 플랫폼 서버가 http://localhost:${PORT} 에서 실행 중입니다.`);
-            console.log(`📡 API URL: http://localhost:${PORT}/api/`);
+            const serverUrl = process.env.SERVER_URL || `http://localhost:${PORT}`;
+console.log(`🚀 플랫폼 서버 실행 중: ${serverUrl}`);
+console.log(`📡 API URL: ${serverUrl}/api/`);
             console.log(`🌍 환경: ${process.env.NODE_ENV || 'development'}`);
             console.log('==============================================\n');
         });
