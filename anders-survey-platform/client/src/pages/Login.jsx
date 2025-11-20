@@ -13,7 +13,8 @@ export default function Login({ onLogin }) {
     setError('');
 
     try {
-      const res = await axiosInstance.post('/login', {
+      // ⭐ 핵심 수정 포인트: /login → /api/login
+      const res = await axiosInstance.post('/api/login', {
         username: id,
         password,
       });
@@ -21,7 +22,7 @@ export default function Login({ onLogin }) {
       const token = res.data.token;
       localStorage.setItem('token', token);
 
-      // ✅ 로그인 성공 후 관리자 페이지로 이동
+      // 로그인 성공 → 관리자 페이지 이동
       navigate('/admin', { replace: true });
     } catch (err) {
       setError('아이디 또는 비밀번호가 잘못되었습니다.');
@@ -60,7 +61,7 @@ export default function Login({ onLogin }) {
             className="w-full py-2 px-4 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors font-medium"
             style={{
               backgroundColor: 'var(--primary, #26C6DA)',
-              color: '#FFFFFF'
+              color: '#FFFFFF',
             }}
           >
             로그인
