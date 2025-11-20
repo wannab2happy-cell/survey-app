@@ -807,10 +807,37 @@ export default function Dashboard() {
             onChange={(value) => setSelectedSurveyId(value)}
             options={[
               { value: 'all', label: '전체 설문' },
-              ...surveys.map(survey => ({
-                value: survey._id || survey.id,
-                label: survey.title || '제목 없음'
-              }))
+              ...(() => {
+                // 설문 목록과 동일한 정렬 로직 적용
+                const sortedSurveys = [...surveys].sort((a, b) => {
+                  let aVal, bVal;
+                  
+                  switch (sortBy) {
+                    case 'title':
+                      aVal = (a.title || '').toLowerCase();
+                      bVal = (b.title || '').toLowerCase();
+                      break;
+                    case 'responses':
+                      aVal = new Date(a.updatedAt || a.createdAt || 0);
+                      bVal = new Date(b.updatedAt || b.createdAt || 0);
+                      break;
+                    case 'updatedAt':
+                    default:
+                      aVal = new Date(a.updatedAt || a.createdAt || 0);
+                      bVal = new Date(b.updatedAt || b.createdAt || 0);
+                      break;
+                  }
+                  
+                  if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+                  if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+                  return 0;
+                });
+                
+                return sortedSurveys.map(survey => ({
+                  value: survey._id || survey.id,
+                  label: survey.title || '제목 없음'
+                }));
+              })()
             ]}
             placeholder="설문을 선택하세요"
           />

@@ -12,6 +12,19 @@ import MobilePreview from './builder/MobilePreview';
 import SurveyPreviewButton from './SurveyPreviewButton';
 import { PERSONAL_INFO_FIELDS } from '../constants.js';
 import { XCircleIcon, PlayIcon, CalendarIcon, PauseIcon } from './icons.jsx';
+
+// 아이콘 컴포넌트
+const CopyIcon = ({ className }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
+);
+
+const LinkIcon = ({ className }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+    </svg>
+);
 import TimePicker from './TimePicker';
 
 // ISO 8601 문자열을 datetime-local 형식(YYYY-MM-DDTHH:MM)으로 변환하는 헬퍼 함수
@@ -640,7 +653,7 @@ const SurveyBuilder = () => {
             } else if (action === 'delete') {
                 setSurveyData(prev => ({
                     ...prev,
-                    questions: prev.questions.filter(q => q.id !== payload.questionId)
+                    questions: prev.questions.filter(q => (q.id !== payload.questionId) && (q._id !== payload.questionId))
                 }));
             } else if (action === 'reorder') {
                 // 드래그앤드롭으로 순서 변경
@@ -649,13 +662,14 @@ const SurveyBuilder = () => {
                     questions: payload.questions
                 }));
             } else if (action === 'duplicate') {
-                const question = surveyData.questions.find(q => q.id === payload.questionId);
+                const question = surveyData.questions.find(q => (q.id === payload.questionId) || (q._id === payload.questionId));
                 if (question) {
                     const newId = Math.max(lastQuestionId, ...surveyData.questions.map(q => q.id || 0)) + 1;
                     const questionText = question.text || question.title || question.content || '질문';
                     const duplicated = {
                         ...question,
                         id: newId,
+                        _id: undefined, // _id는 제거 (새 질문이므로)
                         title: questionText + ' (복사본)',
                         text: questionText + ' (복사본)',
                         content: questionText + ' (복사본)',
@@ -666,10 +680,17 @@ const SurveyBuilder = () => {
                             return {
                                 ...opt,
                                 id: Date.now() + idx + Math.random() * 1000,
+                                _id: undefined, // 옵션의 _id도 제거
                                 text: opt.text || opt.label || String(opt) || `옵션 ${idx + 1}`,
                                 imageBase64: opt.imageBase64 || opt.image || ''
                             };
-                        })
+                        }),
+                        // 척도 및 별점 관련 필드 명시적으로 복사 (이미 ...question으로 복사되지만 명시적으로 보장)
+                        scaleMin: question.scaleMin ?? 0,
+                        scaleMax: question.scaleMax ?? 10,
+                        scaleLeftLabel: question.scaleLeftLabel || '',
+                        scaleRightLabel: question.scaleRightLabel || '',
+                        starCount: question.starCount ?? 5
                     };
                     setSurveyData(prev => ({
                         ...prev,
@@ -752,12 +773,20 @@ const SurveyBuilder = () => {
             const questions = surveyData.questions.map((q, index) => {
                 let questionType = 'TEXT';
                 const qType = (q.type || '').toLowerCase();
+                // 백엔드 스키마는 options를 [String]으로 기대하므로 모든 옵션을 문자열로 변환
                 let finalOptions = (q.options || []).map(opt => {
                     if (typeof opt === 'string') {
                         return opt;
                     }
-                    return opt.text || opt.label || String(opt);
-                }).filter(opt => opt && opt.trim());
+                    // 객체인 경우 text 필드만 추출 (이미지는 별도 필드로 저장)
+                    if (typeof opt === 'object' && opt !== null) {
+                        return opt.text || opt.label || String(opt);
+                    }
+                    return String(opt);
+                }).filter(opt => {
+                    // 빈 문자열 제거
+                    return opt && typeof opt === 'string' && opt.trim();
+                });
                 
                 // 예/아니오는 RADIO로 변환하고 옵션을 ['예', '아니오']로 설정
                 if (qType === 'yes_no') {
@@ -793,13 +822,34 @@ const SurveyBuilder = () => {
                     throw new Error(`질문 ${index + 1}의 내용이 비어있습니다.`);
                 }
 
-                return {
+                const questionPayload = {
                     content: questionContent.trim(),
                     type: questionType,
                     options: finalOptions,
                     order: index,
                     required: q.required || false
                 };
+                
+                // 척도 설정 추가
+                if (qType === 'scale') {
+                    questionPayload.scaleMin = q.scaleMin ?? 0;
+                    questionPayload.scaleMax = q.scaleMax ?? 10;
+                    questionPayload.scaleLeftLabel = q.scaleLeftLabel || '';
+                    questionPayload.scaleRightLabel = q.scaleRightLabel || '';
+                }
+                
+                // 별점 설정 추가
+                if (qType === 'star_rating') {
+                    questionPayload.starCount = q.starCount ?? 5;
+                }
+                
+                // 이미지 추가 (질문 이미지)
+                if (q.image || q.imageBase64) {
+                    questionPayload.image = q.image || q.imageBase64;
+                    questionPayload.imageBase64 = q.imageBase64 || q.image;
+                }
+                
+                return questionPayload;
             });
 
             let normalizedPersonalInfo = { enabled: false };
@@ -1317,7 +1367,7 @@ const SurveyBuilder = () => {
                 <div className="flex-1 flex gap-3 p-2 overflow-hidden" style={{ minHeight: 0, maxHeight: '100%', height: '100%' }}>
                     {/* 왼쪽: 편집 영역 (스크롤 가능) */}
                     <div className="flex-1 overflow-x-hidden pr-1 overflow-y-auto" style={{ height: '100%', minHeight: 0 }}>
-                        <div className="max-w-3xl">
+                        <div className="max-w-3xl pb-8">
                             {currentTab === 'style' && (
                                 <Step1_Settings
                                     form={surveyData}
@@ -1367,10 +1417,10 @@ const SurveyBuilder = () => {
                             )}
 
                             {currentTab === 'publishing' && (
-                                <div className="space-y-4">
+                                <div className="space-y-2">
                                     {/* 설문 진행 상태 */}
-                                    <div className="bg-white rounded-xl shadow-md p-4">
-                                        <h3 className="text-lg font-bold text-text-main mb-4">설문 진행 상태</h3>
+                                    <div className="bg-white rounded-xl shadow-md p-2">
+                                        <h3 className="text-base font-bold text-text-main mb-2">설문 진행 상태</h3>
                                         
                                         <div className="flex flex-wrap gap-2">
                                             {[
@@ -1440,7 +1490,7 @@ const SurveyBuilder = () => {
 
                                         {/* 시간 설정 섹션 */}
                                         {(surveyData.status === 'active' || surveyData.status === 'scheduled') && (
-                                            <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                                            <div className="mt-2 pt-2 border-t border-gray-200 space-y-2">
                                                 {surveyData.status === 'scheduled' && (
                                                     <div>
                                                         <label className="block text-sm font-medium text-text-sub mb-2">
@@ -1588,12 +1638,12 @@ const SurveyBuilder = () => {
                                     </div>
 
                                     {/* 링크 공유 및 QR 코드 */}
-                                    <div className="bg-white rounded-xl shadow-md p-4">
-                                        <h3 className="text-lg font-bold text-text-main mb-4">링크 공유 및 QR 코드</h3>
+                                    <div className="bg-white rounded-xl shadow-md p-2">
+                                        <h3 className="text-base font-bold text-text-main mb-2">링크 공유 및 QR 코드</h3>
                                         
-                                        <div className="space-y-4">
+                                        <div className="space-y-2">
                                             {/* 설문 URL 섹션 */}
-                                            <div className="space-y-3">
+                                            <div className="space-y-2">
                                                 <label htmlFor="surveyUrl" className="block text-sm font-medium text-text-sub mb-2">
                                                     설문 참여 URL
                                                 </label>
@@ -1603,7 +1653,7 @@ const SurveyBuilder = () => {
                                                         id="surveyUrl"
                                                         value={surveyUrl || `http://localhost:5173/surveys/${surveyData.id || 'new'}`}
                                                         readOnly
-                                                        className="flex-1 border border-border rounded-l-lg px-4 py-3 bg-bg text-text-sub truncate"
+                                                        className="flex-1 border border-border rounded-l-lg px-4 py-2.5 bg-bg text-sm text-text-sub truncate"
                                                     />
                                                     <button
                                                         type="button"
@@ -1633,10 +1683,11 @@ const SurveyBuilder = () => {
                                                             backgroundColor: surveyData.id ? '#26C6DA' : '#9CA3AF', // 고정 admin 색상
                                                             color: '#FFFFFF'
                                                         }}
-                                                        className="px-6 py-3 font-medium rounded-r-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                                                        className="px-3 py-2.5 rounded-r-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md flex items-center justify-center"
                                                         disabled={!surveyData.id}
+                                                        title="복사"
                                                     >
-                                                        복사
+                                                        <CopyIcon className="w-5 h-5" />
                                                     </button>
                                                 </div>
                                                 <p className="text-sm text-text-sub mt-2">
@@ -1645,7 +1696,7 @@ const SurveyBuilder = () => {
                                             </div>
 
                                             {/* QR 코드 페이지 URL 섹션 */}
-                                            <div className="space-y-3">
+                                            <div className="space-y-2">
                                                 <label htmlFor="qrPageUrl" className="block text-sm font-medium text-text-sub mb-2">
                                                     QR 코드 페이지 URL (행사용)
                                                 </label>
@@ -1655,7 +1706,7 @@ const SurveyBuilder = () => {
                                                         id="qrPageUrl"
                                                         value={qrPageUrl || `http://localhost:5173/qr/${surveyData.id || 'new'}`}
                                                         readOnly
-                                                        className="flex-1 border border-border rounded-l-lg px-4 py-3 bg-bg text-text-sub truncate"
+                                                        className="flex-1 border border-border rounded-l-lg px-4 py-2.5 bg-bg text-sm text-text-sub truncate"
                                                     />
                                                     <button
                                                         type="button"
@@ -1683,10 +1734,11 @@ const SurveyBuilder = () => {
                                                             backgroundColor: surveyData.id ? '#26C6DA' : '#9CA3AF', // 고정 admin 색상
                                                             color: '#FFFFFF'
                                                         }}
-                                                        className="px-6 py-3 font-medium rounded-r-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                                                        className="px-3 py-2.5 rounded-r-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md flex items-center justify-center"
                                                         disabled={!surveyData.id}
+                                                        title="복사"
                                                     >
-                                                        복사
+                                                        <CopyIcon className="w-5 h-5" />
                                                     </button>
                                                 </div>
                                                 <p className="text-sm text-text-sub mt-2">
@@ -1695,7 +1747,7 @@ const SurveyBuilder = () => {
                                             </div>
 
                                             {/* 결과 공유 링크 섹션 */}
-                                            <div className="space-y-3">
+                                            <div className="space-y-2">
                                                 <label htmlFor="resultsShareUrl" className="block text-sm font-medium text-text-sub mb-2">
                                                     결과 공유 링크 (인증 불필요)
                                                 </label>
@@ -1706,7 +1758,7 @@ const SurveyBuilder = () => {
                                                         value={resultsShareUrl || ''}
                                                         readOnly
                                                         placeholder={surveyData.id ? '공유 링크 생성 버튼을 클릭하세요' : '설문을 저장(생성)해야 공유 링크를 생성할 수 있습니다.'}
-                                                        className="flex-1 border border-border rounded-l-lg px-4 py-3 bg-bg text-text-sub truncate"
+                                                        className="flex-1 border border-border rounded-l-lg px-4 py-2.5 bg-bg text-sm text-text-sub truncate"
                                                     />
                                                     <button
                                                         type="button"
@@ -1716,9 +1768,16 @@ const SurveyBuilder = () => {
                                                             backgroundColor: (surveyData.id && !generatingShareToken) ? '#26C6DA' : '#9CA3AF', // 고정 admin 색상
                                                             color: '#FFFFFF'
                                                         }}
-                                                        className="px-6 py-3 font-medium rounded-r-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                                                        className="px-3 py-2.5 rounded-r-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md flex items-center justify-center"
+                                                        title={generatingShareToken ? '생성 중...' : '링크 생성'}
                                                     >
-                                                        {generatingShareToken ? '생성 중...' : '링크 생성'}
+                                                        {generatingShareToken ? (
+                                                            <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                            </svg>
+                                                        ) : (
+                                                            <LinkIcon className="w-5 h-5" />
+                                                        )}
                                                     </button>
                                                 </div>
                                                 {resultsShareUrl && (
@@ -1742,9 +1801,10 @@ const SurveyBuilder = () => {
                                                                 backgroundColor: '#26C6DA',
                                                                 color: '#FFFFFF'
                                                             }}
-                                                            className="px-4 py-2 font-medium rounded-lg hover:opacity-90 transition shadow-sm hover:shadow-md text-sm"
+                                                            className="px-3 py-2 rounded-lg hover:opacity-90 transition shadow-sm hover:shadow-md flex items-center justify-center"
+                                                            title="복사"
                                                         >
-                                                            복사
+                                                            <CopyIcon className="w-5 h-5" />
                                                         </button>
                                                     </div>
                                                 )}
@@ -1758,10 +1818,10 @@ const SurveyBuilder = () => {
                                     </div>
 
                                     {/* 공개 설정 */}
-                                    <div className="bg-white rounded-xl shadow-md p-4">
-                                        <h3 className="text-lg font-bold text-text-main mb-4">공개 설정</h3>
+                                    <div className="bg-white rounded-xl shadow-md p-2">
+                                        <h3 className="text-base font-bold text-text-main mb-2">공개 설정</h3>
                                         
-                                        <div className="space-y-4">
+                                        <div className="space-y-2">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex-1">
                                                     <label className="text-sm font-medium text-text-sub">
@@ -1856,10 +1916,10 @@ const SurveyBuilder = () => {
                                     </div>
 
                                     {/* 저장 및 공유 */}
-                                    <div className="bg-white rounded-xl shadow-md p-4">
-                                        <h3 className="text-lg font-bold text-text-main mb-4">저장 및 공유</h3>
+                                    <div className="bg-white rounded-xl shadow-md p-2">
+                                        <h3 className="text-base font-bold text-text-main mb-2">저장 및 공유</h3>
                                         
-                                        <div className="space-y-4">
+                                        <div className="space-y-2">
                                             <button
                                                 type="button"
                                                 onClick={handleSave}

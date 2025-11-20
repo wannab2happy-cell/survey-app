@@ -95,6 +95,7 @@ const QuestionCard = (props) => {
   // 모달 상태
   const [showDropdownModal, setShowDropdownModal] = useState(false);
   const [dropdownText, setDropdownText] = useState('');
+  const [isDropdownComposing, setIsDropdownComposing] = useState(false);
   const dragStartRef = useRef({ x: 0, y: 0, isModalContent: false, isDragging: false });
   
   // 입력 필드 로컬 상태 (입력 반응성 향상)
@@ -553,7 +554,7 @@ const QuestionCard = (props) => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          className="flex items-center gap-3 p-4 bg-white border border-border rounded-lg hover:border-primary/50 transition-all group"
+          className="flex items-center gap-2 p-2 bg-white border border-border rounded-lg hover:border-primary/50 transition-all group"
         >
           {/* 옵션 타입 아이콘 */}
           <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-bg border border-border">
@@ -579,7 +580,7 @@ const QuestionCard = (props) => {
             onCompositionStart={() => handleOptionCompositionStart(optionIndex)}
             onCompositionEnd={(e) => handleOptionCompositionEnd(optionIndex, e)}
             placeholder={`옵션 ${optionIndex + 1}`}
-            className={`flex-1 border border-border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary focus:border-primary transition-all text-sm bg-white ${
+            className={`flex-1 border border-border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary transition-all text-sm bg-white ${
               isNewOption 
                 ? 'text-gray-400' 
                 : 'text-text-main'
@@ -639,11 +640,16 @@ const QuestionCard = (props) => {
     });
   };
 
+  // 드래그 핸들 props 받기
+  const dragHandleProps = props.dragHandleProps || {};
+  const isDragging = props.isDragging || false;
+  const onDragEnd = props.onDragEnd;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-xl shadow-md border border-border p-4 mb-3 cursor-pointer hover:shadow-lg transition-all"
+      animate={{ opacity: isDragging ? 0.5 : 1, y: 0 }}
+      className={`bg-white rounded-xl shadow-md border border-border p-3 mb-2 cursor-pointer hover:shadow-lg transition-all ${isDragging ? 'ring-2 ring-primary ring-opacity-50' : ''}`}
       onClick={(e) => {
         // 버튼, 입력 필드, 링크 등을 클릭한 경우에는 미리보기로 전환하지 않음
         const target = e.target;
@@ -654,27 +660,66 @@ const QuestionCard = (props) => {
                                      target.closest('a') ||
                                      target.closest('[role="button"]') ||
                                      target.closest('.dropdown-modal') ||
-                                     target.closest('.modal-backdrop');
+                                     target.closest('.modal-backdrop') ||
+                                     target.closest('.drag-handle');
         if (!isInteractiveElement) {
           onQuestionSelect(index);
         }
       }}
     >
-      {/* 질문 헤더 - 가로 배치 */}
-      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border flex-wrap">
-        {/* 질문 번호와 제목 */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-white font-bold text-sm">
-            {index + 1}
+      {/* 질문 헤더 - 한 줄로 정리 */}
+      <div className="flex items-center gap-2 mb-2 pb-2 border-b border-border">
+        {/* 드래그 핸들 + 질문 번호 */}
+        <div 
+          className="flex items-center gap-1.5 flex-shrink-0 drag-handle group"
+          {...dragHandleProps}
+          onDragEnd={onDragEnd || dragHandleProps.onDragEnd}
+          style={{ cursor: isDragging ? 'grabbing' : 'grab', ...dragHandleProps.style }}
+          onMouseDown={(e) => {
+            // 드래그 핸들 클릭 시 카드 클릭 이벤트 방지
+            e.stopPropagation();
+            if (dragHandleProps.onMouseDown) {
+              dragHandleProps.onMouseDown(e);
+            }
+          }}
+          title="드래그하여 순서 변경"
+        >
+          {/* 드래그 아이콘 (6개 점) */}
+          <div className="flex flex-col gap-0.5 py-0.5">
+            <div className="flex gap-0.5">
+              <div className="w-1 h-1 rounded-full bg-gray-400 group-hover:bg-gray-600 transition-colors" />
+              <div className="w-1 h-1 rounded-full bg-gray-400 group-hover:bg-gray-600 transition-colors" />
+            </div>
+            <div className="flex gap-0.5">
+              <div className="w-1 h-1 rounded-full bg-gray-400 group-hover:bg-gray-600 transition-colors" />
+              <div className="w-1 h-1 rounded-full bg-gray-400 group-hover:bg-gray-600 transition-colors" />
+            </div>
+            <div className="flex gap-0.5">
+              <div className="w-1 h-1 rounded-full bg-gray-400 group-hover:bg-gray-600 transition-colors" />
+              <div className="w-1 h-1 rounded-full bg-gray-400 group-hover:bg-gray-600 transition-colors" />
+            </div>
           </div>
-          <span className="text-sm font-medium text-text-sub">질문</span>
+          {/* 질문 번호 */}
+          <div 
+            className="flex items-center justify-center min-w-[2rem] h-7 px-2 rounded-lg font-bold text-sm"
+            style={{
+              backgroundColor: '#26C6DA',
+              color: '#FFFFFF',
+              textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)'
+            }}
+          >
+            {index + 1}.
+          </div>
         </div>
         
         {/* 이미지 첨부 토글 */}
         <button
           type="button"
-          onClick={() => onQuestionChange(index, 'show_image_upload', !show_image_upload)}
-          className={`p-2 rounded-lg transition-all flex-shrink-0 ${
+          onClick={(e) => {
+            e.stopPropagation();
+            onQuestionChange(index, 'show_image_upload', !show_image_upload);
+          }}
+          className={`p-1.5 rounded-lg transition-all flex-shrink-0 ${
             show_image_upload 
               ? 'bg-primary/10 text-primary' 
               : 'bg-bg text-text-sub hover:bg-primary/5'
@@ -687,8 +732,11 @@ const QuestionCard = (props) => {
         {/* 필수/선택 버튼 */}
         <button
           type="button"
-          onClick={() => onToggleRequired(index)}
-          className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all flex-shrink-0 ${
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleRequired(index);
+          }}
+          className={`px-2.5 py-1 text-xs font-medium rounded-lg border transition-all flex-shrink-0 ${
             required 
               ? 'text-white border-transparent' 
               : 'bg-white text-text-sub border-border hover:border-gray-400'
@@ -704,8 +752,12 @@ const QuestionCard = (props) => {
         {/* 질문 유형 선택 */}
         <select 
           value={type}
-          onChange={(e) => onQuestionTypeChange(index, e?.target?.value)}
-          className="px-3 py-1.5 text-xs border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white font-medium text-text-main flex-shrink-0"
+          onChange={(e) => {
+            e.stopPropagation();
+            onQuestionTypeChange(index, e?.target?.value);
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className="px-2.5 py-1 text-xs border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white font-medium text-text-main flex-shrink-0"
         >
           <option value="radio">단일 선택</option>
           <option value="checkbox">다중 선택</option>
@@ -725,20 +777,24 @@ const QuestionCard = (props) => {
         <div className="flex items-center gap-1 ml-auto flex-shrink-0">
           <button
             type="button"
-            onClick={() => onDuplicateQuestion(index)}
-            className="p-2 text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-all"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDuplicateQuestion(index);
+            }}
+            className="p-1.5 text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-all"
             title="질문 복제"
           >
             <CopyIcon className="w-4 h-4" />
           </button>
           <button 
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               if (window.confirm('정말로 이 질문을 삭제하시겠습니까?')) {
                 onDeleteQuestion(index);
               }
             }}
-            className="p-2 text-error bg-error/10 rounded-lg hover:bg-error/20 transition-all"
+            className="p-1.5 text-error bg-error/10 rounded-lg hover:bg-error/20 transition-all"
             title="질문 삭제"
           >
             <TrashIcon className="w-4 h-4" />
@@ -747,10 +803,10 @@ const QuestionCard = (props) => {
       </div>
 
       {/* 질문 본문 */}
-      <div className="space-y-4">
+      <div className="space-y-2">
         {/* 질문 제목 입력 */}
         <div>
-          <label className="block text-sm font-medium text-text-sub mb-2">
+          <label className="block text-sm font-medium text-text-sub mb-1.5">
             질문 내용
           </label>
           <input
@@ -786,7 +842,7 @@ const QuestionCard = (props) => {
               }, 0);
             }}
             placeholder="새 질문"
-            className={`w-full text-lg font-medium border border-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white ${
+            className={`w-full text-sm font-medium border border-border rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white ${
               localInputValue && localInputValue.trim() !== ''
                 ? 'text-text-main' 
                 : 'text-gray-400'
@@ -797,7 +853,7 @@ const QuestionCard = (props) => {
 
         {/* 질문 이미지 업로드 */}
         {show_image_upload && (
-          <div className="mt-4">
+          <div className="mt-2">
             <ImageUpload
               label="질문 이미지"
               imageBase64={questionImageBase64}
@@ -811,13 +867,13 @@ const QuestionCard = (props) => {
 
         {/* 드롭다운 설정 */}
         {type === 'dropdown' && (
-          <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
-            <div className="flex items-center justify-between mb-3">
+          <div className="p-2 bg-primary/5 rounded-lg border border-primary/20">
+            <div className="flex items-center justify-between mb-2">
               <label className="text-sm font-medium text-text-main">드롭다운 항목</label>
               <button
                 type="button"
                 onClick={handleOpenDropdownModal}
-                className="px-4 py-2 rounded-lg transition-colors text-sm font-semibold shadow-sm hover:shadow-md"
+                className="px-3 py-1.5 rounded-lg transition-colors text-sm font-medium shadow-sm hover:shadow-md"
                 style={{
                   backgroundColor: '#26C6DA',
                   color: '#FFFFFF',
@@ -839,9 +895,9 @@ const QuestionCard = (props) => {
 
         {/* 척도 설정 */}
         {type === 'scale' && (
-          <div className="p-4 bg-secondary/5 rounded-lg border border-secondary/20 space-y-4">
-            <label className="text-sm font-medium text-text-main block">척도 설정</label>
-            <div className="grid grid-cols-2 gap-4">
+          <div className="p-2 bg-secondary/5 rounded-lg border border-secondary/20 space-y-2">
+            <label className="text-sm font-medium text-text-main block mb-2">척도 설정</label>
+            <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="block text-xs text-text-sub mb-1">최소값</label>
                 <input
@@ -863,7 +919,7 @@ const QuestionCard = (props) => {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="block text-xs text-text-sub mb-1">왼쪽 라벨</label>
                 <input
@@ -917,8 +973,8 @@ const QuestionCard = (props) => {
 
         {/* 별점 설정 */}
         {type === 'star_rating' && (
-          <div className="p-4 bg-secondary/5 rounded-lg border border-secondary/20">
-            <label className="text-sm font-medium text-text-main block mb-3">별점 설정</label>
+          <div className="p-2 bg-secondary/5 rounded-lg border border-secondary/20">
+            <label className="text-sm font-medium text-text-main block mb-2">별점 설정</label>
             <div>
               <label className="block text-xs text-text-sub mb-2">별 개수 (1-10)</label>
               <input
@@ -990,12 +1046,12 @@ const QuestionCard = (props) => {
 
         {/* 옵션 목록 */}
         {(isOptionType || isImageOptionType) && type !== 'dropdown' && type !== 'scale' && type !== 'star_rating' && (
-          <div className="mt-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="mt-2">
+            <div className="flex items-center justify-between mb-2">
               <h4 className="text-sm font-bold text-text-main">옵션 목록</h4>
               <span className="text-xs text-text-sub">{options.length}개</span>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {renderOptions()}
             </div>
             
@@ -1003,9 +1059,9 @@ const QuestionCard = (props) => {
             <button
               type="button"
               onClick={() => onAddOption(index, isImageOptionType)}
-              className="w-full mt-4 py-3 px-4 border-2 border-dashed border-border text-text-sub hover:border-primary hover:text-primary hover:bg-primary/5 rounded-lg transition-all flex items-center justify-center gap-2 font-medium"
+              className="w-full mt-2 py-2 px-3 border-2 border-dashed border-border text-sm text-text-sub hover:border-primary hover:text-primary hover:bg-primary/5 rounded-lg transition-all flex items-center justify-center gap-2 font-medium"
             >
-              <PlusIcon className="w-5 h-5" />
+              <PlusIcon className="w-4 h-4" />
               옵션 추가
             </button>
           </div>
@@ -1013,8 +1069,8 @@ const QuestionCard = (props) => {
 
         {/* 텍스트 타입 안내 */}
         {isTextType && (
-          <div className="p-4 border border-border rounded-lg bg-bg">
-            <p className="text-sm text-text-sub">
+          <div className="p-2 border border-border rounded-lg bg-bg">
+            <p className="text-xs text-text-sub">
               {type === 'text' && '사용자는 짧은 텍스트(단답형)를 입력합니다.'}
               {(type === 'textarea' || type === 'descriptive') && '사용자는 긴 텍스트(서술형)를 입력합니다.'}
               {type === 'email' && '사용자는 이메일 주소를 입력합니다. 이메일 형식이 자동으로 검증됩니다.'}
@@ -1092,9 +1148,9 @@ const QuestionCard = (props) => {
             </div>
 
             {/* 본문 */}
-            <div className="flex-1 overflow-y-auto px-6 py-5">
+            <div className="flex-1 overflow-y-auto px-4 py-3">
               {/* 안내 섹션 */}
-              <div className="mb-4 p-4 rounded-xl border" style={{ backgroundColor: '#F0F9FF', borderColor: '#BAE6FD' }}>
+              <div className="mb-3 p-2 rounded-xl border" style={{ backgroundColor: '#F0F9FF', borderColor: '#BAE6FD' }}>
                 <div className="flex items-start gap-2">
                   <svg className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#0284C7' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1116,18 +1172,34 @@ const QuestionCard = (props) => {
               </div>
 
               {/* 입력 필드 */}
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   항목 목록
                 </label>
                 <textarea
                   value={dropdownText}
                   onChange={(e) => {
                     e.stopPropagation();
-                    setDropdownText(e.target.value);
+                    // 한글 조합 중일 때는 onChange를 무시 (조합 완료 후 onCompositionEnd에서 처리)
+                    if (!isDropdownComposing) {
+                      setDropdownText(e.target.value);
+                    }
                   }}
-                  rows={12}
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-primary focus:border-primary transition-all font-mono text-sm resize-none"
+                  onCompositionStart={(e) => {
+                    e.stopPropagation();
+                    setIsDropdownComposing(true);
+                  }}
+                  onCompositionEnd={(e) => {
+                    e.stopPropagation();
+                    // 조합 완료 후 즉시 값 업데이트 (e.target.value는 조합 완료된 최종 값)
+                    setDropdownText(e.target.value);
+                    // 조합 상태 해제는 다음 틱에서 (onChange가 다시 호출되지 않도록)
+                    setTimeout(() => {
+                      setIsDropdownComposing(false);
+                    }, 0);
+                  }}
+                  rows={10}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary transition-all font-mono text-sm resize-none"
                   style={{
                     backgroundColor: '#FAFAFA',
                     lineHeight: '1.8'
@@ -1140,6 +1212,8 @@ const QuestionCard = (props) => {
                     dragStartRef.current.isModalContent = true;
                   }}
                   onBlur={(e) => {
+                    e.stopPropagation();
+                    setIsDropdownComposing(false);
                     e.target.style.backgroundColor = '#FAFAFA';
                     e.target.style.borderColor = '#E5E7EB';
                   }}
@@ -1173,11 +1247,11 @@ const QuestionCard = (props) => {
 
               {/* 미리보기 */}
               {dropdownText.trim() && (
-                <div className="mt-4 p-4 rounded-xl border border-gray-200 bg-gray-50">
-                  <p className="text-xs font-semibold text-gray-600 mb-2">미리보기</p>
-                  <div className="space-y-1.5">
+                <div className="mt-3 p-2 rounded-lg border border-gray-200 bg-gray-50">
+                  <p className="text-xs font-medium text-gray-600 mb-1.5">미리보기</p>
+                  <div className="space-y-1">
                     {dropdownText.split('\n').filter(line => line.trim()).slice(0, 5).map((item, idx) => (
-                      <div key={idx} className="px-3 py-2 bg-white rounded-lg border border-gray-200 text-sm text-gray-700">
+                      <div key={idx} className="px-2 py-1.5 bg-white rounded-lg border border-gray-200 text-xs text-gray-700">
                         {idx + 1}. {item.trim()}
                       </div>
                     ))}
@@ -1192,11 +1266,11 @@ const QuestionCard = (props) => {
             </div>
 
             {/* 푸터 버튼 */}
-            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex gap-3">
+            <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 flex gap-2">
               <button
                 type="button"
                 onClick={() => setShowDropdownModal(false)}
-                className="flex-1 px-5 py-2.5 border-2 rounded-xl transition-all font-semibold text-sm"
+                className="flex-1 px-3 py-2 border rounded-lg transition-all font-medium text-sm"
                 style={{
                   backgroundColor: '#FFFFFF',
                   color: '#6B7280',
@@ -1218,7 +1292,7 @@ const QuestionCard = (props) => {
               <button
                 type="button"
                 onClick={handleSaveDropdownModal}
-                className="flex-1 px-5 py-2.5 rounded-xl transition-all font-semibold text-sm shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                className="flex-1 px-3 py-2 rounded-lg transition-all font-medium text-sm shadow-sm hover:shadow-md flex items-center justify-center gap-1.5"
                 style={{
                   backgroundColor: '#26C6DA',
                   color: '#FFFFFF',

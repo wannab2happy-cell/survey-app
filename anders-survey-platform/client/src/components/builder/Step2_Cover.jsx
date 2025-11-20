@@ -1,13 +1,11 @@
 // client/src/components/builder/Step2_Cover.jsx (모던 UI 개선)
 
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import ImageUpload from '../ImageUpload';
 import { DocumentIcon } from '../icons';
 import RichTextEditor from '../ui/RichTextEditor';
-import UnsplashImagePicker from '../ui/UnsplashImagePicker';
 
 export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
-    const [showUnsplashPicker, setShowUnsplashPicker] = useState(false);
     
     const handleCoverChange = useCallback((key, value) => {
         onCoverChange('cover', key, value); 
@@ -29,13 +27,13 @@ export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
     return (
         <div className="space-y-2">
             {/* 커버 섹션 */}
-                <div className="bg-white rounded-xl shadow-md p-3">
+                <div className="bg-white rounded-xl shadow-md p-2">
                 <h3 className="text-base font-bold text-text-main mb-2">커버</h3>
                 
                 <div className="space-y-2">
                     {/* 커버 제목 */}
                     <div>
-                        <label htmlFor="coverTitle" className="block text-sm font-medium text-text-sub mb-2">
+                        <label htmlFor="coverTitle" className="block text-sm font-medium text-text-sub mb-1.5">
                             커버 제목
                         </label>
                         <RichTextEditor
@@ -46,14 +44,11 @@ export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
                             className="border-gray-300"
                             defaultFontSize={25}
                         />
-                        <p className="mt-1 text-xs text-text-sub">
-                            설문 제목을 입력하면 자동으로 복사됩니다. 필요시 별도로 수정할 수 있습니다.
-                        </p>
                     </div>
 
                     {/* 부제목 */}
                     <div>
-                        <label htmlFor="coverDescription" className="block text-sm font-medium text-text-sub mb-2">
+                        <label htmlFor="coverDescription" className="block text-sm font-medium text-text-sub mb-1.5">
                             부제목
                         </label>
                         <RichTextEditor
@@ -83,72 +78,21 @@ export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
                         />
                     </div>
 
-                    {/* 타이틀 이미지 - 이미지가 있을 때만 표시 */}
-                    {cover.imageBase64 && cover.imageBase64.trim() !== '' && (
+                    {/* 타이틀 이미지 */}
                     <div>
-                            <ImageUpload
-                                label="타이틀 이미지"
-                                imageBase64={cover.imageBase64 || ''}
-                                onImageChange={(e) => {
-                                    if (e && e.target) {
-                                        handleCoverChange('imageBase64', e.target.value || '');
-                                    }
-                                }}
-                                maxSizeMB={8}
-                                recommendedSize="1280×720"
-                                compact={true}
+                        <ImageUpload
+                            label="타이틀 이미지"
+                            imageBase64={cover.imageBase64 || ''}
+                            onImageChange={(e) => {
+                                if (e && e.target) {
+                                    handleCoverChange('imageBase64', e.target.value || '');
+                                }
+                            }}
+                            maxSizeMB={8}
+                            recommendedSize="1280×720"
+                            compact={true}
                         />
                     </div>
-                    )}
-
-                    {/* 타이틀 이미지 추가 버튼 - 이미지가 없을 때만 표시 */}
-                    {(!cover.imageBase64 || cover.imageBase64.trim() === '') && (
-                    <div>
-                            <label className="block text-sm font-medium text-text-sub mb-2">
-                                타이틀 이미지
-                        </label>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const input = document.createElement('input');
-                                        input.type = 'file';
-                                        input.accept = 'image/*';
-                                        input.onchange = (e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) {
-                                                const reader = new FileReader();
-                                                reader.onloadend = () => {
-                                                    handleCoverChange('imageBase64', reader.result);
-                                                };
-                                                reader.readAsDataURL(file);
-                                            }
-                                        };
-                                        input.click();
-                                    }}
-                                    className="flex-1 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all text-sm font-medium flex items-center justify-center gap-2"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    이미지 선택
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowUnsplashPicker(true)}
-                                    className="px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all text-sm font-medium flex items-center justify-center gap-2"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                    Unsplash
-                                </button>
-                            </div>
-                            <p className="mt-1 text-xs text-text-sub">
-                                최대 8MB · 추천 사이즈: 1280×720
-                            </p>
-                    </div>
-                    )}
 
                     {/* 배경 이미지 */}
                     <div>
@@ -194,7 +138,7 @@ export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
 
                     {/* 6. 버튼 텍스트 입력 */}
                     <div>
-                        <label htmlFor="buttonText" className="block text-sm font-medium text-text-sub mb-2">
+                        <label htmlFor="buttonText" className="block text-sm font-medium text-text-sub mb-1.5">
                             버튼 텍스트
                         </label>
                         <input
@@ -203,7 +147,7 @@ export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
                             value={cover.buttonText || ''}
                             onChange={(e) => handleCoverChange('buttonText', e.target.value)}
                             placeholder="설문 시작하기"
-                            className="w-full text-sm text-text-sub border-0 border-b-2 border-border rounded-none px-0 py-2 focus:ring-0 focus:border-primary transition-all bg-transparent"
+                            className="w-full text-sm text-text-sub border-0 border-b-2 border-border rounded-none px-0 py-1.5 focus:ring-0 focus:border-primary transition-all bg-transparent"
                             style={{ 
                                 borderBottom: '2px solid var(--border, #E5E7EB)'
                             }}
@@ -244,17 +188,6 @@ export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
                     </div>
                 </div>
             </div>
-
-            {/* Unsplash 이미지 선택 모달 */}
-            <UnsplashImagePicker
-                isOpen={showUnsplashPicker}
-                onClose={() => setShowUnsplashPicker(false)}
-                onSelect={(e) => {
-                    if (e && e.target) {
-                        handleCoverChange('imageBase64', e.target.value || '');
-                    }
-                }}
-            />
         </div>
     );
 }

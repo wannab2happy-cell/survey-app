@@ -26,6 +26,8 @@ export default function SurveyPageV2() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [personalInfo, setPersonalInfo] = useState({});
+  const [consentChecked, setConsentChecked] = useState(false);
 
   // 라우트에서 step 파라미터 확인
   useEffect(() => {
@@ -180,10 +182,18 @@ export default function SurveyPageV2() {
         answers: answersArray
       });
       
-      const response = await axiosInstance.post(`/surveys/${slug}/response`, {
+      // 개인정보 수집이 활성화된 경우 개인정보 데이터 포함
+      const payload = {
         answers: answersArray,
         submittedAt: new Date().toISOString()
-      });
+      };
+
+      if (survey?.personalInfo?.enabled) {
+        payload.personalInfo = personalInfo;
+        payload.consentChecked = consentChecked;
+      }
+
+      const response = await axiosInstance.post(`/surveys/${slug}/response`, payload);
 
       if (response.data.success || response.status === 200 || response.status === 201) {
         navigate(`/s/${slug}/done`);
@@ -312,6 +322,10 @@ export default function SurveyPageV2() {
         <ReviewPage
           survey={survey}
           answers={answers}
+          personalInfo={personalInfo}
+          onPersonalInfoChange={setPersonalInfo}
+          consentChecked={consentChecked}
+          onConsentChange={setConsentChecked}
           onEdit={handleEdit}
           onSubmit={handleSubmit}
           onSubmitLoading={isSubmitting}

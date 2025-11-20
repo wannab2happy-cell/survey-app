@@ -42,7 +42,7 @@ export default function Step4_Ending({ ending, onEndingChange, onImageChange }) 
                 <div className="space-y-2">
                     {/* 완료 제목 */}
                     <div>
-                        <label htmlFor="endingTitle" className="block text-sm font-medium text-text-sub mb-2">
+                        <label htmlFor="endingTitle" className="block text-sm font-medium text-text-sub mb-1.5">
                             완료 제목
                         </label>
                         <RichTextEditor
@@ -57,7 +57,7 @@ export default function Step4_Ending({ ending, onEndingChange, onImageChange }) 
 
                     {/* 완료 설명 */}
                     <div>
-                        <label htmlFor="endingDescription" className="block text-sm font-medium text-text-sub mb-2">
+                        <label htmlFor="endingDescription" className="block text-sm font-medium text-text-sub mb-1.5">
                             완료 설명 문구
                         </label>
                         <RichTextEditor
@@ -71,13 +71,13 @@ export default function Step4_Ending({ ending, onEndingChange, onImageChange }) 
                     </div>
 
                     {/* 외부 링크 설정 */}
-                    <div className="pt-4 border-t border-border">
-                        <label className="block text-sm font-medium text-text-sub mb-3">
+                    <div className="pt-2 border-t border-border">
+                        <label className="block text-sm font-medium text-text-sub mb-2">
                             외부 사이트 연결
                         </label>
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                             <div>
-                                <label htmlFor="linkUrl" className="block text-xs font-medium text-text-sub mb-1.5">
+                                <label htmlFor="linkUrl" className="block text-xs font-medium text-text-sub mb-1">
                                     연결할 URL
                                 </label>
                                 <input
@@ -86,24 +86,27 @@ export default function Step4_Ending({ ending, onEndingChange, onImageChange }) 
                                     value={safeEnding.linkUrl || ''}
                                     onChange={(e) => handleEndingChange('linkUrl', e.target.value)}
                                     placeholder="https://example.com"
-                                    className="w-full border border-border rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                    className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                 />
                             </div>
                             <div>
-                                <label htmlFor="linkText" className="block text-xs font-medium text-text-sub mb-1.5">
+                                <label htmlFor="linkText" className="block text-xs font-medium text-text-sub mb-1">
                                     버튼 텍스트
                                 </label>
                                 <input
                                     type="text"
                                     id="linkText"
-                                    value={safeEnding.linkText || '더 알아보기'}
-                                    onChange={(e) => handleEndingChange('linkText', e.target.value)}
+                                    value={safeEnding.linkText ?? '더 알아보기'}
+                                    onChange={(e) => {
+                                        const value = e.target.value || '더 알아보기';
+                                        handleEndingChange('linkText', value);
+                                    }}
                                     placeholder="더 알아보기"
-                                    className="w-full border border-border rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                    className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                 />
                             </div>
                             {safeEnding.linkUrl && (
-                                <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                                <div className="p-2 bg-primary/5 border border-primary/20 rounded-lg">
                                     <p className="text-xs text-text-sub">
                                         <span className="font-medium text-primary">미리보기:</span> 버튼이 "{safeEnding.linkText || '더 알아보기'}"로 표시됩니다.
                                     </p>
@@ -117,11 +120,7 @@ export default function Step4_Ending({ ending, onEndingChange, onImageChange }) 
                         <ImageUpload
                             label="완료 페이지 이미지"
                             imageBase64={safeEnding.imageBase64 || ''}
-                            onImageChange={(e) => {
-                                if (e && e.target) {
-                                    handleEndingChange('imageBase64', e.target.value || '');
-                                }
-                            }}
+                            onImageChange={handleImageFileChange}
                             maxSizeMB={8}
                             recommendedSize="1280×720"
                             compact={true}
@@ -131,10 +130,10 @@ export default function Step4_Ending({ ending, onEndingChange, onImageChange }) 
             </div>
 
             {/* 설정 섹션 */}
-                <div className="bg-white rounded-xl shadow-md p-4">
-                <h3 className="text-lg font-bold text-text-main mb-4">설정</h3>
+                <div className="bg-white rounded-xl shadow-md p-2">
+                <h3 className="text-base font-bold text-text-main mb-2">설정</h3>
                 
-                <div className="space-y-4">
+                <div className="space-y-2">
                     {/* 다시하기 버튼 표시 */}
                     <div className="flex items-center justify-between">
                         <label className="text-sm font-medium text-text-sub">

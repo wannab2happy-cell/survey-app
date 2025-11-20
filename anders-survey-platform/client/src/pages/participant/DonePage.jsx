@@ -19,6 +19,7 @@ export default function DonePage({
   const linkUrl = survey?.ending?.linkUrl || '';
   const linkText = survey?.ending?.linkText || '더 알아보기';
   const showRestartButton = survey?.ending?.showRestartButton || false;
+  const endingImageBase64 = survey?.ending?.imageBase64 || '';
 
   // 색상 처리 (먼저 처리)
   const actualColor = typeof color === 'string' && color.startsWith('#') 
@@ -180,6 +181,27 @@ export default function DonePage({
           }}
           dangerouslySetInnerHTML={{ __html: sanitizeHTML(message || '') }}
         />
+
+        {/* 완료 페이지 이미지 */}
+        {endingImageBase64 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.45 }}
+            className="mb-8 px-4 w-full max-w-md"
+          >
+            <img
+              src={endingImageBase64}
+              alt="완료 이미지"
+              className="w-full h-auto rounded-lg shadow-lg object-cover"
+              style={{ maxHeight: '400px' }}
+              onError={(e) => {
+                console.error('완료 이미지 로드 실패:', endingImageBase64);
+                e.target.style.display = 'none';
+              }}
+            />
+          </motion.div>
+        )}
 
         {/* 외부 링크 버튼 */}
         {linkUrl && (

@@ -55,7 +55,7 @@ export default function AdminV2({ onLogout }) {
               <Route path="builder/:id" element={<SurveyBuilder />} />
               <Route path="results/:id" element={<div className="h-full overflow-y-auto pb-6 pt-4"><SurveyResults /></div>} />
               <Route path="builder" element={<SurveyBuilder />} />
-              <Route path="settings" element={<div className="h-full overflow-y-auto pb-6 pt-4"><Settings /></div>} />
+              <Route path="settings" element={<div className="h-full overflow-y-auto pb-12 pt-4"><Settings /></div>} />
               <Route path="account" element={<div className="h-full overflow-y-auto pb-6 pt-4"><Account /></div>} />
               <Route index element={<div className="h-full overflow-y-auto pb-6 pt-4"><SurveyList /></div>} />
               <Route path="*" element={<Navigate to="/admin" replace />} />

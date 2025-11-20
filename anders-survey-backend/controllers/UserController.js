@@ -1,33 +1,256 @@
-// controllers/UserController.js (Mongoose 버전)
-// ⚠️ 참고: 이 파일은 현재 사용되지 않으며, server.js에서 직접 User 모델을 정의하고 있습니다.
-
+// controllers/UserController.js
 import User from '../models/User.js';
+import crypto from 'crypto';
 
-// --- 임시 인증 함수 ---
-// 실제 암호화 및 토큰 발급 로직이 없으므로 임시로 구현합니다.
+// 사용자 초대
+export const inviteUser = async (req, res) => {
+  try {
+    const { name, email, role } = req.body;
+    const inviterId = req.user?.id; // 인증 미들웨어에서 설정된 사용자 ID
 
-// 사용자 ID를 임시로 설정합니다.
-// 실제 앱에서는 JWT 토큰이나 세션을 통해 인증해야 합니다.
-const TEMP_USER_ID = 1; 
+    // 입력 검증
+    if (!name || !email) {
+      return res.status(400).json({
+        success: false,
+        message: '이름과 이메일을 입력해주세요.'
+      });
+    }
 
-// [TBD: 실제 사용자 ID를 반환하는 미들웨어 필요]
-const getUserIdFromRequest = (req) => { 
-    // 실제로는 req.user.id 등 인증된 사용자 정보를 사용해야 합니다.
-    // 현재는 임시로 고정된 사용자 ID를 반환합니다.
-    return TEMP_USER_ID; 
+    // 이메일 중복 확인
+    const existingUser = await User.findOne({ 
+      $or: [
+        { email: email },
+        { username: email } // 이메일을 username으로도 사용할 수 있음
+      ]
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: '이미 등록된 이메일입니다.'
+      });
+    }
+
+    // 초대 토큰 생성
+    const inviteToken = crypto.randomBytes(32).toString('hex');
+    
+    // 초대 만료일 (7일 후)
+    const invitedAt = new Date();
+    const expiresAt = new Date(invitedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    // 초대된 사용자 생성 (비밀번호는 나중에 설정)
+    const invitedUser = await User.create({
+      username: email, // 임시로 이메일을 username으로 사용
+      email: email,
+      name: name,
+      role: role || 'viewer',
+      inviteToken: inviteToken,
+      invitedBy: inviterId || null,
+      invitedAt: invitedAt,
+      status: 'invited'
+    });
+
+    // 초대 링크 생성 (프론트엔드 URL + 토큰)
+    const baseUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const inviteLink = `${baseUrl}/accept-invite?token=${inviteToken}`;
+
+    res.status(201).json({
+      success: true,
+      message: `${name}님을 초대했습니다.`,
+      data: {
+        user: {
+          id: invitedUser._id,
+          name: invitedUser.name,
+          email: invitedUser.email,
+          role: invitedUser.role,
+          status: invitedUser.status,
+          invitedAt: invitedUser.invitedAt
+        },
+        inviteLink: inviteLink,
+        inviteToken: inviteToken // 개발용, 프로덕션에서는 제거 권장
+      }
+    });
+  } catch (error) {
+    console.error('사용자 초대 오류:', error);
+    res.status(500).json({
+      success: false,
+      message: '사용자 초대 중 오류가 발생했습니다.',
+      error: error.message
+    });
+  }
 };
 
-// 회원가입 (임시)
-const signup = async (req, res) => {
-    // 실제 로직: 데이터 유효성 검사, 비밀번호 해시화, DB 저장
-    res.status(200).json({ message: "Signup function is not fully implemented yet." });
+// 초대된 사용자 목록 조회
+export const getInvitedUsers = async (req, res) => {
+  try {
+    const users = await User.find({ status: 'invited' })
+      .populate('invitedBy', 'username name')
+      .select('-password -inviteToken')
+      .sort({ invitedAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: users
+    });
+  } catch (error) {
+    console.error('초대된 사용자 목록 조회 오류:', error);
+    res.status(500).json({
+      success: false,
+      message: '사용자 목록을 불러오는 중 오류가 발생했습니다.',
+      error: error.message
+    });
+  }
 };
 
-// 로그인 (임시)
-const login = async (req, res) => {
-    // 실제 로직: 사용자 인증, JWT 토큰 발급
-    res.status(200).json({ message: "Login function is not fully implemented yet." });
+// 초대 수락 (토큰으로 사용자 정보 조회)
+export const getInviteByToken = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    const user = await User.findOne({ 
+      inviteToken: token,
+      status: 'invited'
+    }).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: '유효하지 않거나 만료된 초대 링크입니다.'
+      });
+    }
+
+    // 초대 만료 확인 (7일)
+    const daysSinceInvite = (new Date() - user.invitedAt) / (1000 * 60 * 60 * 24);
+    if (daysSinceInvite > 7) {
+      return res.status(400).json({
+        success: false,
+        message: '초대 링크가 만료되었습니다.'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('초대 토큰 조회 오류:', error);
+    res.status(500).json({
+      success: false,
+      message: '초대 정보를 불러오는 중 오류가 발생했습니다.',
+      error: error.message
+    });
+  }
 };
 
-// 최종 내보내기: 라우터에서 사용할 모든 함수들을 명시적으로 named export 합니다.
-export { getUserIdFromRequest, signup, login };
+// 초대 수락 처리 (비밀번호 설정)
+export const acceptInvite = async (req, res) => {
+  try {
+    const { token, password, username } = req.body;
+
+    if (!token || !password || !username) {
+      return res.status(400).json({
+        success: false,
+        message: '토큰, 사용자명, 비밀번호를 모두 입력해주세요.'
+      });
+    }
+
+    const user = await User.findOne({ 
+      inviteToken: token,
+      status: 'invited'
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: '유효하지 않거나 만료된 초대 링크입니다.'
+      });
+    }
+
+    // 초대 만료 확인
+    const daysSinceInvite = (new Date() - user.invitedAt) / (1000 * 60 * 60 * 24);
+    if (daysSinceInvite > 7) {
+      return res.status(400).json({
+        success: false,
+        message: '초대 링크가 만료되었습니다.'
+      });
+    }
+
+    // username 중복 확인
+    const existingUsername = await User.findOne({ username });
+    if (existingUsername && existingUsername._id.toString() !== user._id.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: '이미 사용 중인 사용자명입니다.'
+      });
+    }
+
+    // 비밀번호 해시화
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 사용자 정보 업데이트
+    user.username = username;
+    user.password = hashedPassword;
+    user.status = 'active';
+    user.inviteAcceptedAt = new Date();
+    user.inviteToken = undefined; // 토큰 제거
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: '초대가 수락되었습니다. 로그인해주세요.',
+      data: {
+        id: user._id,
+        username: user.username,
+        email: user.email
+      }
+    });
+  } catch (error) {
+    console.error('초대 수락 오류:', error);
+    res.status(500).json({
+      success: false,
+      message: '초대 수락 처리 중 오류가 발생했습니다.',
+      error: error.message
+    });
+  }
+};
+
+// 초대 취소/삭제
+export const deleteInvite = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: '사용자를 찾을 수 없습니다.'
+      });
+    }
+
+    if (user.status !== 'invited') {
+      return res.status(400).json({
+        success: false,
+        message: '초대 상태가 아닌 사용자는 삭제할 수 없습니다.'
+      });
+    }
+
+    await User.findByIdAndDelete(userId);
+
+    res.status(200).json({
+      success: true,
+      message: '초대가 취소되었습니다.'
+    });
+  } catch (error) {
+    console.error('초대 취소 오류:', error);
+    res.status(500).json({
+      success: false,
+      message: '초대 취소 중 오류가 발생했습니다.',
+      error: error.message
+    });
+  }
+};

@@ -81,13 +81,6 @@ export default function StartPage({
 
   const actualBackgroundColor = resolveColorValue(backgroundColor);
 
-  // 디버깅: 배경색 확인
-  console.log('[StartPage] 배경색 정보:', {
-    backgroundColor,
-    actualBackgroundColor,
-    bgImageBase64: bgImageBase64 ? '있음' : '없음'
-  });
-
   // 배경 스타일 결정 (그라데이션 + 배경 이미지)
   const getBackgroundStyle = () => {
     const isValidImage = bgImageBase64 && 
@@ -110,9 +103,6 @@ export default function StartPage({
   };
 
   const bgStyle = getBackgroundStyle();
-  
-  // 디버깅: 최종 배경 스타일 확인
-  console.log('[StartPage] 최종 배경 스타일:', bgStyle);
 
   // buttonShape에 따른 클래스 매핑 (샘플은 pill 형태)
   const getShapeClass = () => {
@@ -192,16 +182,16 @@ export default function StartPage({
             >
               <img
                 src={logoBase64}
-                alt="Logo"
+            alt="Logo"
                 className="w-full h-full object-cover"
                 style={{ borderRadius: '16px' }}
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
+            onError={(e) => {
+              e.target.style.display = 'none';
+            }}
+          />
             </motion.div>
           ) : null}
-        </div>
+      </div>
 
         {/* 3. 설문지 제목 - Primary 색상 적용 */}
         <motion.h1
@@ -250,7 +240,7 @@ export default function StartPage({
               marginBottom: '32px'
             }}
           >
-          {coverImage ? (
+        {coverImage ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -261,15 +251,15 @@ export default function StartPage({
                 boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)'
               }}
             >
-              <img
-                src={coverImage}
-                alt="Cover"
+            <img
+              src={coverImage}
+              alt="Cover"
                 className="w-full h-full object-cover"
                 style={{ borderRadius: '20px' }}
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
             </motion.div>
           ) : (
             // 이미지가 없을 때도 동일한 높이의 투명 공간 유지
@@ -299,31 +289,37 @@ export default function StartPage({
                 transition={{ duration: 0.3, delay: 0.3 }}
                 className="text-center"
                 style={{ 
-                  fontSize: '13px',
-                  color: '#666',
-                  fontWeight: 500,
-                  letterSpacing: '0.01em'
+                  fontSize: '15px',
+                  color: '#1F2937',
+                  fontWeight: 700,
+                  letterSpacing: '0.01em',
+                  textShadow: '0 1px 2px rgba(255, 255, 255, 0.8), 0 1px 1px rgba(0, 0, 0, 0.1)',
+                  padding: '8px 12px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: '8px',
+                  display: 'inline-block',
+                  backdropFilter: 'blur(4px)'
                 }}
               >
-                현재 <span style={{ color: actualColor, fontWeight: 600 }}>0명</span>이 참여했습니다
+                현재 <span style={{ color: actualColor, fontWeight: 800, textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}>0명</span>이 참여했습니다
               </motion.div>
             )}
-          </div>
-        )}
+        </div>
+      )}
 
         {/* 7. 시작 버튼 또는 QR 코드 */}
         {showButton ? (
-          <motion.button
+      <motion.button
             initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+        animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.4 }}
             whileHover={{ 
               scale: 1.02, 
               boxShadow: `0 8px 24px ${actualColor}40`,
               background: `linear-gradient(135deg, ${actualColor} 0%, ${actualSecondaryColor} 100%)`
             }}
-            whileTap={{ scale: 0.98 }}
-            onClick={onStart}
+        whileTap={{ scale: 0.98 }}
+        onClick={onStart}
             className={`w-[80%] ${shapeClass} border-none text-white cursor-pointer mx-auto block flex items-center justify-center gap-2`}
             style={{
               padding: '13px 18px',
@@ -341,8 +337,8 @@ export default function StartPage({
             <span>{buttonText}</span>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ strokeWidth: 2.5 }}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </motion.button>
+          </svg>
+      </motion.button>
         ) : qrCodeUrl ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}

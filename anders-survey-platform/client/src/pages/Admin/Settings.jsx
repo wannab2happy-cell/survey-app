@@ -1,9 +1,10 @@
 // 설정 페이지
 // Theme V2 스타일: 시스템 설정 및 계정 관리
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import axiosInstance from '../../api/axiosInstance';
 
 export default function Settings() {
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
@@ -17,6 +18,7 @@ export default function Settings() {
     { id: 1, name: '관리자', email: 'admin@example.com', role: 'admin', lastLogin: '2024-12-19' }
   ]);
   const [newUser, setNewUser] = useState({ name: '', email: '', role: 'viewer' });
+  const [loadingInvite, setLoadingInvite] = useState(false);
   // 추가: 알림 설정 상태
   const [notifications, setNotifications] = useState({
     surveyClosed: true,
@@ -25,6 +27,39 @@ export default function Settings() {
     email: true,
     push: false,
   });
+
+  // 초대된 사용자 목록 로드
+  useEffect(() => {
+    const fetchInvitedUsers = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const response = await axiosInstance.get('/users/invited', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (response.data.success && response.data.data) {
+          // API 응답 형식에 맞게 변환
+          const invitedUsers = response.data.data.map(user => ({
+            id: user._id || user.id,
+            name: user.name || user.username,
+            email: user.email,
+            role: user.role,
+            lastLogin: user.invitedAt ? new Date(user.invitedAt).toLocaleDateString('ko-KR') : '초대됨'
+          }));
+          setUsers(invitedUsers);
+        }
+      } catch (error) {
+        console.error('초대된 사용자 목록 로드 오류:', error);
+        // 에러가 발생해도 기존 사용자 목록은 유지
+      }
+    };
+
+    fetchInvitedUsers();
+  }, []);
 
 
   // API 키 생성 핸들러
@@ -63,29 +98,127 @@ export default function Settings() {
   };
 
   // 추가: 사용자 초대 핸들러
-  const handleInviteUser = () => {
+  const handleInviteUser = async () => {
     if (!newUser.name || !newUser.email) {
       setMessage({ type: 'error', text: '이름과 이메일을 입력해주세요.' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       return;
     }
 
-    const newUserData = {
-      id: Date.now(),
-      ...newUser,
-      lastLogin: '초대됨',
-    };
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newUser.email)) {
+      setMessage({ type: 'error', text: '올바른 이메일 형식을 입력해주세요.' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      return;
+    }
 
-    setUsers([...users, newUserData]);
-    setNewUser({ name: '', email: '', role: 'viewer' });
-    setShowUserModal(false);
-    setMessage({ type: 'success', text: `${newUserData.name}님을 초대했습니다.` });
-    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    setLoadingInvite(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setMessage({ type: 'error', text: '로그인이 필요합니다.' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+        setLoadingInvite(false);
+        return;
+      }
+
+      const response = await axiosInstance.post(
+        '/users/invite',
+        {
+          name: newUser.name,
+          email: newUser.email,
+          role: newUser.role || 'viewer'
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        // 성공 메시지에 초대 링크 포함
+        const inviteLink = response.data.data?.inviteLink || '';
+        const successMessage = inviteLink 
+          ? `${newUser.name}님을 초대했습니다. 초대 링크: ${inviteLink}`
+          : `${newUser.name}님을 초대했습니다.`;
+
+        setMessage({ type: 'success', text: successMessage });
+        
+        // 사용자 목록에 추가
+        const newUserData = {
+          id: response.data.data?.user?.id,
+          name: response.data.data?.user?.name || newUser.name,
+          email: response.data.data?.user?.email || newUser.email,
+          role: response.data.data?.user?.role || newUser.role,
+          lastLogin: '초대됨'
+        };
+        setUsers([...users, newUserData]);
+        
+        // 폼 초기화
+        setNewUser({ name: '', email: '', role: 'viewer' });
+        setShowUserModal(false);
+        
+        // 초대 링크를 클립보드에 복사 (선택사항)
+        if (inviteLink && navigator.clipboard) {
+          navigator.clipboard.writeText(inviteLink).catch(() => {
+            // 복사 실패해도 무시
+          });
+        }
+      } else {
+        setMessage({ type: 'error', text: response.data.message || '초대에 실패했습니다.' });
+      }
+    } catch (error) {
+      console.error('사용자 초대 오류:', error);
+      const errorMessage = error.response?.data?.message || '사용자 초대 중 오류가 발생했습니다.';
+      setMessage({ type: 'error', text: errorMessage });
+    } finally {
+      setLoadingInvite(false);
+      setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+    }
+  };
+
+  // 초대 취소 핸들러
+  const handleDeleteInvite = async (userId) => {
+    if (!window.confirm('정말로 이 초대를 취소하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setMessage({ type: 'error', text: '로그인이 필요합니다.' });
+        return;
+      }
+
+      const response = await axiosInstance.delete(`/users/invite/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.data.success) {
+        setUsers(users.filter(u => u.id !== userId));
+        setMessage({ type: 'success', text: '초대가 취소되었습니다.' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      } else {
+        setMessage({ type: 'error', text: response.data.message || '초대 취소에 실패했습니다.' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      }
+    } catch (error) {
+      console.error('초대 취소 오류:', error);
+      const errorMessage = error.response?.data?.message || '초대 취소 중 오류가 발생했습니다.';
+      setMessage({ type: 'error', text: errorMessage });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    }
   };
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-8">
       <div>
         <h1 className="text-3xl font-bold text-text-main mb-2">시스템 설정</h1>
         <p className="text-text-sub">
@@ -224,13 +357,7 @@ export default function Settings() {
                 </select>
                 <button
                   type="button"
-                  onClick={() => {
-                    if (window.confirm(`${user.name}을(를) 삭제하시겠습니까?`)) {
-                      setUsers(users.filter(u => u.id !== user.id));
-                      setMessage({ type: 'success', text: '사용자가 삭제되었습니다.' });
-                      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-                    }
-                  }}
+                  onClick={() => handleDeleteInvite(user.id)}
                   className="btn-secondary text-xs"
                   style={{ backgroundColor: '#EF4444', color: '#ffffff', borderColor: '#EF4444' }}
                 >
@@ -396,7 +523,7 @@ export default function Settings() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-xl p-6 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-xl p-6 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto pb-8"
           >
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-text-main">API 키 관리</h3>
@@ -574,9 +701,10 @@ export default function Settings() {
                 <button
                   type="button"
                   onClick={handleInviteUser}
-                  className="btn-primary flex-1"
+                  disabled={loadingInvite}
+                  className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  초대하기
+                  {loadingInvite ? '초대 중...' : '초대하기'}
                 </button>
                 <button
                   onClick={() => {

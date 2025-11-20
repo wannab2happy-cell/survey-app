@@ -104,12 +104,12 @@ export default function Step1_Settings({ form, handleFormChange, onBrandingChang
     return (
         <div className="space-y-3">
             {/* 설문지 제목 섹션 */}
-            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
-                <h2 className="text-lg font-bold text-text-main mb-2">설문지 정보</h2>
+            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-2">
+                <h2 className="text-base font-bold text-text-main mb-2">설문지 정보</h2>
                 
-                <div className="space-y-3">
+                <div className="space-y-2">
                     <div>
-                        <label htmlFor="surveyTitle" className="block text-sm font-semibold text-text-main mb-2">
+                        <label htmlFor="surveyTitle" className="block text-sm font-medium text-text-main mb-1.5">
                             설문지 제목 <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -122,7 +122,7 @@ export default function Step1_Settings({ form, handleFormChange, onBrandingChang
                             onCompositionEnd={handleCompositionEnd}
                             placeholder="설문지 제목을 입력하세요"
                             maxLength={100}
-                            className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 text-base focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white hover:border-gray-300"
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white hover:border-gray-300"
                             style={{
                                 borderColor: form?.branding?.primaryColor || '#E5E7EB',
                                 focusRingColor: form?.branding?.primaryColor || '#26C6DA'
@@ -144,12 +144,12 @@ export default function Step1_Settings({ form, handleFormChange, onBrandingChang
             </section>
 
             {/* 스타일 섹션 */}
-            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
-                <h2 className="text-lg font-bold text-text-main mb-3">스타일</h2>
+            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-2">
+                <h2 className="text-base font-bold text-text-main mb-2">스타일</h2>
                 
                 {/* 참가자 화면 스타일 (템플릿) */}
-                <div className="mb-3">
-                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border-2 border-blue-200 p-3">
+                <div className="mb-2">
+                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border-2 border-blue-200 p-2">
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
@@ -194,12 +194,12 @@ export default function Step1_Settings({ form, handleFormChange, onBrandingChang
             </section>
 
             {/* 고급 설정 섹션 */}
-            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
-                <h2 className="text-lg font-bold text-text-main mb-3">고급 설정</h2>
+            <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-2">
+                <h2 className="text-base font-bold text-text-main mb-2">고급 설정</h2>
                 
-                <div className="space-y-3">
+                <div className="space-y-2">
                     {/* 한글 띄어쓰기 유지 및 줄바꿈 설정 */}
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200">
                         <div className="flex-1">
                             <label htmlFor="koreanSpacingWrap" className="text-sm font-medium text-text-main cursor-pointer">
                                 한글 띄어쓰기 유지하고 줄바꿈하기

@@ -13,6 +13,7 @@ import bcrypt from "bcryptjs";
 import surveyRoutes from "./routes/surveyRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import brandingRoutes from "./routes/brandingRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 import { verifyToken, optionalVerifyToken } from "./middlewares/auth.js";
 import { loginUser } from "./controllers/authController.js";
 import User from "./models/User.js";
@@ -118,6 +119,7 @@ app.post("/api/login", loginUser);
 // 설문 라우트: 토큰이 있으면 검증하고, 없으면 그냥 통과 (선택적 인증)
 app.use("/api/surveys", optionalVerifyToken, surveyRoutes);
 app.use("/api/admin/dashboard", verifyToken, dashboardRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/branding", brandingRoutes); // 브랜딩 라우트 (인증 불필요)
 
 // =============================================

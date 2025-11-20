@@ -1,7 +1,7 @@
 // 참가자용 질문 페이지
 // anders 스타일: 원 스크린 원 포커스, 진행률 바, 하단 네비게이션
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import ProgressBar from '../../components/ui/ProgressBar';
 import QuestionCard from '../../components/ui/QuestionCard';
@@ -29,6 +29,8 @@ export default function QuestionPage({
 }) {
   const [localAnswer, setLocalAnswer] = useState(answer || '');
   const [error, setError] = useState(null);
+  const scaleSliderRef = useRef(null);
+  const [bubbleLeft, setBubbleLeft] = useState(0);
 
   useEffect(() => {
     setLocalAnswer(answer || '');
@@ -37,6 +39,21 @@ export default function QuestionPage({
 
   const questionId = question._id || question.id;
   const questionType = (question.type || '').toUpperCase().trim();
+
+  // 척도 슬라이더 값 풍선 위치 업데이트
+  useEffect(() => {
+    if (questionType === 'SCALE' && scaleSliderRef.current) {
+      const min = question.scaleMin || 1;
+      const max = question.scaleMax || 10;
+      const scaleValue = parseInt(localAnswer) || min;
+      const percentage = ((scaleValue - min) / (max - min)) * 100;
+      
+      const containerWidth = scaleSliderRef.current.offsetWidth;
+      const trackWidth = containerWidth - 24; // padding 제외
+      const leftPosition = 12 + (percentage / 100) * trackWidth;
+      setBubbleLeft(leftPosition);
+    }
+  }, [localAnswer, questionType, question.scaleMin, question.scaleMax]);
   const normalizedOptions = (question.options || []).map(opt => {
     if (typeof opt === 'string') {
       return opt;
@@ -303,11 +320,25 @@ export default function QuestionPage({
       case 'STAR_RATING':
         const starCount = question.starCount || 5;
         const rating = parseInt(localAnswer) || 0;
+        
+        // 브랜딩 색상을 rgba로 변환 (그림자 효과용)
+        const hexToRgba = (hex, alpha = 0.3) => {
+          const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+          if (result) {
+            const r = parseInt(result[1], 16);
+            const g = parseInt(result[2], 16);
+            const b = parseInt(result[3], 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+          }
+          return `rgba(251, 191, 36, ${alpha})`; // 기본값
+        };
+        
         return (
           <div className="w-[80%] mx-auto flex flex-col items-center gap-4">
             <div className="flex items-center gap-1.5 justify-center">
               {Array.from({ length: starCount }).map((_, idx) => {
                 const starValue = idx + 1;
+                const isSelected = starValue <= rating;
                 return (
                   <button
                     key={idx}
@@ -318,14 +349,15 @@ export default function QuestionPage({
                   >
                     <svg
                       className={`w-11 h-11 transition-all ${
-                        starValue <= rating ? 'text-yellow-400' : 'text-gray-300'
+                        isSelected ? '' : 'text-gray-300'
                       }`}
-                      fill={starValue <= rating ? 'currentColor' : 'none'}
-                      stroke={starValue <= rating ? 'none' : 'currentColor'}
+                      fill={isSelected ? actualColor : 'none'}
+                      stroke={isSelected ? 'none' : 'currentColor'}
                       viewBox="0 0 20 20"
                       style={{ 
-                        strokeWidth: starValue <= rating ? 0 : 1.5,
-                        filter: starValue <= rating ? 'drop-shadow(0 2px 4px rgba(251, 191, 36, 0.3))' : 'none'
+                        color: isSelected ? actualColor : undefined,
+                        strokeWidth: isSelected ? 0 : 1.5,
+                        filter: isSelected ? `drop-shadow(0 2px 4px ${hexToRgba(actualColor, 0.3)})` : 'none'
                       }}
                     >
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -349,26 +381,48 @@ export default function QuestionPage({
           </div>
         );
 
-      case 'SCALE':
+      case 'SCALE': {
         const min = question.scaleMin || 1;
         const max = question.scaleMax || 10;
         const scaleValue = parseInt(localAnswer) || min;
         const percentage = ((scaleValue - min) / (max - min)) * 100;
         
+        // 배경 밝기에 따른 라벨 색상 결정
+        const brightness = getBackgroundBrightness();
+        const isDarkBackground = brightness < 128;
+        const labelColor = isDarkBackground ? '#FFFFFF' : '#1F2937'; // 어두운 배경: 흰색, 밝은 배경: 진한 회색
+        const labelShadow = isDarkBackground 
+          ? '0 2px 4px rgba(0, 0, 0, 0.5), 0 0 2px rgba(0, 0, 0, 0.3)' 
+          : '0 1px 2px rgba(255, 255, 255, 0.9), 0 0 1px rgba(0, 0, 0, 0.15)';
+        
         return (
           <div className="w-[80%] mx-auto space-y-6">
             {/* 레이블 (상단) */}
             {(question.scaleLeftLabel || question.scaleRightLabel) && (
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-3 px-1">
                 <span 
-                  className="text-sm text-gray-600 font-medium"
-                  style={{ fontSize: '14px', fontWeight: 500 }}
+                  className="text-base font-bold"
+                  style={{ 
+                    fontSize: '17px', 
+                    fontWeight: 700,
+                    color: labelColor,
+                    textShadow: labelShadow,
+                    letterSpacing: '-0.01em',
+                    lineHeight: '1.4'
+                  }}
                 >
                   {question.scaleLeftLabel || min}
                 </span>
                 <span 
-                  className="text-sm text-gray-600 font-medium"
-                  style={{ fontSize: '14px', fontWeight: 500 }}
+                  className="text-base font-bold"
+                  style={{ 
+                    fontSize: '17px', 
+                    fontWeight: 700,
+                    color: labelColor,
+                    textShadow: labelShadow,
+                    letterSpacing: '-0.01em',
+                    lineHeight: '1.4'
+                  }}
                 >
                   {question.scaleRightLabel || max}
                 </span>
@@ -376,15 +430,21 @@ export default function QuestionPage({
             )}
             
             {/* 슬라이더 컨테이너 */}
-            <div className="relative py-6">
+            <div className="relative py-6" ref={scaleSliderRef}>
               {/* 현재 값 버블 (위에 표시) */}
-              <div 
-                className="absolute transform -translate-x-1/2 transition-all duration-200"
+              <motion.div
+                className="absolute transform -translate-x-1/2"
                 style={{
-                  left: `calc(12px + ${percentage}% * (100% - 24px) / 100)`,
                   bottom: '100%',
                   marginBottom: '12px'
                 }}
+                animate={{
+                  left: `${bubbleLeft || 12}px`,
+                  opacity: 1,
+                  y: 0
+                }}
+                initial={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
               >
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
@@ -426,7 +486,7 @@ export default function QuestionPage({
                     }}
                   />
                 </motion.div>
-              </div>
+              </motion.div>
 
               {/* 슬라이더 트랙 컨테이너 */}
               <div className="relative">
@@ -500,14 +560,39 @@ export default function QuestionPage({
                 </div>
 
                 {/* 최소/최대 값 표시 (하단) - 트랙의 실제 시작/끝과 정렬 */}
-                <div className="flex justify-between mt-4 text-xs text-gray-500 font-medium" style={{ fontSize: '12px', paddingLeft: '12px', paddingRight: '12px' }}>
-                  <span>{min}</span>
-                  <span>{max}</span>
+                <div className="flex justify-between mt-5 px-1">
+                  <span 
+                    className="text-sm font-bold"
+                    style={{ 
+                      fontSize: '16px', 
+                      fontWeight: 700,
+                      color: labelColor,
+                      textShadow: labelShadow,
+                      letterSpacing: '-0.01em',
+                      lineHeight: '1.4'
+                    }}
+                  >
+                    {min}
+                  </span>
+                  <span 
+                    className="text-sm font-bold"
+                    style={{ 
+                      fontSize: '16px', 
+                      fontWeight: 700,
+                      color: labelColor,
+                      textShadow: labelShadow,
+                      letterSpacing: '-0.01em',
+                      lineHeight: '1.4'
+                    }}
+                  >
+                    {max}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
         );
+      }
 
       case 'IMAGE_SELECT':
       case 'IMAGE_CHOICE':

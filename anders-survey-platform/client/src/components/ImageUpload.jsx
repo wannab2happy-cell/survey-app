@@ -235,55 +235,45 @@ const ImageUpload = (props) => {
           
           {compact ? (
             // Compact 모드: 가로 레이아웃
-            <>
-              <div className="flex-shrink-0 flex items-center justify-center w-16 h-16 bg-gray-50 rounded-lg border border-gray-200">
-                <UploadIcon className={`w-5 h-5 ${isDragging ? 'text-primary' : 'text-text-sub'}`} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleButtonClick();
-                    }}
-                    className="px-3 py-1.5 text-xs rounded-lg font-medium bg-primary text-white hover:bg-primary-hover transition-colors"
-                  >
-                    이미지 선택
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setShowUnsplashPicker(true);
-                    }}
-                    className="px-3 py-1.5 text-xs rounded-lg font-medium border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors"
-                  >
-                    Unsplash
-                  </button>
-                </div>
-                <p className="text-xs text-text-sub">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleButtonClick();
+                  }}
+                  className="px-3 py-1.5 text-xs rounded-lg font-semibold border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 active:scale-95 transition-all shadow-sm hover:shadow-md"
+                >
+                  이미지 선택
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowUnsplashPicker(true);
+                  }}
+                  className="px-3 py-1.5 text-xs rounded-lg font-semibold border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 active:scale-95 transition-all shadow-sm hover:shadow-md"
+                >
+                  Unsplash
+                </button>
+                <span className="text-xs text-text-sub">
                   최대 {maxSizeMB}MB{recommendedSize && ` · ${recommendedSize}`}
-                </p>
+                </span>
               </div>
-            </>
+            </div>
           ) : (
             // 일반 모드: 세로 레이아웃
             <>
-          {/* 업로드 아이콘 */}
-              <div className="flex justify-center mb-4">
-                <UploadIcon className={`w-12 h-12 ${isDragging ? 'text-primary' : 'text-text-sub'}`} />
-          </div>
-          
           {/* 드래그 앤 드롭 안내 */}
             <p className="text-sm text-text-sub mb-4">
               이미지 파일을 끌어오세요.
             </p>
           
           {/* 이미지 선택 버튼 - 클릭 시 이벤트 전파 방지 */}
-              <div className="flex items-center gap-3 justify-center">
+              <div className="flex items-center gap-3 justify-center flex-wrap">
           <button
             type="button"
             onClick={(e) => {
@@ -291,7 +281,7 @@ const ImageUpload = (props) => {
               e.stopPropagation();
               handleButtonClick();
             }}
-                  className="px-6 py-2.5 text-sm rounded-lg font-medium bg-primary text-white hover:bg-primary-hover transition-colors"
+                  className="px-4 py-2 text-sm rounded-lg font-semibold border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 active:scale-95 transition-all shadow-md hover:shadow-lg"
                 >
                   이미지 선택하기
                 </button>
@@ -302,19 +292,14 @@ const ImageUpload = (props) => {
                     e.stopPropagation();
                     setShowUnsplashPicker(true);
                   }}
-                  className="px-6 py-2.5 text-sm rounded-lg font-medium border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center gap-2"
+                  className="px-4 py-2 text-sm rounded-lg font-semibold border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 active:scale-95 transition-all shadow-md hover:shadow-lg"
           >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
                   Unsplash에서 가져오기
           </button>
+          <span className="text-sm text-text-sub">
+            최대 크기: {maxSizeMB}MB{recommendedSize && ` · 추천 사이즈: ${recommendedSize}`}
+          </span>
               </div>
-          
-          {/* 가이드 안내 */}
-              <p className="text-sm text-text-sub mt-4">
-                최대 크기: {maxSizeMB}MB{recommendedSize && ` · 추천 사이즈: ${recommendedSize}`}
-            </p>
             </>
           )}
         </label>

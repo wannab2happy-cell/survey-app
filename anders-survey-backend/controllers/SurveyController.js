@@ -248,9 +248,15 @@ export async function submitSurveyResponse(req, res) {
       });
     }
 
+    // 개인정보 수집 데이터 추출
+    const personalInfoData = req.body.personalInfo || {};
+    const consentChecked = req.body.consentChecked || false;
+
     const newResponse = new Response({ 
       surveyId, 
       answers,
+      personalInfo: personalInfoData,
+      consentChecked: consentChecked,
       submittedAt: new Date(),
     });
     await newResponse.save();

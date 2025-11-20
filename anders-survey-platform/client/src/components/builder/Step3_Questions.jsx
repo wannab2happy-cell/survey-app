@@ -368,9 +368,9 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                             backgroundColor: 'var(--primary, #26C6DA)',
                             color: '#FFFFFF'
                         }}
-                        className="px-5 py-2.5 rounded-lg font-medium hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:scale-105"
+                        className="px-3 py-1.5 rounded-lg text-sm font-medium hover:opacity-90 transition-all flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md"
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
                         <span>추가</span>
@@ -380,7 +380,7 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                 
                 {/* 질문 목록 및 개인 정보 수집 설정 - 스크롤 가능 영역 */}
                 <div className="flex-1 overflow-y-auto min-h-0" style={{ overflowY: 'auto', minHeight: 0 }}>
-                        <div className="space-y-2">
+                        <div className="space-y-2 pb-8">
                     <QuestionList
                         questions={questions}
                         questionTypes={questionTypes}
@@ -432,6 +432,16 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                             }
                             const currentOptions = question.options || [];
                             console.log('[Step3_Questions] 현재 옵션:', currentOptions);
+                            
+                            // 옵션이 필요한 질문 타입에서 최소 개수 검증
+                            const needsOptions = ['radio', 'checkbox', 'dropdown', 'radio_image', 'checkbox_image', 'image_choice'].includes(question.type);
+                            const minOptions = question.type === 'dropdown' ? 1 : 2; // 드롭다운은 최소 1개, 나머지는 최소 2개
+                            
+                            if (needsOptions && currentOptions.length <= minOptions) {
+                                alert(`이 질문 유형은 최소 ${minOptions}개 이상의 옵션이 필요합니다.`);
+                                return;
+                            }
+                            
                             const updatedOptions = currentOptions.filter((_, i) => i !== optIdx);
                             console.log('[Step3_Questions] 삭제 후 옵션:', updatedOptions);
                             const updated = { ...question, options: updatedOptions };
@@ -538,7 +548,26 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                                     // 옵션이 필요한 타입이면
                                     const currentOptions = Array.isArray(question.options) ? question.options : [];
                                     
-                                    if (currentOptions.length === 0) {
+                                    // 특정 타입들은 기본 옵션으로 강제 설정 (예/아니오, 별점, 척도 등)
+                                    const forceDefaultOptions = ['yes_no', 'star_rating', 'scale'].includes(mappedType);
+                                    
+                                    if (forceDefaultOptions) {
+                                        // 강제 설정이 필요한 타입은 항상 기본 옵션으로 설정
+                                        let defaultOptions = [];
+                                        if (config.defaultOptions === 2) {
+                                            defaultOptions = [
+                                                { id: Date.now(), text: '옵션 1', imageBase64: config.hasImage ? '' : undefined },
+                                                { id: Date.now() + 1, text: '옵션 2', imageBase64: config.hasImage ? '' : undefined }
+                                            ];
+                                        } else if (Array.isArray(config.defaultOptions)) {
+                                            defaultOptions = config.defaultOptions.map((opt, idx) => ({
+                                                id: Date.now() + idx,
+                                                text: String(opt),
+                                                imageBase64: config.hasImage ? '' : undefined
+                                            }));
+                                        }
+                                        updated.options = defaultOptions;
+                                    } else if (currentOptions.length === 0) {
                                         // 옵션이 없으면 기본 옵션 생성
                                         let defaultOptions = [];
                                         if (config.defaultOptions === 2) {
@@ -555,7 +584,7 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                                         }
                                         updated.options = defaultOptions;
                                     } else {
-                                        // 기존 옵션이 있으면 유지 (타입만 변경)
+                                        // 기존 옵션이 있고 강제 설정이 필요 없는 경우 유지 (타입만 변경)
                                         updated.options = currentOptions;
                                     }
                                 }
