@@ -148,20 +148,75 @@ export default function CoverTemplates({ onTemplateSelect, currentBranding = {} 
     }
   }, [currentBranding, templates]);
 
+  // CSS 변수를 실제 색상 값으로 변환하는 헬퍼 함수
+  const resolveColorValue = (color) => {
+    if (!color || typeof color !== 'string') return color;
+    
+    // CSS 변수인 경우 실제 값으로 변환
+    if (color.startsWith('var(--')) {
+      const varName = color.match(/var\(--([^)]+)\)/)?.[1];
+      if (varName) {
+        // CSS 변수 값을 가져오기
+        const root = document.documentElement;
+        const computedValue = getComputedStyle(root).getPropertyValue(`--${varName}`).trim();
+        
+        if (computedValue) {
+          return computedValue;
+        }
+        
+        // CSS 변수 매핑 (기본값)
+        const varMap = {
+          'success': '#10B981',
+          'error': '#EF4444',
+          'secondary': '#F59E0B',
+          'primary': '#26C6DA',
+          'text-main': '#111827',
+          'text-sub': '#6B7280',
+          'bg': '#F9FAFB',
+          'white': '#FFFFFF',
+          'border': '#E5E7EB'
+        };
+        
+        return varMap[varName] || '#F3F4F6'; // 기본값
+      }
+    }
+    
+    return color;
+  };
+
   const handleTemplateClick = (templateKey, template) => {
     setSelectedTemplate(templateKey);
     if (onTemplateSelect) {
       // tertiaryColor를 backgroundColor로 매핑
       const { tertiaryColor, ...otherColors } = template.colors;
+      
+      // CSS 변수를 실제 색상 값으로 변환
+      const resolvedTertiaryColor = resolveColorValue(tertiaryColor);
+      const resolvedPrimaryColor = resolveColorValue(otherColors.primaryColor);
+      const resolvedSecondaryColor = resolveColorValue(otherColors.secondaryColor);
+      
+      const updatedBranding = {
+        ...currentBranding,
+        primaryColor: resolvedPrimaryColor,
+        secondaryColor: resolvedSecondaryColor,
+        backgroundColor: resolvedTertiaryColor, // 배경 색상을 backgroundColor로 설정 (CSS 변수 해결됨)
+        font: template.font,
+        buttonShape: template.buttonShape,
+        buttonOpacity: template.buttonOpacity !== undefined ? template.buttonOpacity : 0.9
+      };
+      
+      // 디버깅: 템플릿 선택 시 전달되는 데이터 확인
+      console.log('[CoverTemplates] 템플릿 선택:', {
+        templateKey,
+        template,
+        tertiaryColor,
+        resolvedTertiaryColor,
+        updatedBranding,
+        backgroundColor: resolvedTertiaryColor
+      });
+      
       onTemplateSelect({
-        branding: {
-          ...currentBranding,
-          ...otherColors,
-          backgroundColor: tertiaryColor, // 배경 색상을 backgroundColor로 설정
-          font: template.font,
-          buttonShape: template.buttonShape,
-          buttonOpacity: template.buttonOpacity !== undefined ? template.buttonOpacity : 0.9
-        }
+        branding: updatedBranding
       });
     }
   };
@@ -218,11 +273,18 @@ export default function CoverTemplates({ onTemplateSelect, currentBranding = {} 
     // 저장된 템플릿이 현재 선택된 템플릿이면 브랜딩에 자동 적용
     if (selectedTemplate === editingTemplate && onTemplateSelect) {
       const { tertiaryColor, ...otherColors } = updatedTemplate.colors;
+      
+      // CSS 변수를 실제 색상 값으로 변환
+      const resolvedTertiaryColor = resolveColorValue(tertiaryColor);
+      const resolvedPrimaryColor = resolveColorValue(otherColors.primaryColor);
+      const resolvedSecondaryColor = resolveColorValue(otherColors.secondaryColor);
+      
       onTemplateSelect({
         branding: {
           ...currentBranding,
-          ...otherColors,
-          backgroundColor: tertiaryColor,
+          primaryColor: resolvedPrimaryColor,
+          secondaryColor: resolvedSecondaryColor,
+          backgroundColor: resolvedTertiaryColor,
           font: updatedTemplate.font,
           buttonShape: updatedTemplate.buttonShape,
           buttonOpacity: updatedTemplate.buttonOpacity !== undefined ? updatedTemplate.buttonOpacity : 0.9
@@ -256,11 +318,18 @@ export default function CoverTemplates({ onTemplateSelect, currentBranding = {} 
     setSelectedTemplate(newKey);
     if (onTemplateSelect) {
       const { tertiaryColor, ...otherColors } = newTemplate.colors;
+      
+      // CSS 변수를 실제 색상 값으로 변환
+      const resolvedTertiaryColor = resolveColorValue(tertiaryColor);
+      const resolvedPrimaryColor = resolveColorValue(otherColors.primaryColor);
+      const resolvedSecondaryColor = resolveColorValue(otherColors.secondaryColor);
+      
       onTemplateSelect({
         branding: {
           ...currentBranding,
-          ...otherColors,
-          backgroundColor: tertiaryColor,
+          primaryColor: resolvedPrimaryColor,
+          secondaryColor: resolvedSecondaryColor,
+          backgroundColor: resolvedTertiaryColor,
           font: newTemplate.font,
           buttonShape: newTemplate.buttonShape,
           buttonOpacity: newTemplate.buttonOpacity !== undefined ? newTemplate.buttonOpacity : 0.9

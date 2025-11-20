@@ -79,8 +79,34 @@ export default function ReviewPage({
 
   const bgStyle = getBackgroundStyle();
 
+  // 참가자 페이지인지 확인 (SurveyPageV2에서 렌더링되는 경우)
+  const isParticipantPage = typeof window !== 'undefined' && 
+    (window.location.pathname.includes('/s/') || document.body.classList.contains('participant-page'));
+
   return (
-    <div className="h-screen w-full max-w-full flex flex-col overflow-hidden safe-area-bottom" style={{ ...bgStyle, width: '100%', maxWidth: '100vw', height: '100vh' }}>
+    <div 
+      className="h-screen w-full max-w-full flex flex-col overflow-hidden safe-area-bottom" 
+      style={{ 
+        ...bgStyle, 
+        width: isParticipantPage ? '100vw' : '100%', 
+        maxWidth: '100vw', 
+        height: isParticipantPage ? '100vh' : 'auto',
+        minHeight: '100vh',
+        position: isParticipantPage ? 'fixed' : 'relative',
+        top: isParticipantPage ? 0 : 'auto',
+        left: isParticipantPage ? 0 : 'auto',
+        right: isParticipantPage ? 0 : 'auto',
+        bottom: isParticipantPage ? 0 : 'auto',
+        zIndex: isParticipantPage ? 0 : 'auto',
+        overflowY: isParticipantPage ? 'auto' : 'visible',
+        // 배경 스타일을 명시적으로 강제
+        backgroundColor: bgStyle.backgroundColor || actualBackgroundColor,
+        backgroundImage: bgStyle.backgroundImage || 'none',
+        backgroundSize: bgStyle.backgroundSize || 'cover',
+        backgroundPosition: bgStyle.backgroundPosition || 'center',
+        backgroundRepeat: bgStyle.backgroundRepeat || 'no-repeat'
+      }}
+    >
       {/* 스크롤 가능한 콘텐츠 영역 */}
       <div className="flex-1 overflow-y-auto min-h-0">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4 sm:py-6">

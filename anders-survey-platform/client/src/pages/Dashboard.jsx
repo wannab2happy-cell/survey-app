@@ -1108,8 +1108,8 @@ export default function Dashboard() {
                           {statusConfig.label}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {responseCount}개
+                      <td className="px-4 py-3">
+                        <span className="text-base font-bold text-gray-900">{responseCount}개</span>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
                         {formatDateRange()}

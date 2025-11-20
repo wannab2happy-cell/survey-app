@@ -35,11 +35,58 @@ export default function StartPage({
         ? '#A78BFA'
         : (secondaryColor || '#A78BFA'));
 
-  const actualBackgroundColor = typeof backgroundColor === 'string' && backgroundColor.startsWith('#') 
-    ? backgroundColor 
-    : (typeof backgroundColor === 'string' && backgroundColor.includes('var') 
-        ? '#F3F4F6'
-        : (backgroundColor || '#F3F4F6'));
+  // CSS 변수를 실제 hex 값으로 변환하는 함수
+  const resolveColorValue = (color) => {
+    if (!color || typeof color !== 'string') return color || '#F3F4F6';
+    
+    // 이미 hex 값이면 그대로 반환
+    if (color.startsWith('#')) {
+      return color;
+    }
+    
+    // CSS 변수인 경우 실제 값으로 변환
+    if (color.startsWith('var(--')) {
+      const varName = color.match(/var\(--([^)]+)\)/)?.[1];
+      if (varName) {
+        // CSS 변수 값을 가져오기
+        const root = document.documentElement;
+        const computedValue = getComputedStyle(root).getPropertyValue(`--${varName}`).trim();
+        
+        if (computedValue) {
+          return computedValue;
+        }
+        
+        // CSS 변수 매핑 (기본값)
+        const varMap = {
+          'success': '#10B981',
+          'error': '#EF4444',
+          'secondary': '#F59E0B',
+          'primary': '#26C6DA',
+          'bg': '#F9FAFB',
+          'white': '#FFFFFF',
+          'color-bg-tertiary': '#F3F4F6'
+        };
+        
+        return varMap[varName] || '#F3F4F6';
+      }
+    }
+    
+    // var가 포함되어 있지만 var(-- 형식이 아닌 경우
+    if (color.includes('var')) {
+      return '#F3F4F6';
+    }
+    
+    return color || '#F3F4F6';
+  };
+
+  const actualBackgroundColor = resolveColorValue(backgroundColor);
+
+  // 디버깅: 배경색 확인
+  console.log('[StartPage] 배경색 정보:', {
+    backgroundColor,
+    actualBackgroundColor,
+    bgImageBase64: bgImageBase64 ? '있음' : '없음'
+  });
 
   // 배경 스타일 결정 (그라데이션 + 배경 이미지)
   const getBackgroundStyle = () => {
@@ -53,7 +100,7 @@ export default function StartPage({
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        backgroundColor: actualBackgroundColor
+        backgroundColor: actualBackgroundColor // 이미지 로딩 전 배경색
       };
     }
     // 배경 이미지가 없으면 단색 배경 사용
@@ -63,6 +110,9 @@ export default function StartPage({
   };
 
   const bgStyle = getBackgroundStyle();
+  
+  // 디버깅: 최종 배경 스타일 확인
+  console.log('[StartPage] 최종 배경 스타일:', bgStyle);
 
   // buttonShape에 따른 클래스 매핑 (샘플은 pill 형태)
   const getShapeClass = () => {
@@ -82,24 +132,43 @@ export default function StartPage({
 
   const shapeClass = getShapeClass();
 
+  // 참가자 페이지인지 확인 (SurveyPageV2에서 렌더링되는 경우)
+  const isParticipantPage = typeof window !== 'undefined' && 
+    (window.location.pathname.includes('/s/') || document.body.classList.contains('participant-page'));
+
   return (
     <div 
-      className="w-full min-h-screen flex items-center justify-center p-0"
+      className="h-screen w-full max-w-full flex items-center justify-center p-0"
       style={{ 
-        ...bgStyle, 
-        width: '100%', 
+        ...bgStyle,
+        width: isParticipantPage ? '100vw' : '100%', 
         maxWidth: '100vw', 
+        height: isParticipantPage ? '100vh' : 'auto',
         minHeight: '100vh',
-        padding: '30px 0'
+        padding: '30px 0',
+        position: isParticipantPage ? 'fixed' : 'relative',
+        top: isParticipantPage ? 0 : 'auto',
+        left: isParticipantPage ? 0 : 'auto',
+        right: isParticipantPage ? 0 : 'auto',
+        bottom: isParticipantPage ? 0 : 'auto',
+        zIndex: isParticipantPage ? 0 : 'auto',
+        overflowY: isParticipantPage ? 'auto' : 'visible',
+        // 배경 스타일을 명시적으로 강제
+        backgroundColor: bgStyle.backgroundColor || actualBackgroundColor,
+        backgroundImage: bgStyle.backgroundImage || 'none',
+        backgroundSize: bgStyle.backgroundSize || 'cover',
+        backgroundPosition: bgStyle.backgroundPosition || 'center',
+        backgroundRepeat: bgStyle.backgroundRepeat || 'no-repeat'
       }}
     >
-      {/* 디바이스 뷰 컨테이너 */}
+      {/* 디바이스 뷰 컨테이너 - 미리보기용, 실제 참가자 페이지에서는 투명 */}
       <div 
-        className="w-full max-w-[420px] mx-auto bg-white rounded-[24px] shadow-lg flex flex-col"
+        className={`w-full max-w-[420px] mx-auto flex flex-col ${isParticipantPage ? '' : 'bg-white rounded-[24px] shadow-lg'}`}
         style={{
           minHeight: '720px',
           padding: '36px 24px',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)'
+          boxShadow: isParticipantPage ? 'none' : '0 8px 24px rgba(0, 0, 0, 0.15)',
+          backgroundColor: isParticipantPage ? 'transparent' : 'white'
         }}
       >
         {/* 1. 로고 (제일 상단) - 위치 고정 */}

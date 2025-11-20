@@ -71,10 +71,33 @@ export default function Step1_Settings({ form, handleFormChange, onBrandingChang
     }, [form?.title, isComposing]);
 
     const handleTemplateSelect = (templateData) => {
-        if (onBrandingChange) {
-            Object.entries(templateData.branding).forEach(([key, value]) => {
+        if (onBrandingChange && templateData.branding) {
+            // 디버깅: 템플릿 선택 시 전달되는 데이터 확인
+            console.log('[Step1_Settings] 템플릿 선택 데이터:', templateData);
+            
+            // React의 상태 업데이트 배치 처리를 고려하여,
+            // 모든 브랜딩 값을 순차적으로 업데이트하되, 
+            // backgroundColor를 마지막에 확실히 적용
+            const brandingEntries = Object.entries(templateData.branding);
+            
+            // backgroundColor를 제외한 다른 필드들을 먼저 업데이트
+            const otherEntries = brandingEntries.filter(([key]) => key !== 'backgroundColor');
+            const backgroundColorEntry = brandingEntries.find(([key]) => key === 'backgroundColor');
+            
+            // 다른 필드들을 먼저 업데이트
+            otherEntries.forEach(([key, value]) => {
+                console.log(`[Step1_Settings] 브랜딩 업데이트: ${key} = ${value}`);
                 onBrandingChange('branding', key, value);
             });
+            
+            // backgroundColor를 마지막에 확실히 적용 (약간의 지연을 두어 다른 업데이트가 완료된 후 적용)
+            if (backgroundColorEntry) {
+                const [key, value] = backgroundColorEntry;
+                setTimeout(() => {
+                    console.log(`[Step1_Settings] 배경 색상 최종 업데이트: ${key} = ${value}`);
+                    onBrandingChange('branding', key, value);
+                }, 50);
+            }
         }
     };
 

@@ -6,7 +6,7 @@ import QuestionList from './QuestionList';
 import ImageUpload from '../ImageUpload';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function Step3_Questions({ questions, lastQuestionId, personalInfo, onQuestionsChange, onPersonalInfoChange, onImageChange, branding, onBrandingChange }) {
+export default function Step3_Questions({ questions, lastQuestionId, personalInfo, onQuestionsChange, onPersonalInfoChange, onImageChange, branding, onBrandingChange, onQuestionSelect }) {
     
     const safePersonalInfo = personalInfo || { enabled: false, fields: [], consentText: '', consentRequired: false, customFields: [] };
     const [showQuestionTypeModal, setShowQuestionTypeModal] = useState(false);
@@ -373,7 +373,7 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
-                        <span>+ 추가</span>
+                        <span>추가</span>
                     </button>
                 </div>
             </div>
@@ -385,6 +385,7 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                         questions={questions}
                         questionTypes={questionTypes}
                         onQuestionsChange={onQuestionsChange}
+                        onQuestionSelect={onQuestionSelect}
                         onQuestionChange={(idx, key, value) => {
                             // 최신 questions 배열을 참조하도록 함수 내부에서 참조
                             const question = questions[idx];

@@ -57,7 +57,7 @@ export default function ChoiceTile({
       }}
       onMouseEnter={(e) => {
         if (!selected) {
-          e.currentTarget.style.backgroundColor = hoverBgColor;
+        e.currentTarget.style.backgroundColor = hoverBgColor;
           e.currentTarget.style.borderColor = actualColor;
         }
       }}
@@ -68,20 +68,20 @@ export default function ChoiceTile({
     >
       <div className="flex items-center gap-4">
         {type === 'radio' ? (
-          <div 
+        <div 
             className="w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all"
             style={{ 
               borderColor: selected ? actualColor : '#d1d5db',
               borderWidth: '2px'
             }}
-          >
-            {selected && (
-              <div 
+        >
+          {selected && (
+            <div 
                 className="w-3.5 h-3.5 rounded-full transition-all"
-                style={{ backgroundColor: actualColor }}
-              />
-            )}
-          </div>
+              style={{ backgroundColor: actualColor }}
+            />
+          )}
+        </div>
         ) : (
           <div 
             className="w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all"

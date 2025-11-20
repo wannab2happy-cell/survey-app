@@ -16,6 +16,7 @@ export default function QuestionList({
   onOptionImageChange,
   onQuestionTypeChange,
   lastQuestionId,
+  onQuestionSelect,
 }) {
   // questions가 배열인지 확인
   const safeQuestions = Array.isArray(questions) ? questions : [];
@@ -59,6 +60,7 @@ export default function QuestionList({
             onQuestionImageChange={onQuestionImageChange}
             onOptionImageChange={onOptionImageChange}
             onQuestionTypeChange={onQuestionTypeChange}
+            onQuestionSelect={onQuestionSelect}
           />
         );
       })}

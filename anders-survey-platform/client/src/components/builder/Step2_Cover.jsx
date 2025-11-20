@@ -85,7 +85,7 @@ export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
 
                     {/* 타이틀 이미지 - 이미지가 있을 때만 표시 */}
                     {cover.imageBase64 && cover.imageBase64.trim() !== '' && (
-                        <div>
+                    <div>
                             <ImageUpload
                                 label="타이틀 이미지"
                                 imageBase64={cover.imageBase64 || ''}
@@ -97,16 +97,16 @@ export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
                                 maxSizeMB={8}
                                 recommendedSize="1280×720"
                                 compact={true}
-                            />
-                        </div>
+                        />
+                    </div>
                     )}
-                    
+
                     {/* 타이틀 이미지 추가 버튼 - 이미지가 없을 때만 표시 */}
                     {(!cover.imageBase64 || cover.imageBase64.trim() === '') && (
-                        <div>
+                    <div>
                             <label className="block text-sm font-medium text-text-sub mb-2">
                                 타이틀 이미지
-                            </label>
+                        </label>
                             <div className="flex items-center gap-2">
                                 <button
                                     type="button"
@@ -147,7 +147,7 @@ export default function Step2_Cover({ cover, onCoverChange, onImageChange }) {
                             <p className="mt-1 text-xs text-text-sub">
                                 최대 8MB · 추천 사이즈: 1280×720
                             </p>
-                        </div>
+                    </div>
                     )}
 
                     {/* 배경 이미지 */}

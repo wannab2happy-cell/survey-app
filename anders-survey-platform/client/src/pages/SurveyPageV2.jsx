@@ -205,6 +205,22 @@ export default function SurveyPageV2() {
     }
   };
 
+  // 참가자 페이지임을 body와 html에 표시 (배경색 처리용) - 모든 Hook은 조건부 return 이전에 위치해야 함
+  useEffect(() => {
+    document.body.classList.add('participant-page');
+    document.documentElement.classList.add('participant-page');
+    // body와 html의 배경색을 직접 투명하게 설정
+    document.body.style.backgroundColor = 'transparent';
+    document.documentElement.style.backgroundColor = 'transparent';
+    
+    return () => {
+      document.body.classList.remove('participant-page');
+      document.documentElement.classList.remove('participant-page');
+      document.body.style.backgroundColor = '';
+      document.documentElement.style.backgroundColor = '';
+    };
+  }, []);
+
   // 로딩 상태
   if (loading) {
     return (

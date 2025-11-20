@@ -272,25 +272,25 @@ const ImageUpload = (props) => {
           ) : (
             // 일반 모드: 세로 레이아웃
             <>
-              {/* 업로드 아이콘 */}
+          {/* 업로드 아이콘 */}
               <div className="flex justify-center mb-4">
                 <UploadIcon className={`w-12 h-12 ${isDragging ? 'text-primary' : 'text-text-sub'}`} />
-              </div>
-              
-              {/* 드래그 앤 드롭 안내 */}
-              <p className="text-sm text-text-sub mb-4">
-                이미지 파일을 끌어오세요.
-              </p>
-              
-              {/* 이미지 선택 버튼 - 클릭 시 이벤트 전파 방지 */}
+          </div>
+          
+          {/* 드래그 앤 드롭 안내 */}
+            <p className="text-sm text-text-sub mb-4">
+              이미지 파일을 끌어오세요.
+            </p>
+          
+          {/* 이미지 선택 버튼 - 클릭 시 이벤트 전파 방지 */}
               <div className="flex items-center gap-3 justify-center">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleButtonClick();
-                  }}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleButtonClick();
+            }}
                   className="px-6 py-2.5 text-sm rounded-lg font-medium bg-primary text-white hover:bg-primary-hover transition-colors"
                 >
                   이미지 선택하기
@@ -303,18 +303,18 @@ const ImageUpload = (props) => {
                     setShowUnsplashPicker(true);
                   }}
                   className="px-6 py-2.5 text-sm rounded-lg font-medium border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center gap-2"
-                >
+          >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                   Unsplash에서 가져오기
-                </button>
+          </button>
               </div>
-              
-              {/* 가이드 안내 */}
+          
+          {/* 가이드 안내 */}
               <p className="text-sm text-text-sub mt-4">
                 최대 크기: {maxSizeMB}MB{recommendedSize && ` · 추천 사이즈: ${recommendedSize}`}
-              </p>
+            </p>
             </>
           )}
         </label>
@@ -367,17 +367,17 @@ const ImageUpload = (props) => {
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-700 mb-1">이미지가 업로드되었습니다</p>
                 <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleButtonClick();
-                    }}
-                    className="text-sm text-[#2dafb9] hover:text-[#27a69f] font-medium"
-                  >
-                    이미지 변경하기
-                  </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleButtonClick();
+                  }}
+                  className="text-sm text-[#2dafb9] hover:text-[#27a69f] font-medium"
+                >
+                  이미지 변경하기
+                </button>
                 </div>
                 {/* 가이드 안내 */}
                 <p className="text-sm text-text-sub mt-2">
@@ -387,17 +387,17 @@ const ImageUpload = (props) => {
             )}
             {compact && (
               <div className="flex-1">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleButtonClick();
-                  }}
-                  className="text-xs text-[#2dafb9] hover:text-[#27a69f] font-medium"
-                >
-                  변경
-                </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleButtonClick();
+                }}
+                className="text-xs text-[#2dafb9] hover:text-[#27a69f] font-medium"
+              >
+                변경
+              </button>
                 {/* 가이드 안내 */}
                 <p className="text-xs text-text-sub mt-1">
                   최대 크기: {maxSizeMB}MB{recommendedSize && ` · 추천 사이즈: ${recommendedSize}`}

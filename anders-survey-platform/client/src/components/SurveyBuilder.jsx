@@ -464,7 +464,7 @@ const SurveyBuilder = () => {
             const currentParentData = prev[parentKey] || {};
             
             // 해당 부모 키만 업데이트하고 나머지 데이터는 그대로 유지
-            return {
+            const updated = {
                 ...prev,
                 questions: prev.questions || [], // 질문 데이터 보호
                 [parentKey]: {
@@ -472,6 +472,17 @@ const SurveyBuilder = () => {
                     [childKey]: value
                 }
             };
+            
+            // 디버깅: 브랜딩 변경 시 로그 출력
+            if (parentKey === 'branding' && childKey === 'backgroundColor') {
+                console.log('[SurveyBuilder] 배경 색상 업데이트:', {
+                    childKey,
+                    value,
+                    updatedBranding: updated.branding
+                });
+            }
+            
+            return updated;
         });
         
         // 브랜딩 색상이 변경되면 CSS 변수 업데이트 (Admin 스타일은 제외)
@@ -1337,6 +1348,13 @@ const SurveyBuilder = () => {
                                     onImageChange={handleImageChange}
                                     branding={surveyData.branding}
                                     onBrandingChange={handleBrandingChange}
+                                    onQuestionSelect={(index) => {
+                                        setPreviewQuestionIndex(index);
+                                        // questions 탭으로 전환하여 미리보기 활성화
+                                        if (currentTab !== 'questions') {
+                                            setCurrentTab('questions');
+                                        }
+                                    }}
                                 />
                             )}
 
@@ -1868,12 +1886,22 @@ const SurveyBuilder = () => {
                                             </button>
                                             
                                             {surveyData.id && (
-                                                <div className="grid grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-3 gap-4">
                                                     <button
                                                         onClick={() => window.open(surveyUrl, '_blank')}
                                                         className="px-4 py-2 bg-bg border border-border rounded-lg hover:bg-primary/10 hover:border-primary transition text-sm text-text-sub font-medium"
                                                     >
                                                         미리보기
+                                                    </button>
+                                                    <button
+                                                        onClick={() => navigate(`/s/${surveyData.id}/start`)}
+                                                        className="px-4 py-2 bg-green-500 text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-semibold flex items-center justify-center gap-2"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                        </svg>
+                                                        참가자 화면
                                                     </button>
                                                     <button
                                                         onClick={() => navigate(`/admin/results/${surveyData.id}`)}

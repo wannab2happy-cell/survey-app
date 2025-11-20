@@ -28,7 +28,7 @@ export default function BottomNav({
         ? '#A78BFA'
         : (secondaryColor || '#A78BFA'));
   return (
-    <div className="w-full bg-transparent border-t border-gray-200 py-4 px-5 safe-area-bottom" style={{ borderColor: 'rgba(0, 0, 0, 0.1)', boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.04)' }}>
+    <div className="w-full bg-transparent py-4 px-5 safe-area-bottom" style={{ boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.04)' }}>
       <div className="max-w-md mx-auto flex gap-3 justify-center">
         {showPrevious && (
           <button

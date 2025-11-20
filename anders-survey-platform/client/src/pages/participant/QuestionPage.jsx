@@ -208,7 +208,7 @@ export default function QuestionPage({
       case 'RADIO':
       case 'YES_NO':
         return (
-          <div className="space-y-3">
+          <div className="w-[80%] mx-auto space-y-3">
             {normalizedOptions.map((option, idx) => (
               <ChoiceTile
                 key={idx}
@@ -227,7 +227,7 @@ export default function QuestionPage({
       case 'CHECKBOX':
         const selectedArray = Array.isArray(localAnswer) ? localAnswer : [];
         return (
-          <div className="space-y-3">
+          <div className="w-[80%] mx-auto space-y-3">
             {normalizedOptions.map((option, idx) => (
               <ChoiceTile
                 key={idx}
@@ -304,8 +304,8 @@ export default function QuestionPage({
         const starCount = question.starCount || 5;
         const rating = parseInt(localAnswer) || 0;
         return (
-          <div className="flex flex-col items-center gap-4">
-            <div className="flex items-center gap-1.5">
+          <div className="w-[80%] mx-auto flex flex-col items-center gap-4">
+            <div className="flex items-center gap-1.5 justify-center">
               {Array.from({ length: starCount }).map((_, idx) => {
                 const starValue = idx + 1;
                 return (
@@ -353,48 +353,158 @@ export default function QuestionPage({
         const min = question.scaleMin || 1;
         const max = question.scaleMax || 10;
         const scaleValue = parseInt(localAnswer) || min;
+        const percentage = ((scaleValue - min) / (max - min)) * 100;
+        
         return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between mb-4">
-              <span 
-                className="text-sm text-gray-600 font-medium"
-                style={{ fontSize: '14px', fontWeight: 500 }}
-              >
-                {question.scaleLeftLabel || min}
-              </span>
-              <span 
-                className="text-2xl font-bold"
-                style={{ 
-                  color,
-                  fontSize: '24px',
-                  fontWeight: 700,
-                  letterSpacing: '-0.02em'
+          <div className="w-[80%] mx-auto space-y-6">
+            {/* 레이블 (상단) */}
+            {(question.scaleLeftLabel || question.scaleRightLabel) && (
+              <div className="flex items-center justify-between mb-2">
+                <span 
+                  className="text-sm text-gray-600 font-medium"
+                  style={{ fontSize: '14px', fontWeight: 500 }}
+                >
+                  {question.scaleLeftLabel || min}
+                </span>
+                <span 
+                  className="text-sm text-gray-600 font-medium"
+                  style={{ fontSize: '14px', fontWeight: 500 }}
+                >
+                  {question.scaleRightLabel || max}
+                </span>
+              </div>
+            )}
+            
+            {/* 슬라이더 컨테이너 */}
+            <div className="relative py-6">
+              {/* 현재 값 버블 (위에 표시) */}
+              <div 
+                className="absolute transform -translate-x-1/2 transition-all duration-200"
+                style={{
+                  left: `calc(12px + ${percentage}% * (100% - 24px) / 100)`,
+                  bottom: '100%',
+                  marginBottom: '12px'
                 }}
               >
-                {scaleValue}
-              </span>
-              <span 
-                className="text-sm text-gray-600 font-medium"
-                style={{ fontSize: '14px', fontWeight: 500 }}
-              >
-                {question.scaleRightLabel || max}
-              </span>
-            </div>
-            <input
-              type="range"
-              min={min}
-              max={max}
-              value={scaleValue}
-              onChange={(e) => handleAnswerChange(e.target.value)}
-              className="w-full h-3 rounded-lg appearance-none cursor-pointer"
-              style={{
-                background: `linear-gradient(to right, ${actualColor} 0%, ${actualSecondaryColor} ${((scaleValue - min) / (max - min)) * 100}%, #E5E7EB ${((scaleValue - min) / (max - min)) * 100}%, #E5E7EB 100%)`,
-                outline: 'none'
-              }}
-            />
-            <div className="flex justify-between text-xs text-gray-500 font-medium" style={{ fontSize: '12px' }}>
-              <span>{min}</span>
-              <span>{max}</span>
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                  className="relative"
+                >
+                  {/* 버블 */}
+                  <div
+                    className="rounded-full px-4 py-2 shadow-lg flex items-center justify-center"
+                    style={{
+                      backgroundColor: actualColor,
+                      color: '#FFFFFF',
+                      minWidth: '48px',
+                      boxShadow: `0 4px 12px ${actualColor}40, 0 2px 4px rgba(0, 0, 0, 0.1)`
+                    }}
+                  >
+                    <span 
+                      className="text-lg font-bold"
+                      style={{ 
+                        fontSize: '18px',
+                        fontWeight: 700,
+                        letterSpacing: '-0.02em'
+                      }}
+                    >
+                      {scaleValue}
+                    </span>
+                  </div>
+                  {/* 삼각형 포인터 */}
+                  <div
+                    className="absolute top-full left-1/2 transform -translate-x-1/2"
+                    style={{
+                      width: 0,
+                      height: 0,
+                      borderLeft: '8px solid transparent',
+                      borderRight: '8px solid transparent',
+                      borderTop: `8px solid ${actualColor}`,
+                      filter: 'drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1))'
+                    }}
+                  />
+                </motion.div>
+              </div>
+
+              {/* 슬라이더 트랙 컨테이너 */}
+              <div className="relative">
+                {/* 커스텀 슬라이더 트랙 */}
+                <div className="relative" style={{ paddingLeft: '12px', paddingRight: '12px' }}>
+                  {/* 배경 트랙 */}
+                  <div
+                    className="w-full rounded-full"
+                    style={{
+                      height: '8px',
+                      backgroundColor: '#E5E7EB',
+                      position: 'relative',
+                      overflow: 'visible'
+                    }}
+                  >
+                    {/* 채워진 트랙 */}
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${percentage}%` }}
+                      transition={{ duration: 0.3, ease: 'easeOut' }}
+                      className="absolute left-0 top-0 h-full rounded-full"
+                      style={{
+                        background: `linear-gradient(to right, ${actualColor}, ${actualSecondaryColor || actualColor})`,
+                        boxShadow: `0 2px 4px ${actualColor}30`
+                      }}
+                    />
+                  </div>
+
+                  {/* Range Input (투명하게 오버레이) */}
+                  <input
+                    type="range"
+                    min={min}
+                    max={max}
+                    value={scaleValue}
+                    onChange={(e) => handleAnswerChange(e.target.value)}
+                    className="absolute top-0 left-0 w-full h-8 cursor-pointer opacity-0 z-10"
+                    style={{
+                      marginTop: '-12px',
+                      cursor: 'pointer',
+                      paddingLeft: '12px',
+                      paddingRight: '12px',
+                      width: 'calc(100% - 24px)',
+                      left: '12px'
+                    }}
+                  />
+
+                  {/* 커스텀 썸 (Thumb) */}
+                  <div
+                    className="absolute transform -translate-x-1/2 transition-all duration-200"
+                    style={{
+                      left: `calc(12px + ${percentage}% * (100% - 24px) / 100)`,
+                      top: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 5
+                    }}
+                  >
+                    <motion.div
+                      whileHover={{ scale: 1.15 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="rounded-full shadow-lg"
+                      style={{
+                        width: '24px',
+                        height: '24px',
+                        backgroundColor: '#FFFFFF',
+                        border: `3px solid ${actualColor}`,
+                        boxShadow: `0 4px 8px ${actualColor}40, 0 2px 4px rgba(0, 0, 0, 0.15)`,
+                        cursor: 'grab'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* 최소/최대 값 표시 (하단) - 트랙의 실제 시작/끝과 정렬 */}
+                <div className="flex justify-between mt-4 text-xs text-gray-500 font-medium" style={{ fontSize: '12px', paddingLeft: '12px', paddingRight: '12px' }}>
+                  <span>{min}</span>
+                  <span>{max}</span>
+                </div>
+              </div>
             </div>
           </div>
         );
@@ -403,7 +513,7 @@ export default function QuestionPage({
       case 'IMAGE_CHOICE':
         const selectedImages = Array.isArray(localAnswer) ? localAnswer : [];
         return (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="w-[80%] mx-auto grid grid-cols-2 gap-4">
             {normalizedOptions.map((option, idx) => {
               const imageUrl = typeof option === 'string' && option.startsWith('data:image/') 
                 ? option 
@@ -502,16 +612,31 @@ export default function QuestionPage({
 
   const bgStyle = getBackgroundStyle();
 
+  // 참가자 페이지인지 확인 (SurveyPageV2에서 렌더링되는 경우)
+  const isParticipantPage = typeof window !== 'undefined' && 
+    (window.location.pathname.includes('/s/') || document.body.classList.contains('participant-page'));
+
   return (
     <motion.div 
       className="h-screen flex flex-col items-center justify-center overflow-hidden"
       style={{
-        width: '100%',
+        width: isParticipantPage ? '100vw' : '100%',
         maxWidth: '100vw',
         minHeight: '100vh',
-        position: 'relative', // 배경이 확실히 보이도록
+        height: isParticipantPage ? '100vh' : 'auto',
+        position: isParticipantPage ? 'fixed' : 'relative',
+        top: isParticipantPage ? 0 : 'auto',
+        left: isParticipantPage ? 0 : 'auto',
+        right: isParticipantPage ? 0 : 'auto',
+        bottom: isParticipantPage ? 0 : 'auto',
+        zIndex: isParticipantPage ? 0 : 'auto',
+        overflowY: isParticipantPage ? 'auto' : 'visible',
         // 배경 스타일을 명시적으로 적용 (다른 스타일보다 우선)
-        ...bgStyle
+        backgroundColor: bgStyle.backgroundColor || actualBackgroundColor,
+        backgroundImage: bgStyle.backgroundImage || 'none',
+        backgroundSize: bgStyle.backgroundSize || 'cover',
+        backgroundPosition: bgStyle.backgroundPosition || 'center',
+        backgroundRepeat: bgStyle.backgroundRepeat || 'no-repeat'
       }}
       initial={{ opacity: 0, ...bgStyle }}
       animate={{ opacity: 1, ...bgStyle }}
@@ -551,7 +676,7 @@ export default function QuestionPage({
           onNext={handleNext}
           onPrevious={onPrevious}
           showPrevious={showPrevious}
-          nextLabel={questionNumber === totalQuestions ? '검토하기' : '다음'}
+          nextLabel="다음"
           previousLabel="이전"
           disabled={false}
           color={actualColor}

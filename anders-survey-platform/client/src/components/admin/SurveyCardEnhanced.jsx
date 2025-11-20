@@ -167,7 +167,7 @@ export default function SurveyCardEnhanced({ survey, onUpdate }) {
               <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`}></span>
               {statusConfig.label}
             </span>
-            <span className="text-sm text-gray-500">
+            <span className="text-base font-bold text-gray-900">
               {loading ? '로딩 중...' : `${responseCount}개 응답`}
             </span>
             <span className="text-sm text-gray-500">

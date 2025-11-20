@@ -50,6 +50,7 @@ const QuestionCard = (props) => {
     onToggleRequired = () => {},
     onQuestionImageChange = () => {},
     onOptionImageChange = () => {},
+    onQuestionSelect = () => {},
   } = props || {};
 
   // 질문 데이터 정규화 (title, text, content 통일)
@@ -642,7 +643,22 @@ const QuestionCard = (props) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-xl shadow-md border border-border p-4 mb-3"
+      className="bg-white rounded-xl shadow-md border border-border p-4 mb-3 cursor-pointer hover:shadow-lg transition-all"
+      onClick={(e) => {
+        // 버튼, 입력 필드, 링크 등을 클릭한 경우에는 미리보기로 전환하지 않음
+        const target = e.target;
+        const isInteractiveElement = target.closest('button') || 
+                                     target.closest('input') || 
+                                     target.closest('textarea') || 
+                                     target.closest('select') ||
+                                     target.closest('a') ||
+                                     target.closest('[role="button"]') ||
+                                     target.closest('.dropdown-modal') ||
+                                     target.closest('.modal-backdrop');
+        if (!isInteractiveElement) {
+          onQuestionSelect(index);
+        }
+      }}
     >
       {/* 질문 헤더 - 가로 배치 */}
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border flex-wrap">

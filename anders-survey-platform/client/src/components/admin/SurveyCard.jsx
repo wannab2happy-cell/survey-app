@@ -53,7 +53,7 @@ export default function SurveyCard({ survey, delay = 0 }) {
           </span>
         )}
         {survey?.totalResponses !== undefined && (
-          <span>응답: {survey.totalResponses}개</span>
+          <span className="text-base font-bold text-gray-900">응답: {survey.totalResponses}개</span>
         )}
       </div>
 

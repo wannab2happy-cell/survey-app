@@ -110,6 +110,16 @@ body {
   font-family: var(--font-body, 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif);
 }
 
+/* 참가자 페이지에서는 body 배경색을 투명하게 */
+body.participant-page {
+  background-color: transparent !important;
+}
+
+/* 참가자 페이지의 html 요소도 투명하게 */
+html.participant-page {
+  background-color: transparent !important;
+}
+
 /* 3. 기본 링크 및 버튼 스타일 */
 a {
   color: var(--dynamic-primary-color);

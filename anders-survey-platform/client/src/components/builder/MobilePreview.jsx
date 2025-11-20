@@ -18,7 +18,10 @@ export default function MobilePreview({
   const secondaryColor = surveyData?.branding?.secondaryColor || 'var(--secondary)';
   const buttonShape = surveyData?.branding?.buttonShape || 'rounded-lg';
   const buttonOpacity = surveyData?.branding?.buttonOpacity !== undefined ? surveyData?.branding?.buttonOpacity : 0.9;
-  const backgroundColor = surveyData?.branding?.backgroundColor || '#1a1f2e';
+  // 배경 색상: 템플릿에서 설정한 backgroundColor를 우선 사용, 없으면 tertiaryColor, 마지막으로 기본값
+  const backgroundColor = surveyData?.branding?.backgroundColor || 
+                          surveyData?.branding?.tertiaryColor || 
+                          '#F3F4F6';
   // 커버의 배경 이미지가 우선, 없으면 브랜딩의 배경 이미지 사용
   const bgImageBase64 = surveyData?.cover?.bgImageBase64 || surveyData?.branding?.bgImageBase64 || '';
   
@@ -41,10 +44,14 @@ export default function MobilePreview({
     width: '100%',
     height: '667px',
     maxHeight: '667px',
-    backgroundColor: '#fff',
+    backgroundColor: backgroundColor || '#fff', // 배경색 적용
     borderRadius: '24px',
     overflow: 'hidden',
-    position: 'relative'
+    position: 'relative',
+    backgroundImage: bgImageBase64 ? `url(${bgImageBase64})` : 'none',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat'
   };
 
   // 렌더링할 콘텐츠 결정
@@ -76,6 +83,8 @@ export default function MobilePreview({
             align-items: stretch !important;
             justify-content: flex-start !important;
             overflow: visible !important;
+            /* 배경 색상과 이미지는 StartPage에서 설정한 인라인 스타일을 유지 */
+            /* 인라인 스타일이 우선순위가 높으므로 CSS로 덮어쓰지 않음 */
           }
           .mobile-preview-container > div > div[class*="max-w"] {
             width: 100% !important;
@@ -86,13 +95,9 @@ export default function MobilePreview({
             overflow: auto !important;
             padding: 36px 24px !important;
             margin: 0 !important;
+            /* 내부 카드의 배경은 투명하게 유지 (외부 배경이 보이도록) */
             background-color: transparent !important;
-            background: transparent !important;
-          }
-          .mobile-preview-container > div[style*="backgroundImage"] {
-            background-size: cover !important;
-            background-position: center !important;
-            background-repeat: no-repeat !important;
+            background-image: none !important;
           }
         `}} />
         <div className="mobile-preview-container" style={containerStyle}>

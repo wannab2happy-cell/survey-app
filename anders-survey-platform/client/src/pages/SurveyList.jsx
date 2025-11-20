@@ -94,6 +94,14 @@ export default function SurveyList({ onLogout }) {
   // 삭제 확인 중인 항목 추적 (동기적으로 관리)
   const deletingRef = useRef(new Set());
 
+  // 메시지 표시 및 자동 숨김 (useEffect 전에 정의)
+  const showMessage = (type, text, duration = 3000) => {
+    setMessage({ type, text });
+    if (duration > 0) {
+      setTimeout(() => setMessage({ type: '', text: '' }), duration);
+    }
+  };
+
   useEffect(() => {
     const fetchSurveys = async () => {
       setLoading(true);
@@ -119,6 +127,7 @@ export default function SurveyList({ onLogout }) {
                 ? new Date(survey.createdAt || survey.updatedAt).toLocaleString('ko-KR')
                 : 'N/A',
               source: 'api',
+              totalResponses: survey.totalResponses || 0
             };
           }).filter(s => s !== null);
         } else if (Array.isArray(response.data)) {
@@ -137,6 +146,7 @@ export default function SurveyList({ onLogout }) {
                 ? new Date(survey.createdAt || survey.updatedAt).toLocaleString('ko-KR')
                 : 'N/A',
               source: 'api',
+              totalResponses: survey.totalResponses || 0
             };
           }).filter(s => s !== null);
         }
@@ -150,20 +160,27 @@ export default function SurveyList({ onLogout }) {
       // 로컬 스토리지에서 데이터 로드 (API 실패 시 대비)
       try {
         const localSurveys = loadSurveyListFromLocal();
+        // 로컬 스토리지 설문도 API 설문과 병합 (중복 제거는 아래에서 처리)
         allSurveys.push(...localSurveys);
       } catch (localErr) {
         console.error('로컬 스토리지에서 설문 목록 로드 실패:', localErr);
       }
       
-      // 중복 제거 및 데이터 검증
+      // 중복 제거 및 데이터 검증 (API 데이터 우선)
       const uniqueSurveys = [];
       const seenIds = new Set();
+      
+      // API 설문을 먼저 추가 (우선순위 높음)
       for (const survey of allSurveys) {
         if (survey && survey.id && !seenIds.has(survey.id)) {
           seenIds.add(survey.id);
-          // 최종 데이터 검증
-          if (survey.title && survey.status) {
-            uniqueSurveys.push(survey);
+          // 최종 데이터 검증 - title이 없어도 id만 있으면 표시
+          if (survey.id) {
+            uniqueSurveys.push({
+              ...survey,
+              title: survey.title || '제목 없음',
+              status: survey.status || 'inactive'
+            });
           } else {
             console.warn('불완전한 설문 데이터:', survey);
           }
@@ -230,14 +247,6 @@ export default function SurveyList({ onLogout }) {
     if (onLogout) onLogout();
     localStorage.removeItem('token');
     navigate('/login', { replace: true });
-  };
-
-  // 메시지 표시 및 자동 숨김
-  const showMessage = (type, text, duration = 3000) => {
-    setMessage({ type, text });
-    if (duration > 0) {
-      setTimeout(() => setMessage({ type: '', text: '' }), duration);
-    }
   };
 
   // 삭제 핸들러 (요구사항 7) - 확인 1회만 진행
@@ -486,7 +495,7 @@ export default function SurveyList({ onLogout }) {
           </div>
           <div className="px-3 py-2 bg-white border border-gray-200 rounded-lg shadow-sm flex items-center gap-2">
             <span className="text-xs text-text-sub">응답</span>
-            <span className="text-sm font-semibold text-text-main">{totalResponses}</span>
+            <span className="text-base font-bold text-gray-900">{totalResponses}</span>
           </div>
         </div>
 
@@ -661,8 +670,8 @@ export default function SurveyList({ onLogout }) {
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                           {survey.updatedAt}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                          {survey.totalResponses || 0}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className="text-base font-bold text-gray-900">{survey.totalResponses || 0}</span>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <div className="flex items-center gap-2">

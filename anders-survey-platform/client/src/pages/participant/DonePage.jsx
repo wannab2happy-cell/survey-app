@@ -80,8 +80,34 @@ export default function DonePage({
 
   const shapeClass = getShapeClass();
 
+  // 참가자 페이지인지 확인 (SurveyPageV2에서 렌더링되는 경우)
+  const isParticipantPage = typeof window !== 'undefined' && 
+    (window.location.pathname.includes('/s/') || document.body.classList.contains('participant-page'));
+
   return (
-    <div className="h-screen w-full max-w-full flex items-center justify-center px-4 sm:px-6 safe-area-bottom relative" style={{ ...bgStyle, width: '100%', maxWidth: '100vw', height: '100vh', minHeight: '100vh' }}>
+    <div 
+      className="h-screen w-full max-w-full flex items-center justify-center px-4 sm:px-6 safe-area-bottom" 
+      style={{ 
+        ...bgStyle, 
+        width: isParticipantPage ? '100vw' : '100%', 
+        maxWidth: '100vw', 
+        height: isParticipantPage ? '100vh' : 'auto',
+        minHeight: '100vh',
+        position: isParticipantPage ? 'fixed' : 'relative',
+        top: isParticipantPage ? 0 : 'auto',
+        left: isParticipantPage ? 0 : 'auto',
+        right: isParticipantPage ? 0 : 'auto',
+        bottom: isParticipantPage ? 0 : 'auto',
+        zIndex: isParticipantPage ? 0 : 'auto',
+        overflowY: isParticipantPage ? 'auto' : 'visible',
+        // 배경 스타일을 명시적으로 강제
+        backgroundColor: bgStyle.backgroundColor || actualBackgroundColor,
+        backgroundImage: bgStyle.backgroundImage || 'none',
+        backgroundSize: bgStyle.backgroundSize || 'cover',
+        backgroundPosition: bgStyle.backgroundPosition || 'center',
+        backgroundRepeat: bgStyle.backgroundRepeat || 'no-repeat'
+      }}
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
