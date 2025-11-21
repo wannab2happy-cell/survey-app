@@ -23,10 +23,33 @@ const allowedOrigins = process.env.CLIENT_URL
   ? process.env.CLIENT_URL.split(',').map(url => url.trim())
   : [];
 
+// 와일드카드 패턴 매칭 함수
+const isOriginAllowed = (origin) => {
+  if (!origin) return true; // origin이 없으면 허용 (Postman, curl 등)
+  
+  for (const pattern of allowedOrigins) {
+    // 와일드카드 패턴 처리 (*.vercel.app)
+    if (pattern.includes('*')) {
+      const regexPattern = pattern
+        .replace(/\./g, '\\.')  // .을 \.로 이스케이프
+        .replace(/\*/g, '.*');  // *를 .*로 변환
+      const regex = new RegExp(`^${regexPattern}$`);
+      if (regex.test(origin)) {
+        return true;
+      }
+    } else {
+      // 정확한 URL 매칭
+      if (origin === pattern) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
 const corsOptions = {
   origin: function (origin, callback) {
-    // 개발 환경에서는 origin이 없는 요청도 허용 (Postman, curl 등)
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (isOriginAllowed(origin)) {
       callback(null, true);
     } else {
       callback(new Error(`Not allowed by CORS: ${origin}`));
