@@ -7,6 +7,7 @@ import SharedSurveyResults from './pages/SharedSurveyResults';
 import Login from './pages/Login';
 import Admin from './pages/Admin';
 import AcceptInvite from './pages/AcceptInvite';
+import AdminV2 from './pages/AdminV2';
 import NotFound from './pages/NotFound';
 import { isThemeV2Enabled } from './utils/featureToggle';
 import './App.css';
