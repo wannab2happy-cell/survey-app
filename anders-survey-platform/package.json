@@ -8,6 +8,7 @@
     "dev:client": "cd client && npm run dev",
     "build": "cd client && npm run build",
     "preview": "cd client && npm run preview",
+    "start": "node src/app.js",
     "start-backend": "cd anders-survey-backend && npm start"
   },
   "dependencies": {
