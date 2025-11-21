@@ -30,11 +30,15 @@ const isOriginAllowed = (origin) => {
   for (const pattern of allowedOrigins) {
     // 와일드카드 패턴 처리 (*.vercel.app)
     if (pattern.includes('*')) {
-      const regexPattern = pattern
-        .replace(/\./g, '\\.')  // .을 \.로 이스케이프
+      // URL 패턴을 정규식으로 변환
+      // 예: https://*.vercel.app -> ^https://.*\.vercel\.app$
+      let regexPattern = pattern
+        .replace(/[.+?^${}()|[\]\\]/g, '\\$&')  // 특수 문자 이스케이프
         .replace(/\*/g, '.*');  // *를 .*로 변환
       const regex = new RegExp(`^${regexPattern}$`);
-      if (regex.test(origin)) {
+      const isMatch = regex.test(origin);
+      console.log(`[CORS] Pattern: ${pattern}, Origin: ${origin}, Match: ${isMatch}`);
+      if (isMatch) {
         return true;
       }
     } else {
