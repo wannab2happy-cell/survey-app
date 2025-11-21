@@ -11,10 +11,16 @@ if (!baseURL) {
   console.error('[Axios] Vercel 환경 변수에 VITE_API_URL을 추가하세요.');
 }
 
+const finalBaseURL = baseURL || 'https://survey-app-c6tz.onrender.com/api';
+console.log('[Axios] finalBaseURL:', finalBaseURL);
+console.log('[Axios] axiosInstance will use baseURL:', finalBaseURL);
+
 const axiosInstance = axios.create({
-  baseURL: baseURL || 'https://survey-app-c6tz.onrender.com/api', // fallback
+  baseURL: finalBaseURL,
   headers: { 'Content-Type': 'application/json' },
 });
+
+console.log('[Axios] axiosInstance.defaults.baseURL:', axiosInstance.defaults.baseURL);
 
 // JWT 토큰 만료 확인 헬퍼 함수
 const isTokenExpired = (token) => {
