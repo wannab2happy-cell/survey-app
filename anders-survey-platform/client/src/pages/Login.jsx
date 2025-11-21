@@ -23,25 +23,56 @@ export default function Login({ onLogin }) {
 
     try {
       console.log('[Login] 로그인 시도:', { username: id });
+      console.log('[Login] 요청 URL:', axiosInstance.defaults.baseURL + '/auth/login');
+      
       const res = await axiosInstance.post('/auth/login', {
         username: id,
         password,
       });
 
-      console.log('[Login] 로그인 성공:', res.data);
+      console.log('[Login] 응답 상태:', res.status);
+      console.log('[Login] 응답 데이터:', res.data);
+      
+      // 응답 데이터 확인
+      if (!res.data) {
+        throw new Error('서버로부터 응답을 받지 못했습니다.');
+      }
+      
       const token = res.data.token;
       
       if (!token) {
-        throw new Error('토큰을 받지 못했습니다.');
+        console.error('[Login] 토큰이 없습니다. 응답:', res.data);
+        throw new Error('토큰을 받지 못했습니다. 서버 응답: ' + JSON.stringify(res.data));
       }
       
+      console.log('[Login] 토큰 저장:', token.substring(0, 20) + '...');
       localStorage.setItem('token', token);
 
+      console.log('[Login] 관리자 페이지로 이동합니다.');
       // 로그인 성공 → 관리자 페이지 이동
       navigate('/admin', { replace: true });
     } catch (err) {
       console.error('[Login] 로그인 오류:', err);
-      const errorMessage = err.response?.data?.message || err.message || '로그인 중 오류가 발생했습니다.';
+      console.error('[Login] 오류 상세:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        statusText: err.response?.statusText,
+      });
+      
+      let errorMessage = '로그인 중 오류가 발생했습니다.';
+      
+      if (err.response) {
+        // 서버 응답이 있는 경우
+        errorMessage = err.response.data?.message || err.response.data?.error || `서버 오류 (${err.response.status})`;
+      } else if (err.request) {
+        // 요청은 보냈지만 응답을 받지 못한 경우
+        errorMessage = '서버에 연결할 수 없습니다. 네트워크를 확인해주세요.';
+      } else {
+        // 요청 설정 중 오류가 발생한 경우
+        errorMessage = err.message || '로그인 요청 중 오류가 발생했습니다.';
+      }
+      
       setError(errorMessage);
     } finally {
       setLoading(false);
