@@ -9,10 +9,18 @@ console.log('[Axios] import.meta.env.VITE_API_URL:', envBaseURL);
 console.log('[Axios] import.meta.env.MODE:', import.meta.env.MODE);
 
 // Fallback: 환경 변수가 없으면 프로덕션 API URL 사용
+// ⚠️ 중요: Vercel 환경 변수가 빌드 시점에 주입되지 않으면 fallback 사용
 const PRODUCTION_API_URL = 'https://survey-app-c6tz.onrender.com/api';
-const finalBaseURL = envBaseURL && envBaseURL.trim() !== '' 
-  ? envBaseURL.trim().replace(/\/$/, '') // 끝의 슬래시 제거
-  : PRODUCTION_API_URL;
+
+// 환경 변수 확인 및 정규화
+let finalBaseURL;
+if (envBaseURL && typeof envBaseURL === 'string' && envBaseURL.trim() !== '') {
+  finalBaseURL = envBaseURL.trim().replace(/\/$/, ''); // 끝의 슬래시 제거
+} else {
+  // 환경 변수가 없거나 빈 문자열이면 fallback 사용
+  finalBaseURL = PRODUCTION_API_URL;
+  console.warn('[Axios] ⚠️ VITE_API_URL이 설정되지 않아 fallback URL을 사용합니다:', PRODUCTION_API_URL);
+}
 
 console.log('[Axios] ✅ 최종 baseURL:', finalBaseURL);
 
