@@ -12,7 +12,7 @@ let hasLoggedFeatureToggle = false;
 
 export const isThemeV2Enabled = () => {
   // 개발 환경에서는 강제로 true (테스트용)
-  // 프로덕션에서는 환경 변수로 제어
+  // 프로덕션에서는 환경 변수로 제어 (기본값: true)
   const envValue = import.meta.env.VITE_FEATURE_THEME_V2;
   
   // 개발 환경에서는 무조건 true
@@ -24,8 +24,8 @@ export const isThemeV2Enabled = () => {
     return true;
   }
   
-  // 프로덕션에서는 환경 변수로 제어
-  return envValue === 'true';
+  // 프로덕션에서는 환경 변수로 제어 (설정되지 않으면 기본값 true)
+  return envValue !== 'false';
 };
 
 /**
