@@ -2,8 +2,17 @@ import axios from 'axios';
 
 const baseURL = import.meta.env.VITE_API_URL;
 
+// 디버깅: baseURL 확인
+console.log('[Axios] VITE_API_URL:', import.meta.env.VITE_API_URL);
+console.log('[Axios] baseURL:', baseURL);
+
+if (!baseURL) {
+  console.error('[Axios] ❌ VITE_API_URL이 설정되지 않았습니다!');
+  console.error('[Axios] Vercel 환경 변수에 VITE_API_URL을 추가하세요.');
+}
+
 const axiosInstance = axios.create({
-  baseURL,
+  baseURL: baseURL || 'https://survey-app-c6tz.onrender.com/api', // fallback
   headers: { 'Content-Type': 'application/json' },
 });
 

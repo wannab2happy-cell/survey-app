@@ -75,6 +75,7 @@ const corsOptions = {
     }
   },
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'], // ⭐ Authorization 헤더 명시적 허용
   credentials: true,
   optionsSuccessStatus: 200,
 };
