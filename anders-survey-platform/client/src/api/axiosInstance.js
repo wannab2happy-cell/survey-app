@@ -79,9 +79,16 @@ axiosInstance.interceptors.request.use(
     
     if (import.meta.env.MODE === 'development' || isLoginRequest) {
       console.log(`[Axios] Request: ${config.method?.toUpperCase()} ${fullUrl}`);
+      console.log(`[Axios] Config:`, { url: config.url, method: config.method, baseURL: config.baseURL });
     }
     
-    // 토큰이 만료되었는지 확인
+    // 로그인 요청은 토큰 만료 체크를 건너뛰기
+    if (isLoginRequest) {
+      console.log('[Axios] 로그인 요청이므로 토큰 체크를 건너뜁니다.');
+      return config;
+    }
+    
+    // 토큰이 만료되었는지 확인 (로그인 요청 제외)
     if (token && isTokenExpired(token)) {
       console.warn('토큰이 만료되었습니다. 로그인 페이지로 이동합니다.');
       localStorage.removeItem('token');
@@ -98,7 +105,10 @@ axiosInstance.interceptors.request.use(
     if (token) config.headers['Authorization'] = `Bearer ${token}`;
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error('[Axios] Request interceptor error:', error);
+    return Promise.reject(error);
+  }
 );
 
 axiosInstance.interceptors.response.use(
