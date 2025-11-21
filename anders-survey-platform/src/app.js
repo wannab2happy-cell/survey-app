@@ -27,29 +27,38 @@ const allowedOrigins = process.env.CLIENT_URL
 const isOriginAllowed = (origin) => {
   if (!origin) return true; // origin이 없으면 허용 (Postman, curl 등)
   
+  console.log(`[CORS] Checking origin: ${origin}`);
+  console.log(`[CORS] Allowed patterns:`, allowedOrigins);
+  
   for (const pattern of allowedOrigins) {
     // 와일드카드 패턴 처리 (*.vercel.app)
     if (pattern.includes('*')) {
       // URL 패턴을 정규식으로 변환
       // 예: https://*.vercel.app -> ^https://.*\.vercel\.app$
-      // *를 먼저 .*로 변환한 후, 나머지 특수 문자 이스케이프
+      // 단계별로 변환하여 정확한 정규식 생성
       let regexPattern = pattern
-        .replace(/\*/g, 'PLACEHOLDER_WILDCARD')  // *를 임시 플레이스홀더로
-        .replace(/[.+?^${}()|[\]\\]/g, '\\$&')  // 특수 문자 이스케이프
-        .replace(/PLACEHOLDER_WILDCARD/g, '.*');  // 플레이스홀더를 .*로 변환
+        .replace(/\*/g, '___WILDCARD___')  // *를 임시 플레이스홀더로
+        .replace(/[.+?^${}()|[\]\\]/g, '\\$&')  // 특수 문자 이스케이프 (하지만 *는 이미 처리됨)
+        .replace(/___WILDCARD___/g, '.*');  // 플레이스홀더를 .*로 변환
+      
       const regex = new RegExp(`^${regexPattern}$`);
       const isMatch = regex.test(origin);
-      console.log(`[CORS] Pattern: ${pattern}, Regex: ${regexPattern}, Origin: ${origin}, Match: ${isMatch}`);
+      console.log(`[CORS] Pattern: "${pattern}" -> Regex: "${regexPattern}"`);
+      console.log(`[CORS] Testing "${origin}" against regex: ${isMatch}`);
+      
       if (isMatch) {
+        console.log(`[CORS] ✅ MATCH FOUND!`);
         return true;
       }
     } else {
       // 정확한 URL 매칭
       if (origin === pattern) {
+        console.log(`[CORS] ✅ Exact match: ${origin}`);
         return true;
       }
     }
   }
+  console.log(`[CORS] ❌ No match found for: ${origin}`);
   return false;
 };
 
