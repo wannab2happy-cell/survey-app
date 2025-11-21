@@ -13,7 +13,7 @@ export default function Login({ onLogin }) {
     setError('');
 
     try {
-      const res = await axiosInstance.post('/login', {
+      const res = await axiosInstance.post('/auth/login', {
         username: id,
         password,
       });
@@ -24,7 +24,9 @@ export default function Login({ onLogin }) {
       // 로그인 성공 → 관리자 페이지 이동
       navigate('/admin', { replace: true });
     } catch (err) {
-      setError('아이디 또는 비밀번호가 잘못되었습니다.');
+      console.error('로그인 오류:', err);
+      const errorMessage = err.response?.data?.message || err.message || '로그인 중 오류가 발생했습니다.';
+      setError(errorMessage);
     }
   };
 
