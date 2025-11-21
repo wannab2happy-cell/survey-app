@@ -11,14 +11,21 @@ export default function Login({ onLogin }) {
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('[Login] handleLoginSubmit 호출됨');
+    console.log('[Login] 입력값:', { id: id.trim(), password: password.trim() });
+    
     setError('');
     
     // 입력값 검증
     if (!id.trim() || !password.trim()) {
+      console.warn('[Login] 입력값이 비어있습니다.');
       setError('아이디와 비밀번호를 입력해주세요.');
       return;
     }
 
+    console.log('[Login] 로딩 시작');
     setLoading(true);
 
     try {
@@ -118,6 +125,11 @@ export default function Login({ onLogin }) {
           <button
             type="submit"
             disabled={loading || !id.trim() || !password.trim()}
+            onClick={(e) => {
+              console.log('[Login] 버튼 클릭됨');
+              console.log('[Login] 버튼 상태:', { loading, id: id.trim(), password: password.trim() });
+              console.log('[Login] disabled 상태:', loading || !id.trim() || !password.trim());
+            }}
             className="w-full py-2 px-4 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
               backgroundColor: loading || !id.trim() || !password.trim() ? '#9CA3AF' : 'var(--primary, #26C6DA)',
