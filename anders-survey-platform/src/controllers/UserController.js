@@ -167,32 +167,60 @@ export const inviteUser = async (req, res) => {
         );
 
         // 클라이언트 URL 처리 (와일드카드 및 다중 URL 대응)
-        let clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-        
-        // 1. 콤마로 구분된 경우 첫 번째 URL 사용
-        if (clientUrl.includes(',')) {
-            clientUrl = clientUrl.split(',')[0].trim();
+        let clientUrl = null;
+
+        // 🔥 1순위: 요청을 보낸 프론트엔드의 실제 Origin 헤더 (가장 정확함)
+        const reqOrigin = req.headers.origin;
+        if (reqOrigin) {
+            console.log('[inviteUser] ✅ Origin 헤더 사용:', reqOrigin);
+            clientUrl = reqOrigin;
         }
 
-        // 2. 와일드카드(*) 처리 - Vercel 프리뷰 배포 대응
-        // MAIN_CLIENT_URL 환경 변수가 있으면 최우선 사용
-        if (process.env.MAIN_CLIENT_URL) {
-            clientUrl = process.env.MAIN_CLIENT_URL.trim();
-        } else if (clientUrl.includes('*')) {
-            // 와일드카드가 있으면 제거하거나 기본값으로 대체
-            // 예: https://*.vercel.app -> https://survey-app.vercel.app (기본값 필요)
-            // 여기서는 와일드카드가 포함된 경우, 현재 요청의 Origin 헤더를 사용할 수 있으면 사용
-            const reqOrigin = req.headers.origin;
-            if (reqOrigin && (reqOrigin.includes('vercel.app') || reqOrigin.includes('localhost'))) {
-                clientUrl = reqOrigin;
-            } else {
-                // 최후의 수단: 와일드카드 제거 (불완전할 수 있음)
-                clientUrl = clientUrl.replace('*.', ''); 
+        // 🔥 2순위: Referer 헤더에서 도메인 추출
+        if (!clientUrl) {
+            const referer = req.headers.referer || req.headers.referrer;
+            if (referer) {
+                try {
+                    const refererUrl = new URL(referer);
+                    clientUrl = `${refererUrl.protocol}//${refererUrl.host}`;
+                    console.log('[inviteUser] ✅ Referer 헤더에서 URL 추출:', clientUrl);
+                } catch (err) {
+                    console.warn('[inviteUser] ⚠️ Referer 파싱 실패:', err.message);
+                }
             }
+        }
+
+        // 🔥 3순위: 환경 변수 FRONTEND_URL (프로덕션용 고정 도메인)
+        if (!clientUrl && process.env.FRONTEND_URL) {
+            clientUrl = process.env.FRONTEND_URL.trim();
+            console.log('[inviteUser] ✅ FRONTEND_URL 환경 변수 사용:', clientUrl);
+        }
+
+        // 🔥 4순위: 환경 변수 CLIENT_URL (CORS용이지만 fallback으로 사용)
+        if (!clientUrl) {
+            let envUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+            console.log('[inviteUser] CLIENT_URL 환경 변수:', envUrl);
+
+            // 콤마로 구분된 경우 첫 번째 URL 사용
+            if (envUrl.includes(',')) {
+                envUrl = envUrl.split(',')[0].trim();
+            }
+
+            // 와일드카드(*) 처리
+            if (envUrl.includes('*')) {
+                console.warn('[inviteUser] ⚠️ CLIENT_URL에 와일드카드가 포함되어 있습니다:', envUrl);
+                console.warn('[inviteUser] 권장: Render 환경 변수에 FRONTEND_URL을 추가하세요 (예: https://survey-....vercel.app)');
+                // 와일드카드 제거 (https://*.vercel.app -> https://vercel.app - 부정확함)
+                envUrl = envUrl.replace(/\*\./g, '');
+                console.warn('[inviteUser] ⚠️ 와일드카드 제거 후:', envUrl);
+            }
+            
+            clientUrl = envUrl;
         }
         
         // 끝에 슬래시 제거
         clientUrl = clientUrl.replace(/\/$/, '');
+        console.log('[inviteUser] 🎯 최종 클라이언트 URL:', clientUrl);
 
         const inviteLink = `${clientUrl}/accept-invite?token=${inviteToken}`;
 
