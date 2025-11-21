@@ -32,12 +32,14 @@ const isOriginAllowed = (origin) => {
     if (pattern.includes('*')) {
       // URL 패턴을 정규식으로 변환
       // 예: https://*.vercel.app -> ^https://.*\.vercel\.app$
+      // *를 먼저 .*로 변환한 후, 나머지 특수 문자 이스케이프
       let regexPattern = pattern
+        .replace(/\*/g, 'PLACEHOLDER_WILDCARD')  // *를 임시 플레이스홀더로
         .replace(/[.+?^${}()|[\]\\]/g, '\\$&')  // 특수 문자 이스케이프
-        .replace(/\*/g, '.*');  // *를 .*로 변환
+        .replace(/PLACEHOLDER_WILDCARD/g, '.*');  // 플레이스홀더를 .*로 변환
       const regex = new RegExp(`^${regexPattern}$`);
       const isMatch = regex.test(origin);
-      console.log(`[CORS] Pattern: ${pattern}, Origin: ${origin}, Match: ${isMatch}`);
+      console.log(`[CORS] Pattern: ${pattern}, Regex: ${regexPattern}, Origin: ${origin}, Match: ${isMatch}`);
       if (isMatch) {
         return true;
       }
