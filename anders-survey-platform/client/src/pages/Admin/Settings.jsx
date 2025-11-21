@@ -141,7 +141,15 @@ export default function Settings() {
 
       if (response.data.success) {
         // 성공 메시지에 초대 링크 포함
-        const inviteLink = response.data.data?.inviteLink || '';
+        let inviteLink = response.data.data?.inviteLink || '';
+        
+        // 🔥 초대 링크에 와일드카드(*.vercel.app)가 있으면 현재 도메인으로 교체
+        if (inviteLink.includes('*.vercel.app') || inviteLink.includes('*')) {
+          const currentOrigin = window.location.origin; // 현재 브라우저 주소 (예: https://survey-....vercel.app)
+          inviteLink = inviteLink.replace(/https?:\/\/\*[^\/]*/, currentOrigin);
+          console.log('[Settings] 초대 링크 수정:', inviteLink);
+        }
+        
         const successMessage = inviteLink 
           ? `${newUser.name}님을 초대했습니다. 초대 링크: ${inviteLink}`
           : `${newUser.name}님을 초대했습니다.`;
