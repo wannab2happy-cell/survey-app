@@ -1,26 +1,33 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_URL;
+// 환경 변수에서 baseURL 가져오기
+const envBaseURL = import.meta.env.VITE_API_URL;
 
-// 디버깅: baseURL 확인
-console.log('[Axios] VITE_API_URL:', import.meta.env.VITE_API_URL);
-console.log('[Axios] baseURL:', baseURL);
+// 디버깅: 환경 변수 확인
+console.log('[Axios] import.meta.env:', import.meta.env);
+console.log('[Axios] import.meta.env.VITE_API_URL:', envBaseURL);
+console.log('[Axios] import.meta.env.MODE:', import.meta.env.MODE);
 
-if (!baseURL) {
-  console.error('[Axios] ❌ VITE_API_URL이 설정되지 않았습니다!');
-  console.error('[Axios] Vercel 환경 변수에 VITE_API_URL을 추가하세요.');
+// Fallback: 환경 변수가 없으면 프로덕션 API URL 사용
+const PRODUCTION_API_URL = 'https://survey-app-c6tz.onrender.com/api';
+const finalBaseURL = envBaseURL && envBaseURL.trim() !== '' 
+  ? envBaseURL.trim().replace(/\/$/, '') // 끝의 슬래시 제거
+  : PRODUCTION_API_URL;
+
+console.log('[Axios] ✅ 최종 baseURL:', finalBaseURL);
+
+if (!envBaseURL || envBaseURL.trim() === '') {
+  console.warn('[Axios] ⚠️ VITE_API_URL이 설정되지 않아 fallback URL을 사용합니다:', PRODUCTION_API_URL);
+  console.warn('[Axios] Vercel 환경 변수에 VITE_API_URL을 추가하세요.');
 }
-
-const finalBaseURL = baseURL || 'https://survey-app-c6tz.onrender.com/api';
-console.log('[Axios] finalBaseURL:', finalBaseURL);
-console.log('[Axios] axiosInstance will use baseURL:', finalBaseURL);
 
 const axiosInstance = axios.create({
   baseURL: finalBaseURL,
   headers: { 'Content-Type': 'application/json' },
 });
 
-console.log('[Axios] axiosInstance.defaults.baseURL:', axiosInstance.defaults.baseURL);
+// 생성 후 확인
+console.log('[Axios] ✅ axiosInstance.defaults.baseURL:', axiosInstance.defaults.baseURL);
 
 // JWT 토큰 만료 확인 헬퍼 함수
 const isTokenExpired = (token) => {
