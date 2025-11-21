@@ -6,27 +6,45 @@ export default function Login({ onLogin }) {
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
+    // 입력값 검증
+    if (!id.trim() || !password.trim()) {
+      setError('아이디와 비밀번호를 입력해주세요.');
+      return;
+    }
+
+    setLoading(true);
 
     try {
+      console.log('[Login] 로그인 시도:', { username: id });
       const res = await axiosInstance.post('/auth/login', {
         username: id,
         password,
       });
 
+      console.log('[Login] 로그인 성공:', res.data);
       const token = res.data.token;
+      
+      if (!token) {
+        throw new Error('토큰을 받지 못했습니다.');
+      }
+      
       localStorage.setItem('token', token);
 
       // 로그인 성공 → 관리자 페이지 이동
       navigate('/admin', { replace: true });
     } catch (err) {
-      console.error('로그인 오류:', err);
+      console.error('[Login] 로그인 오류:', err);
       const errorMessage = err.response?.data?.message || err.message || '로그인 중 오류가 발생했습니다.';
       setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,13 +77,14 @@ export default function Login({ onLogin }) {
 
           <button
             type="submit"
-            className="w-full py-2 px-4 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors font-medium"
+            disabled={loading || !id.trim() || !password.trim()}
+            className="w-full py-2 px-4 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
-              backgroundColor: 'var(--primary, #26C6DA)',
+              backgroundColor: loading || !id.trim() || !password.trim() ? '#9CA3AF' : 'var(--primary, #26C6DA)',
               color: '#FFFFFF',
             }}
           >
-            로그인
+            {loading ? '로그인 중...' : '로그인'}
           </button>
         </form>
       </div>
