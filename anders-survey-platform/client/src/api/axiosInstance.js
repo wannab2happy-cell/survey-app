@@ -3,10 +3,11 @@ import axios from 'axios';
 // 환경 변수에서 baseURL 가져오기
 const envBaseURL = import.meta.env.VITE_API_URL;
 
-// 디버깅: 환경 변수 확인
-console.log('[Axios] import.meta.env:', import.meta.env);
-console.log('[Axios] import.meta.env.VITE_API_URL:', envBaseURL);
-console.log('[Axios] import.meta.env.MODE:', import.meta.env.MODE);
+// 디버깅: 환경 변수 확인 (개발 모드에서만)
+if (import.meta.env.MODE === 'development') {
+  console.log('[Axios] import.meta.env.VITE_API_URL:', envBaseURL);
+  console.log('[Axios] import.meta.env.MODE:', import.meta.env.MODE);
+}
 
 // Fallback: 환경 변수가 없으면 프로덕션 API URL 사용
 // ⚠️ 중요: Vercel 환경 변수가 빌드 시점에 주입되지 않으면 fallback 사용
@@ -19,14 +20,18 @@ if (envBaseURL && typeof envBaseURL === 'string' && envBaseURL.trim() !== '') {
 } else {
   // 환경 변수가 없거나 빈 문자열이면 fallback 사용
   finalBaseURL = PRODUCTION_API_URL;
-  console.warn('[Axios] ⚠️ VITE_API_URL이 설정되지 않아 fallback URL을 사용합니다:', PRODUCTION_API_URL);
 }
 
-console.log('[Axios] ✅ 최종 baseURL:', finalBaseURL);
-
-if (!envBaseURL || envBaseURL.trim() === '') {
-  console.warn('[Axios] ⚠️ VITE_API_URL이 설정되지 않아 fallback URL을 사용합니다:', PRODUCTION_API_URL);
-  console.warn('[Axios] Vercel 환경 변수에 VITE_API_URL을 추가하세요.');
+// 최종 baseURL 로그 (프로덕션에서는 간단하게)
+if (import.meta.env.MODE === 'development') {
+  console.log('[Axios] import.meta.env.VITE_API_URL:', envBaseURL);
+  console.log('[Axios] ✅ 최종 baseURL:', finalBaseURL);
+  if (!envBaseURL || envBaseURL.trim() === '') {
+    console.warn('[Axios] ⚠️ VITE_API_URL이 설정되지 않아 fallback URL을 사용합니다:', PRODUCTION_API_URL);
+  }
+} else {
+  // 프로덕션에서는 최소한의 로그만
+  console.log('[Axios] baseURL:', finalBaseURL);
 }
 
 const axiosInstance = axios.create({
@@ -34,8 +39,10 @@ const axiosInstance = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// 생성 후 확인
-console.log('[Axios] ✅ axiosInstance.defaults.baseURL:', axiosInstance.defaults.baseURL);
+// 생성 후 확인 (개발 모드에서만)
+if (import.meta.env.MODE === 'development') {
+  console.log('[Axios] ✅ axiosInstance.defaults.baseURL:', axiosInstance.defaults.baseURL);
+}
 
 // JWT 토큰 만료 확인 헬퍼 함수
 const isTokenExpired = (token) => {
@@ -66,9 +73,11 @@ axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage?.getItem('token');
     
-    // 디버깅: 요청 URL 로그
-    const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
-    console.log(`[Axios] Request: ${config.method?.toUpperCase()} ${fullUrl}`);
+    // 디버깅: 요청 URL 로그 (개발 모드에서만 상세 로그)
+    if (import.meta.env.MODE === 'development') {
+      const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
+      console.log(`[Axios] Request: ${config.method?.toUpperCase()} ${fullUrl}`);
+    }
     
     // 토큰이 만료되었는지 확인
     if (token && isTokenExpired(token)) {
