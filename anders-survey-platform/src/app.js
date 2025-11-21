@@ -49,9 +49,13 @@ const isOriginAllowed = (origin) => {
 
 const corsOptions = {
   origin: function (origin, callback) {
+    console.log(`[CORS] Request from origin: ${origin}`);
+    console.log(`[CORS] Allowed origins:`, allowedOrigins);
     if (isOriginAllowed(origin)) {
+      console.log(`[CORS] ✅ Origin allowed: ${origin}`);
       callback(null, true);
     } else {
+      console.log(`[CORS] ❌ Origin blocked: ${origin}`);
       callback(new Error(`Not allowed by CORS: ${origin}`));
     }
   },
