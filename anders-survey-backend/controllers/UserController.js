@@ -1,6 +1,7 @@
 // controllers/UserController.js
 import User from '../models/User.js';
 import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 
 // 사용자 초대
 export const inviteUser = async (req, res) => {
