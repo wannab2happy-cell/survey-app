@@ -13,8 +13,7 @@ export default function Login({ onLogin }) {
     setError('');
 
     try {
-      // ⭐ 핵심 수정 포인트: /login → /api/login
-      const res = await axiosInstance.post('/api/login', {
+      const res = await axiosInstance.post('/login', {
         username: id,
         password,
       });
