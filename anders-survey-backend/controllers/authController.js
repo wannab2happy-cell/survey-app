@@ -20,7 +20,11 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ username });
+    // 기존: const user = await User.findOne({ username });
+    // 개선: username 혹은 email 로 조회
+    const user = await User.findOne({
+      $or: [{ username }, { email: username }]
+    });
     if (!user) {
       return res.status(401).json({ 
         success: false,

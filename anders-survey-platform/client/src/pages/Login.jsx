@@ -30,13 +30,13 @@ export default function Login({ onLogin }) {
 
     try {
       console.log('[Login] 로그인 시도:', { username: id });
-      console.log('[Login] 요청 URL:', axiosInstance.defaults.baseURL + '/auth/login');
+      console.log('[Login] 요청 URL:', axiosInstance.defaults.baseURL + '/login');
       console.log('[Login] axiosInstance 확인:', {
         baseURL: axiosInstance.defaults.baseURL,
         hasPost: typeof axiosInstance.post === 'function'
       });
       
-      const res = await axiosInstance.post('/auth/login', {
+      const res = await axiosInstance.post('/login', {
         username: id,
         password,
       });

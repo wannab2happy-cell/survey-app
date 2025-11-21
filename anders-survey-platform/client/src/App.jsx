@@ -6,7 +6,7 @@ import QRCodePage from './pages/QRCodePage';
 import SharedSurveyResults from './pages/SharedSurveyResults';
 import Login from './pages/Login';
 import Admin from './pages/Admin';
-import AdminV2 from './pages/AdminV2';
+import AcceptInvite from './pages/AcceptInvite';
 import NotFound from './pages/NotFound';
 import { isThemeV2Enabled } from './utils/featureToggle';
 import './App.css';
@@ -32,6 +32,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/accept-invite" element={<AcceptInvite />} />
           {/* 레거시 라우트 (기존 호환성 유지) */}
           <Route path="/surveys" element={<SurveyPage />} />
           <Route path="/surveys/:surveyId" element={<SurveyPage />} />
