@@ -45,6 +45,10 @@ axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage?.getItem('token');
     
+    // 디버깅: 요청 URL 로그
+    const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
+    console.log(`[Axios] Request: ${config.method?.toUpperCase()} ${fullUrl}`);
+    
     // 토큰이 만료되었는지 확인
     if (token && isTokenExpired(token)) {
       console.warn('토큰이 만료되었습니다. 로그인 페이지로 이동합니다.');
