@@ -79,20 +79,32 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // =============================================
 const allowedOrigins = [
   process.env.CLIENT_URL,                  // Vercel 프로덕션
-  process.env.CLIENT_URL,                 // 개발환경
+  "https://survey-8ke8ggum8-anders-projects-2d7c87b2.vercel.app", // Specific Vercel Preview
 ].filter(Boolean);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.warn("⚠️ CORS 차단:", origin);
-        callback(null, false);
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
       }
+
+      // Allow any Vercel preview deployment
+      if (origin.endsWith(".vercel.app")) {
+        return callback(null, true);
+      }
+
+      console.warn("⚠️ CORS 차단:", origin);
+      callback(null, false);
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    maxAge: 600,
   })
 );
 
