@@ -1,8 +1,10 @@
 // 관리자용 좌측 사이드바
 // 모던 단색 아이콘 디자인
 
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import LogoutModal from './LogoutModal';
 
 // 단색 SVG 아이콘 컴포넌트
 const DashboardIcon = ({ className = "w-5 h-5" }) => (
@@ -52,6 +54,17 @@ const menuItems = [
 
 export default function Sidebar({ onLogout }) {
   const location = useLocation();
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+  const handleLogoutConfirm = () => {
+    setIsLogoutModalOpen(false);
+    if (onLogout) {
+      onLogout();
+    } else {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+  };
 
   const isActive = (path) => {
     if (path === '/admin/dashboard') {
@@ -175,16 +188,7 @@ export default function Sidebar({ onLogout }) {
         {/* 로그아웃 */}
         <button
           type="button"
-          onClick={() => {
-            if (window.confirm('로그아웃 하시겠습니까?')) {
-              if (onLogout) {
-                onLogout();
-              } else {
-                localStorage.removeItem('token');
-                window.location.href = '/login';
-              }
-            }
-          }}
+          onClick={() => setIsLogoutModalOpen(true)}
           className="w-full px-4 py-2.5 rounded-lg transition-all duration-200 text-left flex items-center gap-3 font-medium text-sm"
           style={{ color: ADMIN_INACTIVE_COLOR }}
           onMouseEnter={(e) => {
@@ -200,6 +204,13 @@ export default function Sidebar({ onLogout }) {
           <span>로그아웃</span>
         </button>
       </div>
+
+      
+      <LogoutModal 
+        isOpen={isLogoutModalOpen} 
+        onClose={() => setIsLogoutModalOpen(false)} 
+        onConfirm={handleLogoutConfirm} 
+      />
     </aside>
   );
 }
