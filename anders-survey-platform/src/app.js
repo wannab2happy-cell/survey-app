@@ -14,6 +14,7 @@ import router from './routes/index.js';
 import brandingRoutes from './routes/brandingRoutes.js'; 
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -98,6 +99,7 @@ app.use('/api', router);
 app.use('/api/branding', brandingRoutes);
 app.use('/api/admin/dashboard', dashboardRoutes);
 app.use('/api/auth', authRoutes); 
+app.use('/api/users', userRoutes);
 
 // 404 핸들러 (라우트 이후에 위치)
 app.use((req, res) => {
