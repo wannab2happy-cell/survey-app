@@ -15,7 +15,7 @@ import brandingRoutes from "./routes/brandingRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 
 import { verifyToken, optionalVerifyToken } from "./middlewares/auth.js";
-import { loginUser } from "./controllers/authController.js";
+import { loginUser, getProfile, updateProfile } from "./controllers/authController.js";
 import User from "./models/User.js";
 
 dotenv.config();
@@ -119,7 +119,9 @@ app.post("/api/login", loginUser);
 app.use("/api/surveys", optionalVerifyToken, surveyRoutes);
 app.use("/api/admin/dashboard", verifyToken, dashboardRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/branding", brandingRoutes);
+// 프로필 조회 및 업데이트 API
+app.get('/api/profile', verifyToken, getProfile);
+app.put('/api/profile', verifyToken, updateProfile);
 
 // =============================================
 // 7. 404 핸들러

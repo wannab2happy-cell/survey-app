@@ -60,12 +60,17 @@ export const inviteUser = async (req, res) => {
     const invitedAt = new Date();
     const expiresAt = new Date(invitedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
 
+    // 임시 비밀번호 생성 (초대된 사용자는 나중에 비밀번호를 설정)
+    const tempPasswordPlain = crypto.randomBytes(16).toString('hex');
+    const tempPasswordHash = await bcrypt.hash(tempPasswordPlain, 10);
+
     // 초대된 사용자 생성 (비밀번호는 나중에 설정)
     const invitedUser = await User.create({
       username: email, // 임시로 이메일을 username으로 사용
       email: email,
       name: name,
       role: targetRole,
+      password: tempPasswordHash,
       inviteToken: inviteToken,
       invitedBy: inviterId || null,
       invitedAt: invitedAt,
