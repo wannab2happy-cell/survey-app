@@ -50,7 +50,10 @@ export default function Login({ onLogin }) {
 
       console.log('[Login] 관리자 페이지로 이동합니다.');
       // 로그인 성공 → 관리자 페이지 이동
-      navigate('/admin', { replace: true });
+      // 약간의 지연을 두어 토큰 저장이 완료된 후 이동
+      setTimeout(() => {
+        navigate('/admin', { replace: true });
+      }, 100);
     } catch (err) {
       console.error('[Login] 로그인 오류:', err);
       console.error('[Login] 오류 상세:', {
