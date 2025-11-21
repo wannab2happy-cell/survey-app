@@ -73,9 +73,11 @@ axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage?.getItem('token');
     
-    // 디버깅: 요청 URL 로그 (개발 모드에서만 상세 로그)
-    if (import.meta.env.MODE === 'development') {
-      const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
+    // 디버깅: 요청 URL 로그 (로그인 요청은 항상 로그 출력)
+    const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
+    const isLoginRequest = config.url?.includes('/auth/login') || config.url?.includes('/login');
+    
+    if (import.meta.env.MODE === 'development' || isLoginRequest) {
       console.log(`[Axios] Request: ${config.method?.toUpperCase()} ${fullUrl}`);
     }
     

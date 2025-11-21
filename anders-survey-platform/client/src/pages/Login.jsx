@@ -24,11 +24,17 @@ export default function Login({ onLogin }) {
     try {
       console.log('[Login] 로그인 시도:', { username: id });
       console.log('[Login] 요청 URL:', axiosInstance.defaults.baseURL + '/auth/login');
+      console.log('[Login] axiosInstance 확인:', {
+        baseURL: axiosInstance.defaults.baseURL,
+        hasPost: typeof axiosInstance.post === 'function'
+      });
       
       const res = await axiosInstance.post('/auth/login', {
         username: id,
         password,
       });
+      
+      console.log('[Login] 요청 완료, 응답 대기 중...');
 
       console.log('[Login] 응답 상태:', res.status);
       console.log('[Login] 응답 데이터:', res.data);
