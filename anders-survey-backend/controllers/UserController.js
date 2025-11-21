@@ -17,6 +17,27 @@ export const inviteUser = async (req, res) => {
       });
     }
 
+    // 역할 권한 검증
+    const inviterRole = req.user?.role;
+    const targetRole = role || 'viewer';
+
+    // editor는 viewer만 초대 가능, admin/editor 초대 불가
+    if (inviterRole === 'editor' && (targetRole === 'admin' || targetRole === 'editor')) {
+      return res.status(403).json({
+        success: false,
+        message: 'editor는 viewer만 초대할 수 있습니다.'
+      });
+    }
+
+    // 유효한 역할인지 확인
+    const validRoles = ['admin', 'editor', 'viewer'];
+    if (!validRoles.includes(targetRole)) {
+      return res.status(400).json({
+        success: false,
+        message: '유효하지 않은 역할입니다. (admin, editor, viewer 중 선택)'
+      });
+    }
+
     // 이메일 중복 확인
     const existingUser = await User.findOne({ 
       $or: [
@@ -44,7 +65,7 @@ export const inviteUser = async (req, res) => {
       username: email, // 임시로 이메일을 username으로 사용
       email: email,
       name: name,
-      role: role || 'viewer',
+      role: targetRole,
       inviteToken: inviteToken,
       invitedBy: inviterId || null,
       invitedAt: invitedAt,
@@ -230,6 +251,18 @@ export const deleteInvite = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: '사용자를 찾을 수 없습니다.'
+      });
+    }
+
+    // 역할 권한 검증
+    const deleterRole = req.user?.role;
+    const targetRole = user.role;
+
+    // editor는 viewer만 삭제 가능, admin/editor 삭제 불가
+    if (deleterRole === 'editor' && (targetRole === 'admin' || targetRole === 'editor')) {
+      return res.status(403).json({
+        success: false,
+        message: 'editor는 viewer만 삭제할 수 있습니다.'
       });
     }
 

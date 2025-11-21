@@ -352,7 +352,7 @@ export default function Settings() {
                   className="px-3 py-1 text-xs border border-border rounded focus:ring-2 focus:ring-primary focus:border-primary"
                 >
                   <option value="admin">관리자</option>
-                  <option value="staff">스태프</option>
+                  <option value="editor">편집자</option>
                   <option value="viewer">뷰어</option>
                 </select>
                 <button
@@ -681,8 +681,8 @@ export default function Settings() {
                   onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
                   className="w-full border border-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                 >
-                  <option value="viewer">뷰어 (읽기 전용)</option>
-                  <option value="staff">스태프 (편집 가능)</option>
+                  <option value="viewer">뷰어 (조회 전용)</option>
+                  <option value="editor">편집자 (설문 관리 가능)</option>
                   <option value="admin">관리자 (모든 권한)</option>
                 </select>
               </div>

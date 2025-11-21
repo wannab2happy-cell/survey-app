@@ -134,6 +134,51 @@ export const requireAdmin = (req, res, next) => {
   next();
 };
 
+/**
+ * 편집자 이상 권한 확인 미들웨어 (admin, editor)
+ * verifyToken 미들웨어 이후에 사용해야 합니다.
+ */
+export const requireEditor = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ 
+      success: false,
+      message: '인증이 필요합니다.' 
+    });
+  }
+
+  if (req.user.role !== 'admin' && req.user.role !== 'editor') {
+    return res.status(403).json({ 
+      success: false,
+      message: '편집 권한이 필요합니다.' 
+    });
+  }
+
+  next();
+};
+
+/**
+ * 조회자 이상 권한 확인 미들웨어 (admin, editor, viewer)
+ * verifyToken 미들웨어 이후에 사용해야 합니다.
+ */
+export const requireViewer = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ 
+      success: false,
+      message: '인증이 필요합니다.' 
+    });
+  }
+
+  const allowedRoles = ['admin', 'editor', 'viewer'];
+  if (!allowedRoles.includes(req.user.role)) {
+    return res.status(403).json({ 
+      success: false,
+      message: '조회 권한이 필요합니다.' 
+    });
+  }
+
+  next();
+};
+
 // 하위 호환성을 위한 별칭 (기존 코드와의 호환성 유지)
 export const protect = verifyToken;
 export const admin = requireAdmin;
