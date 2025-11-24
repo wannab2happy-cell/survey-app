@@ -11,6 +11,10 @@ const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
   console.error('❌ MONGO_URI 환경 변수가 설정되지 않았습니다.');
+  console.error('📝 환경 변수 설정 방법:');
+  console.error('   - Render Dashboard → Environment → Add Environment Variable');
+  console.error('   - Key: MONGO_URI');
+  console.error('   - Value: mongodb+srv://username:password@cluster.mongodb.net/dbname');
   process.exit(1);
 }
 
