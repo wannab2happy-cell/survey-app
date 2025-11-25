@@ -790,9 +790,7 @@ const QuestionCard = (props) => {
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              if (window.confirm('정말로 이 질문을 삭제하시겠습니까?')) {
-                onDeleteQuestion(index);
-              }
+              onDeleteQuestion(index);
             }}
             className="p-1.5 text-error bg-error/10 rounded-lg hover:bg-error/20 transition-all"
             title="질문 삭제"

@@ -242,7 +242,9 @@ export default function CoverTemplates({ onTemplateSelect, currentBranding = {} 
 
   const handleDeleteClick = (e, templateKey) => {
     e.stopPropagation();
-    if (confirm(`"${templates[templateKey].name}" 템플릿을 삭제하시겠습니까?`)) {
+    // 간단한 확인 후 삭제 (템플릿 삭제는 되돌릴 수 있으므로 확인만)
+    const confirmed = window.confirm(`"${templates[templateKey].name}" 템플릿을 삭제하시겠습니까?`);
+    if (confirmed) {
       const newTemplates = { ...templates };
       delete newTemplates[templateKey];
       setTemplates(newTemplates);

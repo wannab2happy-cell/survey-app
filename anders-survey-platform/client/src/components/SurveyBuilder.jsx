@@ -13,6 +13,7 @@ import SurveyPreviewButton from './SurveyPreviewButton';
 import { PERSONAL_INFO_FIELDS } from '../constants.js';
 import { XCircleIcon, PlayIcon, CalendarIcon, PauseIcon } from './icons.jsx';
 import { toast } from '../components/ui/ToastContainer';
+import ConfirmModal from '../components/ui/ConfirmModal';
 
 // 아이콘 컴포넌트
 const CopyIcon = ({ className }) => (
@@ -135,6 +136,13 @@ const SurveyBuilder = () => {
     });
     const [resultsShareUrl, setResultsShareUrl] = useState('');
     const [generatingShareToken, setGeneratingShareToken] = useState(false);
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: null,
+        variant: 'danger'
+    });
 
     // 브랜딩 색상을 CSS 변수에 적용 (Admin 스타일은 제외)
     useEffect(() => {
@@ -660,10 +668,21 @@ const SurveyBuilder = () => {
                     };
                 });
             } else if (action === 'delete') {
-                setSurveyData(prev => ({
-                    ...prev,
-                    questions: prev.questions.filter(q => (q.id !== payload.questionId) && (q._id !== payload.questionId))
-                }));
+                const question = surveyData.questions.find(q => (q.id === payload.questionId) || (q._id === payload.questionId));
+                const questionText = question?.text || question?.title || question?.content || '질문';
+                setConfirmModal({
+                    isOpen: true,
+                    title: '질문 삭제',
+                    message: `정말로 "${questionText}" 질문을 삭제하시겠습니까?`,
+                    variant: 'danger',
+                    onConfirm: () => {
+                        setSurveyData(prev => ({
+                            ...prev,
+                            questions: prev.questions.filter(q => (q.id !== payload.questionId) && (q._id !== payload.questionId))
+                        }));
+                        toast.success('질문이 삭제되었습니다.');
+                    }
+                });
             } else if (action === 'reorder') {
                 // 드래그앤드롭으로 순서 변경
                 setSurveyData(prev => ({
@@ -2002,6 +2021,16 @@ const SurveyBuilder = () => {
                     </div>
                 </div>
             </div>
+
+            {/* 확인 모달 */}
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                onConfirm={confirmModal.onConfirm || (() => {})}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                variant={confirmModal.variant}
+            />
         </div>
     );
 };

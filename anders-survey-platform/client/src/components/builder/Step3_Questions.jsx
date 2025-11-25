@@ -449,9 +449,7 @@ export default function Step3_Questions({ questions, lastQuestionId, personalInf
                         }}
                         onDelete={(qIdx) => {
                             const question = questions[qIdx];
-                            if (window.confirm('정말로 이 질문을 삭제하시겠습니까?')) {
-                                onQuestionsChange('delete', { questionId: question.id });
-                            }
+                            onQuestionsChange('delete', { questionId: question.id });
                         }}
                         onDuplicate={(qIdx) => {
                             const question = questions[qIdx];
