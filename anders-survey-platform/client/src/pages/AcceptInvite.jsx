@@ -25,7 +25,7 @@ export default function AcceptInvite() {
     }
     setLoading(true);
     try {
-      const res = await axiosInstance.post('/accept-invite', {
+      const res = await axiosInstance.post('/users/accept-invite', {
         token,
         username,
         password,
