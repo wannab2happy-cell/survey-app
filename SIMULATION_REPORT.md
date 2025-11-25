@@ -115,16 +115,33 @@
 
 ---
 
-## 🔄 진행 중인 작업
+## ✅ 완료된 작업
 
-### 3. alert() 교체 작업
-- **진행률**: 5% (Login 페이지 적용 완료, 47곳 남음)
-- **다음 단계**: 주요 페이지에 toast 적용
+### 1. alert() 교체 작업
+- **진행률**: 100% 완료
+- **완료된 파일**:
+  - SurveyBuilder.jsx: 19곳 → toast로 교체 완료
+  - SurveyResults.jsx: 9곳 → toast로 교체 완료
+  - SurveyPageV2.jsx: 2곳 → toast로 교체 완료
+  - Login.jsx: 적용 완료
+  - Settings.jsx: 적용 완료
 
-### 4. UI/UX 통일 작업
-- **진행률**: 30%
-- **완료**: Button, Card, Toast 컴포넌트 생성, Login 페이지 적용
-- **진행 중**: 나머지 페이지에 새 컴포넌트 적용
+### 2. window.confirm() 교체 작업
+- **진행률**: 100% 완료
+- **완료된 파일**:
+  - SurveyList.jsx: 3곳 → ConfirmModal로 교체 완료
+  - Settings.jsx: 2곳 → ConfirmModal로 교체 완료
+  - SurveyBuilder.jsx: 질문 삭제 확인 모달 추가
+  - QuestionCard.jsx: window.confirm 제거, 부모에서 처리
+  - Step3_Questions.jsx: window.confirm 제거, 부모에서 처리
+
+### 3. UI/UX 통일 작업
+- **진행률**: 80% 완료
+- **완료**: 
+  - Button, Card, Toast, ConfirmModal 컴포넌트 생성
+  - Login 페이지 적용 완료
+  - 주요 페이지에 toast 적용 완료
+- **남은 작업**: 나머지 페이지에 Button 컴포넌트 적용
 
 ---
 
@@ -140,10 +157,21 @@
    - 일관된 패딩, 그림자, 둥근 모서리
 
 3. **Toast 시스템** ✅
-   - alert() 대체
+   - alert() 대체 (총 30곳 교체 완료)
    - 전역 toast 함수 제공
    - App.jsx에 통합 완료
+   - 모든 주요 페이지에 적용 완료
+
+4. **ConfirmModal 컴포넌트** ✅
+   - window.confirm() 대체 (총 8곳 교체 완료)
+   - 통일된 확인 모달 UI
+   - variant 지원 (danger, warning, info)
 
 ### 적용된 페이지
 - ✅ Login.jsx (Button + Toast)
+- ✅ SurveyBuilder.jsx (Toast + ConfirmModal)
+- ✅ SurveyResults.jsx (Toast)
+- ✅ SurveyPageV2.jsx (Toast)
+- ✅ Settings.jsx (Toast + ConfirmModal)
+- ✅ SurveyList.jsx (ConfirmModal)
 
