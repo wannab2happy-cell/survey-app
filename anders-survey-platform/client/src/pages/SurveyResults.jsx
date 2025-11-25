@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
 import StatCard from '../components/admin/StatCard';
 import CustomSelect from '../components/ui/CustomSelect';
+import { toast } from '../components/ui/ToastContainer';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -61,7 +62,7 @@ export default function SurveyResults({ survey: propSurvey, results: propResults
   // 샘플 데이터 생성 함수
   const generateSampleData = async () => {
     if (!survey || !survey.questions || survey.questions.length === 0) {
-      alert('설문 질문이 없습니다.');
+      toast.warning('설문 질문이 없습니다.');
       return;
     }
 
@@ -183,10 +184,10 @@ export default function SurveyResults({ survey: propSurvey, results: propResults
       setFilteredResults(combinedResults);
       setHasSampleData(true);
       
-      alert(`${sampleResponses.length}개의 샘플 응답이 생성되었습니다.`);
+      toast.success(`${sampleResponses.length}개의 샘플 응답이 생성되었습니다.`);
     } catch (err) {
       console.error('샘플 데이터 생성 오류:', err);
-      alert('샘플 데이터 생성에 실패했습니다: ' + (err.message || '알 수 없는 오류'));
+      toast.error('샘플 데이터 생성에 실패했습니다: ' + (err.message || '알 수 없는 오류'));
     } finally {
       setLoading(false);
     }
@@ -234,7 +235,7 @@ export default function SurveyResults({ survey: propSurvey, results: propResults
         }
       } catch (err) {
         console.error('데이터 불러오기 오류:', err);
-        alert('응답 결과를 불러오는데 실패했습니다: ' + (err.response?.data?.message || err.message));
+        toast.error('응답 결과를 불러오는데 실패했습니다: ' + (err.response?.data?.message || err.message));
         setResults({ results: [] });
         setFilteredResults([]);
       } finally {
@@ -551,7 +552,7 @@ export default function SurveyResults({ survey: propSurvey, results: propResults
   // 추가: PDF 내보내기 (jsPDF 사용)
   const handleDownloadPDF = () => {
     if (!filteredResults?.length || !survey) {
-      alert('다운로드할 응답이 없습니다.');
+      toast.warning('다운로드할 응답이 없습니다.');
       return;
     }
     
@@ -628,14 +629,14 @@ export default function SurveyResults({ survey: propSurvey, results: propResults
       doc.save(fileName);
     } catch (err) {
       console.error('PDF 생성 실패:', err);
-      alert('PDF 생성에 실패했습니다. CSV 다운로드를 사용해주세요.');
+      toast.error('PDF 생성에 실패했습니다. CSV 다운로드를 사용해주세요.');
     }
   };
 
   // 엑셀 다운로드 (CSV 형식, 엑셀에서 열기 가능)
   const handleDownloadExcel = () => {
     if (!filteredResults?.length || !survey) {
-      alert('다운로드할 응답이 없습니다.');
+      toast.warning('다운로드할 응답이 없습니다.');
       return;
     }
     
@@ -680,7 +681,7 @@ export default function SurveyResults({ survey: propSurvey, results: propResults
     });
 
     if (rows.length === 0) {
-      alert('다운로드할 데이터가 없습니다.');
+      toast.warning('다운로드할 데이터가 없습니다.');
       return;
     }
 
@@ -720,7 +721,7 @@ export default function SurveyResults({ survey: propSurvey, results: propResults
   // CSV 다운로드 (기존 형식 유지)
   const handleDownloadCSV = () => {
     if (!filteredResults?.length) {
-      alert('다운로드할 응답이 없습니다.');
+      toast.warning('다운로드할 응답이 없습니다.');
       return;
     }
     
@@ -754,7 +755,7 @@ export default function SurveyResults({ survey: propSurvey, results: propResults
     });
 
     if (rows.length === 0) {
-      alert('다운로드할 데이터가 없습니다.');
+      toast.warning('다운로드할 데이터가 없습니다.');
       return;
     }
 

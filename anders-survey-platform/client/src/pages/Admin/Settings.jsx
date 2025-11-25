@@ -5,6 +5,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axiosInstance from '../../api/axiosInstance';
+import ConfirmModal from '../../components/ui/ConfirmModal';
+import { toast } from '../../components/ui/ToastContainer';
 
 export default function Settings() {
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
@@ -26,6 +28,14 @@ export default function Settings() {
     serverLoad: false,
     email: true,
     push: false,
+  });
+  // 확인 모달 상태
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null,
+    variant: 'danger'
   });
 
   // 초대된 사용자 목록 로드
@@ -79,22 +89,27 @@ export default function Settings() {
 
     setApiKeys([...apiKeys, newKey]);
     setNewApiKeyName('');
-    setMessage({ type: 'success', text: 'API 키가 생성되었습니다.' });
+    toast.success('API 키가 생성되었습니다.');
   };
 
   // API 키 삭제 핸들러
   const handleDeleteApiKey = (keyId) => {
-    if (window.confirm('정말로 이 API 키를 삭제하시겠습니까?')) {
-      setApiKeys(apiKeys.filter(k => k.id !== keyId));
-      setMessage({ type: 'success', text: 'API 키가 삭제되었습니다.' });
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'API 키 삭제',
+      message: '정말로 이 API 키를 삭제하시겠습니까?',
+      variant: 'danger',
+      onConfirm: () => {
+        setApiKeys(apiKeys.filter(k => k.id !== keyId));
+        toast.success('API 키가 삭제되었습니다.');
+      }
+    });
   };
 
   // API 키 복사 핸들러
   const handleCopyApiKey = (key) => {
     navigator.clipboard.writeText(key);
-    setMessage({ type: 'success', text: 'API 키가 클립보드에 복사되었습니다.' });
-    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    toast.success('API 키가 클립보드에 복사되었습니다.');
   };
 
   // 추가: 사용자 초대 핸들러
@@ -154,7 +169,8 @@ export default function Settings() {
           ? `${newUser.name}님을 초대했습니다. 초대 링크: ${inviteLink}`
           : `${newUser.name}님을 초대했습니다.`;
 
-        setMessage({ type: 'success', text: successMessage });
+        toast.success(successMessage);
+        setMessage({ type: 'success', text: successMessage }); // 기존 메시지도 유지 (링크 표시용)
         
         // 사용자 목록에 추가
         const newUserData = {
@@ -177,11 +193,14 @@ export default function Settings() {
           });
         }
       } else {
-        setMessage({ type: 'error', text: response.data.message || '초대에 실패했습니다.' });
+        const errorMsg = response.data.message || '초대에 실패했습니다.';
+        toast.error(errorMsg);
+        setMessage({ type: 'error', text: errorMsg });
       }
     } catch (error) {
       console.error('사용자 초대 오류:', error);
       const errorMessage = error.response?.data?.message || '사용자 초대 중 오류가 발생했습니다.';
+      toast.error(errorMessage);
       setMessage({ type: 'error', text: errorMessage });
     } finally {
       setLoadingInvite(false);
@@ -190,38 +209,39 @@ export default function Settings() {
   };
 
   // 초대 취소 핸들러
-  const handleDeleteInvite = async (userId) => {
-    if (!window.confirm('정말로 이 초대를 취소하시겠습니까?')) {
-      return;
-    }
+  const handleDeleteInvite = (userId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: '초대 취소',
+      message: '정말로 이 초대를 취소하시겠습니까?',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            toast.error('로그인이 필요합니다.');
+            return;
+          }
 
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setMessage({ type: 'error', text: '로그인이 필요합니다.' });
-        return;
-      }
+          const response = await axiosInstance.delete(`/users/invite/${userId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
 
-      const response = await axiosInstance.delete(`/users/invite/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
+          if (response.data.success) {
+            setUsers(users.filter(u => u.id !== userId));
+            toast.success('초대가 취소되었습니다.');
+          } else {
+            toast.error(response.data.message || '초대 취소에 실패했습니다.');
+          }
+        } catch (error) {
+          console.error('초대 취소 오류:', error);
+          const errorMessage = error.response?.data?.message || '초대 취소 중 오류가 발생했습니다.';
+          toast.error(errorMessage);
         }
-      });
-
-      if (response.data.success) {
-        setUsers(users.filter(u => u.id !== userId));
-        setMessage({ type: 'success', text: '초대가 취소되었습니다.' });
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-      } else {
-        setMessage({ type: 'error', text: response.data.message || '초대 취소에 실패했습니다.' });
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       }
-    } catch (error) {
-      console.error('초대 취소 오류:', error);
-      const errorMessage = error.response?.data?.message || '초대 취소 중 오류가 발생했습니다.';
-      setMessage({ type: 'error', text: errorMessage });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    }
+    });
   };
 
 
@@ -729,6 +749,16 @@ export default function Settings() {
           </motion.div>
         </div>
       )}
+
+      {/* 확인 모달 */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={confirmModal.onConfirm || (() => {})}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant}
+      />
     </div>
   );
 }

@@ -12,6 +12,7 @@ import MobilePreview from './builder/MobilePreview';
 import SurveyPreviewButton from './SurveyPreviewButton';
 import { PERSONAL_INFO_FIELDS } from '../constants.js';
 import { XCircleIcon, PlayIcon, CalendarIcon, PauseIcon } from './icons.jsx';
+import { toast } from '../components/ui/ToastContainer';
 
 // 아이콘 컴포넌트
 const CopyIcon = ({ className }) => (
@@ -709,7 +710,7 @@ const SurveyBuilder = () => {
             }
         } catch (error) {
             console.error('[SurveyBuilder] handleQuestionsChange 오류:', error);
-            alert('질문 처리 중 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류'));
+            toast.error('질문 처리 중 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류'));
         }
     }, [surveyData.questions, lastQuestionId]);
 
@@ -915,6 +916,7 @@ const SurveyBuilder = () => {
 
             const savedId = response.data.data?._id || response.data.data?.id || id;
             
+            toast.success('설문지가 성공적으로 저장되었습니다!');
             setSuccessMessage('✅ 설문지가 성공적으로 저장되었습니다!');
             
             if (savedId && !id) {
@@ -976,6 +978,7 @@ const SurveyBuilder = () => {
             }
             
             setError(errorMessage);
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -1024,7 +1027,7 @@ const SurveyBuilder = () => {
     // QR 코드 PNG 다운로드
     const downloadQRCodePNG = (url) => {
         if (!url) {
-            alert('설문 링크가 없습니다. 먼저 설문을 저장해주세요.');
+            toast.warning('설문 링크가 없습니다. 먼저 설문을 저장해주세요.');
             return;
         }
 
@@ -1046,14 +1049,14 @@ const SurveyBuilder = () => {
             })
             .catch(error => {
                 console.error('QR코드 다운로드 실패:', error);
-                alert('QR코드 다운로드에 실패했습니다.');
+                toast.error('QR코드 다운로드에 실패했습니다.');
             });
     };
 
     // QR 코드 SVG 다운로드
     const downloadQRCodeSVG = (url) => {
         if (!url) {
-            alert('설문 링크가 없습니다. 먼저 설문을 저장해주세요.');
+            toast.warning('설문 링크가 없습니다. 먼저 설문을 저장해주세요.');
             return;
         }
 
@@ -1076,7 +1079,7 @@ const SurveyBuilder = () => {
             })
             .catch(error => {
                 console.error('QR코드 SVG 다운로드 실패:', error);
-                alert('QR코드 SVG 다운로드에 실패했습니다.');
+                toast.error('QR코드 SVG 다운로드에 실패했습니다.');
             });
     };
 
@@ -1089,7 +1092,7 @@ const SurveyBuilder = () => {
     // 결과 공유 토큰 생성
     const handleGenerateShareToken = async () => {
         if (!surveyData.id) {
-            alert('⚠️ 설문을 먼저 저장(생성)해야 공유 링크를 생성할 수 있습니다.');
+            toast.warning('설문을 먼저 저장(생성)해야 공유 링크를 생성할 수 있습니다.');
             return;
         }
 
@@ -1100,13 +1103,13 @@ const SurveyBuilder = () => {
             if (response.data.success && response.data.data) {
                 const shareUrl = `${window.location.origin}/results/${surveyData.id}/shared/${response.data.data.shareToken}`;
                 setResultsShareUrl(shareUrl);
-                alert('✅ 결과 공유 링크가 생성되었습니다.');
+                toast.success('결과 공유 링크가 생성되었습니다.');
             } else {
                 throw new Error(response.data.message || '공유 토큰 생성에 실패했습니다.');
             }
         } catch (err) {
             console.error('공유 토큰 생성 오류:', err);
-            alert('⚠️ 공유 토큰 생성에 실패했습니다: ' + (err.response?.data?.message || err.message));
+            toast.error('공유 토큰 생성에 실패했습니다: ' + (err.response?.data?.message || err.message));
         } finally {
             setGeneratingShareToken(false);
         }
@@ -1212,7 +1215,7 @@ const SurveyBuilder = () => {
                                             onClick={() => {
                                                 if (surveyUrl) {
                                                     navigator.clipboard.writeText(surveyUrl);
-                                                    alert('링크가 복사되었습니다');
+                                                    toast.success('링크가 복사되었습니다');
                                                 }
                                             }}
                                             className="px-3 py-2 bg-white border border-gray-300 text-text-main rounded-lg hover:bg-gray-50 transition-colors text-xs font-medium"
@@ -1670,7 +1673,7 @@ const SurveyBuilder = () => {
                                                             if (surveyData.id && url) {
                                                                 try {
                                                                     await navigator.clipboard.writeText(url);
-                                                                    alert('✅ 설문 링크가 클립보드에 복사되었습니다.');
+                                                                    toast.success('설문 링크가 클립보드에 복사되었습니다.');
                                                                 } catch (err) {
                                                                     console.error('클립보드 복사 실패:', err);
                                                                     // Fallback: 텍스트 선택 방식
@@ -1678,13 +1681,13 @@ const SurveyBuilder = () => {
                                                                     if (input) {
                                                                         input.select();
                                                                         document.execCommand('copy');
-                                                                        alert('✅ 설문 링크가 클립보드에 복사되었습니다.');
+                                                                        toast.success('설문 링크가 클립보드에 복사되었습니다.');
                                                                     } else {
-                                                                        alert('⚠️ 클립보드 복사에 실패했습니다.');
+                                                                        toast.error('클립보드 복사에 실패했습니다.');
                                                                     }
                                                                 }
                                                             } else {
-                                                                alert('⚠️ 설문을 먼저 저장(생성)해야 공유 링크를 복사할 수 있습니다.');
+                                                                toast.warning('설문을 먼저 저장(생성)해야 공유 링크를 복사할 수 있습니다.');
                                                             }
                                                         }}
                                                         style={{
@@ -1722,20 +1725,20 @@ const SurveyBuilder = () => {
                                                             if (surveyData.id && qrPageUrl) {
                                                                 try {
                                                                     await navigator.clipboard.writeText(qrPageUrl);
-                                                                    alert('✅ QR 코드 페이지 링크가 클립보드에 복사되었습니다.');
+                                                                    toast.success('QR 코드 페이지 링크가 클립보드에 복사되었습니다.');
                                                                 } catch (err) {
                                                                     console.error('클립보드 복사 실패:', err);
                                                                     const input = document.getElementById('qrPageUrl');
                                                                     if (input) {
                                                                         input.select();
                                                                         document.execCommand('copy');
-                                                                        alert('✅ QR 코드 페이지 링크가 클립보드에 복사되었습니다.');
+                                                                        toast.success('QR 코드 페이지 링크가 클립보드에 복사되었습니다.');
                                                                     } else {
-                                                                        alert('⚠️ 클립보드 복사에 실패했습니다.');
+                                                                        toast.error('클립보드 복사에 실패했습니다.');
                                                                     }
                                                                 }
                                                             } else {
-                                                                alert('⚠️ 설문을 먼저 저장(생성)해야 QR 코드 페이지 링크를 복사할 수 있습니다.');
+                                                                toast.warning('설문을 먼저 저장(생성)해야 QR 코드 페이지 링크를 복사할 수 있습니다.');
                                                             }
                                                         }}
                                                         style={{
@@ -1795,13 +1798,13 @@ const SurveyBuilder = () => {
                                                             onClick={async () => {
                                                                 try {
                                                                     await navigator.clipboard.writeText(resultsShareUrl);
-                                                                    alert('✅ 결과 공유 링크가 클립보드에 복사되었습니다.');
+                                                                    toast.success('결과 공유 링크가 클립보드에 복사되었습니다.');
                                                                 } catch (err) {
                                                                     const input = document.getElementById('resultsShareUrl');
                                                                     if (input) {
                                                                         input.select();
                                                                         document.execCommand('copy');
-                                                                        alert('✅ 결과 공유 링크가 클립보드에 복사되었습니다.');
+                                                                        toast.success('결과 공유 링크가 클립보드에 복사되었습니다.');
                                                                     }
                                                                 }
                                                             }}

@@ -8,6 +8,7 @@ import StartPage from './participant/StartPage';
 import QuestionPage from './participant/QuestionPage';
 import ReviewPage from './participant/ReviewPage';
 import DonePage from './participant/DonePage';
+import { toast } from '../components/ui/ToastContainer';
 
 const STEP_START = 'start';
 const STEP_QUESTION = 'question';
@@ -196,10 +197,11 @@ export default function SurveyPageV2() {
       const response = await axiosInstance.post(`/surveys/${slug}/response`, payload);
 
       if (response.data.success || response.status === 200 || response.status === 201) {
+        toast.success('설문이 성공적으로 제출되었습니다!');
         navigate(`/s/${slug}/done`);
         setCurrentStep(STEP_DONE);
       } else {
-        alert('제출 중 오류가 발생했습니다.');
+        toast.error('제출 중 오류가 발생했습니다.');
       }
     } catch (err) {
       console.error('제출 오류:', err);
@@ -209,7 +211,7 @@ export default function SurveyPageV2() {
         data: err.response?.data,
         message: errorMessage
       });
-      alert('제출 중 오류가 발생했습니다: ' + errorMessage);
+      toast.error('제출 중 오류가 발생했습니다: ' + errorMessage);
     } finally {
       setIsSubmitting(false);
     }

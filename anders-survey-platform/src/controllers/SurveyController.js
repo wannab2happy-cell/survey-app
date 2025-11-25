@@ -333,14 +333,29 @@ export const updateSurvey = async (req, res) => {
         const { surveyId } = req.params;
         const { title, description, questions, personalInfo, branding, cover, ending, head, foot, status, startAt, endAt } = req.body;
 
-        // 설문 존재 확인
-        const survey = await Survey.findById(surveyId);
+        // 설문 존재 확인 (slug 또는 ObjectId로 조회)
+        let survey = null;
+        if (surveyId.match(/^[0-9a-fA-F]{24}$/)) {
+            // MongoDB ObjectId 형식
+            survey = await Survey.findById(surveyId);
+        } else {
+            // slug로 조회 시도
+            survey = await Survey.findOne({ slug: surveyId });
+            // slug가 없으면 ObjectId로 재시도 (하위 호환성)
+            if (!survey) {
+                survey = await Survey.findById(surveyId);
+            }
+        }
+        
         if (!survey) {
             return res.status(404).json({ 
                 success: false,
                 message: "설문을 찾을 수 없습니다." 
             });
         }
+        
+        // 실제 surveyId는 survey._id 사용
+        const actualSurveyId = survey._id.toString();
 
         // 필수 필드 검증
         if (!title || !title.trim()) {
@@ -414,7 +429,7 @@ export const updateSurvey = async (req, res) => {
 
         // 설문 업데이트
         const updatedSurvey = await Survey.findByIdAndUpdate(
-            surveyId,
+            actualSurveyId,
             {
                 title: title.trim(),
                 description: description?.trim() || '',
@@ -473,15 +488,31 @@ export const deleteSurvey = async (req, res) => {
     try {
         const { surveyId } = req.params;
 
-        const survey = await Survey.findById(surveyId);
+        // 설문 존재 확인 (slug 또는 ObjectId로 조회)
+        let survey = null;
+        if (surveyId.match(/^[0-9a-fA-F]{24}$/)) {
+            // MongoDB ObjectId 형식
+            survey = await Survey.findById(surveyId);
+        } else {
+            // slug로 조회 시도
+            survey = await Survey.findOne({ slug: surveyId });
+            // slug가 없으면 ObjectId로 재시도 (하위 호환성)
+            if (!survey) {
+                survey = await Survey.findById(surveyId);
+            }
+        }
+        
         if (!survey) {
             return res.status(404).json({ 
                 success: false,
                 message: "설문을 찾을 수 없습니다." 
             });
         }
+        
+        // 실제 surveyId는 survey._id 사용
+        const actualSurveyId = survey._id.toString();
 
-        await Survey.findByIdAndDelete(surveyId);
+        await Survey.findByIdAndDelete(actualSurveyId);
 
         return res.status(200).json({
             success: true,
@@ -506,14 +537,29 @@ export const getSurveyResults = async (req, res) => {
             return res.status(400).json({ message: "설문 ID가 필요합니다." });
         }
 
-        // 설문 존재 확인
-        const survey = await Survey.findById(surveyId);
+        // 설문 존재 확인 (slug 또는 ObjectId로 조회)
+        let survey = null;
+        if (surveyId.match(/^[0-9a-fA-F]{24}$/)) {
+            // MongoDB ObjectId 형식
+            survey = await Survey.findById(surveyId);
+        } else {
+            // slug로 조회 시도
+            survey = await Survey.findOne({ slug: surveyId });
+            // slug가 없으면 ObjectId로 재시도 (하위 호환성)
+            if (!survey) {
+                survey = await Survey.findById(surveyId);
+            }
+        }
+        
         if (!survey) {
             return res.status(404).json({ message: "설문을 찾을 수 없습니다." });
         }
+        
+        // 실제 surveyId는 survey._id 사용
+        const actualSurveyId = survey._id.toString();
 
         // 해당 설문의 모든 응답 조회
-        const responses = await Response.find({ surveyId })
+        const responses = await Response.find({ surveyId: actualSurveyId })
             .sort({ submittedAt: -1 })
             .select('answers submittedAt userId');
 
@@ -530,7 +576,7 @@ export const getSurveyResults = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            surveyId: surveyId,
+            surveyId: actualSurveyId,
             totalResponses: results.length,
             results: results
         });
