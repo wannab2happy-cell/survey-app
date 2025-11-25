@@ -33,7 +33,7 @@ export default function AcceptInvite() {
       if (res.data.success) {
         setMessage({ type: 'success', text: '계정이 생성되었습니다. 로그인합니다.' });
         // 자동 로그인 후 메인 페이지 이동
-        const loginRes = await axiosInstance.post('/login', {
+        const loginRes = await axiosInstance.post('/auth/login', {
           username,
           password,
         });

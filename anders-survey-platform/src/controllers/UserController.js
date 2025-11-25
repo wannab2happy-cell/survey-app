@@ -279,6 +279,97 @@ export const getInvitedUsers = async (req, res) => {
     }
 };
 
+// 초대 수락 (초대 토큰으로 계정 활성화)
+export const acceptInvite = async (req, res) => {
+    try {
+        const { token, username, password } = req.body;
+
+        if (!token || !username || !password) {
+            return res.status(400).json({ 
+                success: false,
+                message: '토큰, 아이디, 비밀번호는 필수입니다.' 
+            });
+        }
+
+        // JWT 토큰 검증
+        let decoded;
+        try {
+            decoded = jwt.verify(token, JWT_SECRET);
+        } catch (error) {
+            return res.status(400).json({ 
+                success: false,
+                message: '유효하지 않거나 만료된 초대 링크입니다.' 
+            });
+        }
+
+        // 토큰 타입 확인
+        if (decoded.type !== 'invite') {
+            return res.status(400).json({ 
+                success: false,
+                message: '유효하지 않은 초대 토큰입니다.' 
+            });
+        }
+
+        const { email, role } = decoded;
+
+        // 이메일로 사용자 찾기
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ 
+                success: false,
+                message: '초대된 사용자를 찾을 수 없습니다.' 
+            });
+        }
+
+        // 이미 활성화된 사용자인지 확인 (status 필드 사용)
+        if (user.status === 'active') {
+            return res.status(400).json({ 
+                success: false,
+                message: '이미 계정이 활성화되었습니다. 로그인해주세요.' 
+            });
+        }
+
+        // username 중복 확인
+        const existingUsername = await User.findOne({ username });
+        if (existingUsername && existingUsername._id.toString() !== user._id.toString()) {
+            return res.status(400).json({ 
+                success: false,
+                message: '이미 사용 중인 아이디입니다.' 
+            });
+        }
+
+        // 비밀번호 해시화
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // 사용자 정보 업데이트
+        user.username = username;
+        user.password = hashedPassword;
+        user.status = 'active'; // 초대 상태에서 활성 상태로 변경
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: '계정이 성공적으로 생성되었습니다.',
+            data: {
+                user: {
+                    id: user._id,
+                    username: user.username,
+                    email: user.email,
+                    role: user.role
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('초대 수락 오류:', error);
+        return res.status(500).json({ 
+            success: false,
+            message: '초대 수락 중 오류가 발생했습니다.',
+            error: error.message 
+        });
+    }
+};
+
 // 초대 취소 (사용자 삭제)
 export const deleteInvite = async (req, res) => {
     try {
