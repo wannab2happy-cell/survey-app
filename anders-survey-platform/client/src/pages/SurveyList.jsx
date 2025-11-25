@@ -8,6 +8,8 @@ import { isThemeV2Enabled } from '../utils/featureToggle';
 import StatCard from '../components/admin/StatCard';
 import { motion } from 'framer-motion';
 import CustomSelect from '../components/ui/CustomSelect';
+import ConfirmModal from '../components/ui/ConfirmModal';
+import { toast } from '../components/ui/ToastContainer';
 
 const loadSurveyListFromLocal = () => {
   const list = JSON.parse(localStorage.getItem('surveyList') || '[]');
@@ -270,41 +272,38 @@ export default function SurveyList({ onLogout }) {
     deletingRef.current.add(surveyId);
     setProcessingItems(prev => new Set(prev).add(surveyId));
     
-    // 삭제 확인 (1회만)
-    const confirmed = window.confirm('정말로 이 설문을 삭제하시겠습니까?');
-    
-    if (!confirmed) {
-      // 취소 시 플래그 제거
-      deletingRef.current.delete(surveyId);
-      setProcessingItems(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(surveyId);
-        return newSet;
-      });
-      return;
-    }
-    
-    try {
-      await axiosInstance.delete(`/surveys/${surveyId}`);
-      setSurveys(prev => prev.filter(s => s.id !== surveyId));
-      setSelectedSurveys(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(surveyId);
-        return newSet;
-      });
-      showMessage('success', '설문이 삭제되었습니다.');
-    } catch (err) {
-      console.error('삭제 실패:', err);
-      const errorMessage = err.response?.data?.message || err.message || '설문 삭제에 실패했습니다.';
-      showMessage('error', errorMessage);
-    } finally {
-      deletingRef.current.delete(surveyId);
-      setProcessingItems(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(surveyId);
-        return newSet;
-      });
-    }
+    // 삭제 확인 모달 표시
+    setConfirmModal({
+      isOpen: true,
+      title: '설문 삭제',
+      message: '정말로 이 설문을 삭제하시겠습니까?',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await axiosInstance.delete(`/surveys/${surveyId}`);
+          setSurveys(prev => prev.filter(s => s.id !== surveyId));
+          setSelectedSurveys(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(surveyId);
+            return newSet;
+          });
+          toast.success('설문이 삭제되었습니다.');
+          showMessage('success', '설문이 삭제되었습니다.');
+        } catch (err) {
+          console.error('삭제 실패:', err);
+          const errorMessage = err.response?.data?.message || err.message || '설문 삭제에 실패했습니다.';
+          toast.error(errorMessage);
+          showMessage('error', errorMessage);
+        } finally {
+          deletingRef.current.delete(surveyId);
+          setProcessingItems(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(surveyId);
+            return newSet;
+          });
+        }
+      }
+    });
   };
 
   // 다중 선택 삭제 (요구사항 7) - 확인 1회만 진행
@@ -319,12 +318,14 @@ export default function SurveyList({ onLogout }) {
       return;
     }
 
-    // 삭제 확인 (1회만)
-    if (!window.confirm(`선택한 ${selectedSurveys.size}개의 설문을 삭제하시겠습니까?`)) {
-      return;
-    }
-
-    setProcessing(true);
+    // 삭제 확인 모달 표시
+    setConfirmModal({
+      isOpen: true,
+      title: '다중 삭제',
+      message: `선택한 ${selectedSurveys.size}개의 설문을 삭제하시겠습니까?`,
+      variant: 'danger',
+      onConfirm: async () => {
+        setProcessing(true);
     const selectedIds = Array.from(selectedSurveys);
     const results = [];
     const errors = [];
@@ -396,11 +397,13 @@ export default function SurveyList({ onLogout }) {
       return;
     }
 
-    if (!window.confirm(`선택한 ${selectedSurveys.size}개의 설문을 "${getStatusConfig(newStatus).label}" 상태로 변경하시겠습니까?`)) {
-      return;
-    }
-
-    setProcessing(true);
+    setConfirmModal({
+      isOpen: true,
+      title: '상태 변경',
+      message: `선택한 ${selectedSurveys.size}개의 설문을 "${getStatusConfig(newStatus).label}" 상태로 변경하시겠습니까?`,
+      variant: 'warning',
+      onConfirm: async () => {
+        setProcessing(true);
     const selectedIds = Array.from(selectedSurveys);
     const results = [];
     const errors = [];
@@ -443,9 +446,11 @@ export default function SurveyList({ onLogout }) {
     } catch (err) {
       console.error('일괄 상태 변경 실패:', err);
       showMessage('error', '일괄 상태 변경 중 오류가 발생했습니다.');
-    } finally {
-      setProcessing(false);
-    }
+        } finally {
+          setProcessing(false);
+        }
+      }
+    });
   };
 
   // 통계 계산
@@ -953,6 +958,16 @@ export default function SurveyList({ onLogout }) {
           )}
         </div>
       </div>
+
+      {/* 확인 모달 */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={confirmModal.onConfirm || (() => {})}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant}
+      />
     </div>
   );
 }
