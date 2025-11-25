@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
+import Button from '../components/ui/Button';
+import { toast } from '../components/ui/ToastContainer';
 
 export default function Login({ onLogin }) {
   const [id, setId] = useState('');
@@ -61,6 +63,7 @@ export default function Login({ onLogin }) {
       console.log('[Login] 토큰 저장:', token.substring(0, 20) + '...');
       localStorage.setItem('token', token);
 
+      toast.success('로그인 성공!');
       console.log('[Login] 관리자 페이지로 이동합니다.');
       // 로그인 성공 → 관리자 페이지 이동
       // 약간의 지연을 두어 토큰 저장이 완료된 후 이동
@@ -90,6 +93,7 @@ export default function Login({ onLogin }) {
       }
       
       setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -122,22 +126,21 @@ export default function Login({ onLogin }) {
 
           {error && <p className="text-error text-sm mt-2">{error}</p>}
 
-          <button
+          <Button
             type="submit"
+            variant="primary"
+            size="lg"
+            fullWidth
             disabled={loading || !id.trim() || !password.trim()}
+            loading={loading}
             onClick={(e) => {
               console.log('[Login] 버튼 클릭됨');
               console.log('[Login] 버튼 상태:', { loading, id: id.trim(), password: password.trim() });
               console.log('[Login] disabled 상태:', loading || !id.trim() || !password.trim());
             }}
-            className="w-full py-2 px-4 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              backgroundColor: loading || !id.trim() || !password.trim() ? '#9CA3AF' : 'var(--primary, #26C6DA)',
-              color: '#FFFFFF',
-            }}
           >
-            {loading ? '로그인 중...' : '로그인'}
-          </button>
+            로그인
+          </Button>
         </form>
       </div>
     </div>

@@ -10,6 +10,7 @@ import AcceptInvite from './pages/AcceptInvite';
 import AdminV2 from './pages/AdminV2';
 import NotFound from './pages/NotFound';
 import { isThemeV2Enabled } from './utils/featureToggle';
+import ToastContainer from './components/ui/ToastContainer';
 import './App.css';
 
 const isAuthenticated = () => !!localStorage.getItem('token');
@@ -30,6 +31,7 @@ function AppContent() {
   
   return (
     <div className={`${themeV2Enabled ? 'theme-v2' : 'theme-legacy'} ${isAdmin ? 'admin-theme' : ''}`}>
+        <ToastContainer />
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
