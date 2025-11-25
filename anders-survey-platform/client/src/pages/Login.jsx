@@ -17,7 +17,7 @@ export default function Login({ onLogin }) {
     console.log('[Login] 입력값:', { id: id.trim(), password: password.trim() });
     
     setError('');
-    
+
     // 입력값 검증
     if (!id.trim() || !password.trim()) {
       console.warn('[Login] 입력값이 비어있습니다.');
@@ -30,13 +30,13 @@ export default function Login({ onLogin }) {
 
     try {
       console.log('[Login] 로그인 시도:', { username: id });
-      console.log('[Login] 요청 URL:', axiosInstance.defaults.baseURL + '/login');
+      console.log('[Login] 요청 URL:', axiosInstance.defaults.baseURL + '/auth/login');
       console.log('[Login] axiosInstance 확인:', {
         baseURL: axiosInstance.defaults.baseURL,
         hasPost: typeof axiosInstance.post === 'function'
       });
       
-      const res = await axiosInstance.post('/login', {
+      const res = await axiosInstance.post('/auth/login', {
         username: id,
         password,
       });
@@ -50,7 +50,7 @@ export default function Login({ onLogin }) {
       if (!res.data) {
         throw new Error('서버로부터 응답을 받지 못했습니다.');
       }
-      
+
       const token = res.data.token;
       
       if (!token) {
@@ -65,7 +65,7 @@ export default function Login({ onLogin }) {
       // 로그인 성공 → 관리자 페이지 이동
       // 약간의 지연을 두어 토큰 저장이 완료된 후 이동
       setTimeout(() => {
-        navigate('/admin', { replace: true });
+      navigate('/admin', { replace: true });
       }, 100);
     } catch (err) {
       console.error('[Login] 로그인 오류:', err);
