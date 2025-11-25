@@ -56,42 +56,56 @@ export default function AcceptInvite() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-12 p-6 bg-bg rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4 text-text-main">초대 수락</h2>
-      {message.text && (
-        <div className={`p-3 rounded mb-4 ${message.type === 'error' ? 'bg-error/10 text-error' : 'bg-success/10 text-success'}`}>
-          {message.text}
-        </div>
-      )}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-text-sub mb-1">아이디</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full border border-border rounded px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary"
-            placeholder="사용자명"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-text-sub mb-1">비밀번호</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-border rounded px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary"
-            placeholder="비밀번호"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? '처리 중...' : '계정 만들기'}
-        </button>
-      </form>
+    <div className="admin-theme min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Anders Survey Platform Admin
+        </h2>
+        <p className="text-center text-sm text-gray-600 mb-4">
+          초대를 수락하고 계정을 생성하세요
+        </p>
+
+        {message.text && (
+          <div className={`p-3 rounded-lg text-sm ${
+            message.type === 'error' 
+              ? 'bg-error/10 text-error' 
+              : 'bg-success/10 text-success'
+          }`}>
+            {message.text}
+          </div>
+        )}
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            <input
+              type="text"
+              placeholder="아이디"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full border border-border px-3 py-2 rounded-t-md focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+            />
+            <input
+              type="password"
+              placeholder="비밀번호"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full border border-border px-3 py-2 rounded-b-md focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading || !username.trim() || !password.trim()}
+            className="w-full py-2 px-4 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: loading || !username.trim() || !password.trim() ? '#9CA3AF' : '#26C6DA',
+              color: '#FFFFFF',
+            }}
+          >
+            {loading ? '처리 중...' : '계정 만들기'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
