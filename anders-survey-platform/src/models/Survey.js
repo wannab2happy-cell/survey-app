@@ -21,6 +21,7 @@ const PersonalInfoSchema = new mongoose.Schema({
 const SurveySchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, default: '' },
+  slug: { type: String, unique: true, sparse: true }, // URL 친화적 식별자 (선택사항)
   questions: [QuestionSchema], // 질문 배열
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // 설문을 생성한 사용자 ID
   status: { type: String, enum: ['draft', 'published', 'closed', 'inactive', 'active', 'scheduled', 'completed'], default: 'inactive' },

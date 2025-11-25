@@ -30,7 +30,19 @@ export const getSurveyDetails = async (req, res) => {
     try {
         const { surveyId } = req.params;
 
-        const survey = await Survey.findById(surveyId).select('_id title description questions');
+        // slug 또는 ObjectId로 조회 시도
+        let survey = null;
+        if (surveyId.match(/^[0-9a-fA-F]{24}$/)) {
+            // MongoDB ObjectId 형식
+            survey = await Survey.findById(surveyId);
+        } else {
+            // slug로 조회 시도
+            survey = await Survey.findOne({ slug: surveyId });
+            // slug가 없으면 ObjectId로 재시도 (하위 호환성)
+            if (!survey) {
+                survey = await Survey.findById(surveyId);
+            }
+        }
 
         if (!survey) {
             return res.status(404).json({ message: "설문을 찾을 수 없습니다." });
@@ -84,15 +96,30 @@ export const submitSurveyResponse = async (req, res) => {
     }
 
     try {
-        // Survey 존재 확인
-        const survey = await Survey.findById(surveyId);
+        // Survey 존재 확인 (slug 또는 ObjectId로 조회)
+        let survey = null;
+        if (surveyId.match(/^[0-9a-fA-F]{24}$/)) {
+            // MongoDB ObjectId 형식
+            survey = await Survey.findById(surveyId);
+        } else {
+            // slug로 조회 시도
+            survey = await Survey.findOne({ slug: surveyId });
+            // slug가 없으면 ObjectId로 재시도 (하위 호환성)
+            if (!survey) {
+                survey = await Survey.findById(surveyId);
+            }
+        }
+        
         if (!survey) {
             return res.status(404).json({ message: "설문을 찾을 수 없습니다." });
         }
+        
+        // 실제 surveyId는 survey._id 사용
+        const actualSurveyId = survey._id.toString();
 
         // Response 생성 (answers는 서브스키마로 포함)
         const response = await Response.create({
-            surveyId: surveyId,
+            surveyId: actualSurveyId,
             userId: userId || null,
             answers: answers.map(answer => ({
                 questionId: answer.questionId,
@@ -213,10 +240,31 @@ export const createSurvey = async (req, res) => {
             questions: normalizedQuestions.map(q => ({ type: q.type, content: q.content.substring(0, 20) + '...' }))
         });
         
+        // slug 생성 (제목 기반 또는 ObjectId 사용)
+        const generateSlug = (text) => {
+            return text
+                .toLowerCase()
+                .replace(/[^\w\s-]/g, '') // 특수문자 제거
+                .replace(/\s+/g, '-') // 공백을 하이픈으로
+                .replace(/-+/g, '-') // 연속된 하이픈 제거
+                .trim();
+        };
+        
+        let slug = req.body.slug || generateSlug(title);
+        // slug 중복 확인 및 처리
+        let existingSurvey = await Survey.findOne({ slug });
+        let slugSuffix = 1;
+        while (existingSurvey) {
+            slug = `${generateSlug(title)}-${slugSuffix}`;
+            existingSurvey = await Survey.findOne({ slug });
+            slugSuffix++;
+        }
+
         // 설문 생성
         const newSurvey = await Survey.create({
             title: title.trim(),
             description: description?.trim() || '',
+            slug: slug,
             questions: normalizedQuestions,
             userId: userId,
             status: status || 'inactive',

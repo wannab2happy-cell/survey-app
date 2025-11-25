@@ -39,8 +39,8 @@ export default function AcceptInvite() {
         });
         if (loginRes.data.success) {
           localStorage.setItem('token', loginRes.data.token);
-          // 로그인 후 메인 설문 페이지로 이동 (protected route)
-          navigate('/surveys');
+          // 로그인 후 관리자 페이지로 이동
+          navigate('/admin');
         } else {
           setMessage({ type: 'error', text: loginRes.data.message || '로그인에 실패했습니다.' });
         }
